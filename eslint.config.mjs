@@ -3,6 +3,10 @@ import uniHelper from '@uni-helper/eslint-config'
 export default uniHelper({
   unocss: true,
   vue: true,
+  stylistic: {
+    indent: 2,
+    semi: false,
+  },
   markdown: false,
   ignores: [
     // 忽略uni_modules目录

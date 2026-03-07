@@ -5,6 +5,10 @@ export type CustomRequestOptions = UniApp.RequestOptions & {
   query?: Record<string, any>
   /** 出错时是否隐藏错误提示 */
   hideErrorToast?: boolean
+  /** 是否返回原始响应数据（不进行 code 校验） */
+  isRaw?: boolean
+  /** 是否返回完整的响应对象（包含 header, cookies 等），不仅仅是 data */
+  returnFullResponse?: boolean
 } & IUniUploadFileOptions // 添加uni.uploadFile参数类型
 
 /** 主要提供给 openapi-ts-request 生成的代码使用 */

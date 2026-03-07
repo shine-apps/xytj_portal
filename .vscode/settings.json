@@ -92,5 +92,13 @@
     "Wechat",
     "WechatMiniprogram",
     "Weixin"
-  ]
+  ],
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.scf_tmp": true
+  }
 }

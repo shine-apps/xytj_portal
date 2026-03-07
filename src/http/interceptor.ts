@@ -1,5 +1,5 @@
 import type { CustomRequestOptions } from '@/http/types'
-import { useTokenStore } from '@/store'
+import { useUserStore } from '@/store'
 import { getEnvBaseUrl } from '@/utils'
 import { stringifyQuery } from './tools/queryString'
 
@@ -49,12 +49,25 @@ const httpInterceptor = {
       ...options.header,
     }
     // 3. 添加 token 请求头标识
-    const tokenStore = useTokenStore()
-    const token = tokenStore.updateNowTime().validToken
+    const { hasValidLogin, tokenInfo } = useUserStore()
 
-    if (token) {
-      options.header.Authorization = `Bearer ${token}`
+    if (hasValidLogin) {
+      options.header.Authorization = `Bearer ${tokenInfo.token}`
     }
+
+    // 4. 添加 Better Auth Session Cookie (如果存在)
+    // const sessionCookieValue = uni.getStorageSync('better-auth.session_token')
+    // if (sessionCookieValue) {
+    //   const existingCookie = options.header.Cookie || options.header.cookie || ''
+    //   // sessionCookieValue 已经是 key=value 格式
+    //   if (existingCookie) {
+    //     options.header.Cookie = `${existingCookie}; ${sessionCookieValue}`
+    //   }
+    //   else {
+    //     options.header.Cookie = sessionCookieValue
+    //   }
+    // }
+
     return options
   },
 }
