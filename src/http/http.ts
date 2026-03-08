@@ -1,7 +1,6 @@
-import type { CustomRequestOptions, IResponse } from '@/http/types'
+import type { CustomRequestOptions } from '@/http/types'
 import { useUserStore } from '@/store'
 import { toLoginPage } from '@/utils/toLoginPage'
-import { ResultEnum } from './tools/enum'
 
 // 刷新 token 状态管理
 const refreshing = false // 防止重复刷新 token 标识
@@ -18,11 +17,11 @@ export function http<T>(options: CustomRequestOptions) {
       // #endif
       // 响应成功
       success: async (res) => {
-        const responseData = res.data as IResponse<T>
-        const { code } = responseData
+        const responseData = res.data as T
+        // const { code } = responseData
 
         // 检查是否是401错误（包括HTTP状态码401或业务码401）
-        const isTokenExpired = res.statusCode === 401 || code === 401
+        const isTokenExpired = res.statusCode === 401
 
         if (isTokenExpired) {
           const userStore = useUserStore()
@@ -41,14 +40,14 @@ export function http<T>(options: CustomRequestOptions) {
           if (options.isRaw) {
             return resolve(res.data as any)
           }
-          // 处理业务逻辑错误
-          if (code !== ResultEnum.Success0 && code !== ResultEnum.Success200) {
-            uni.showToast({
-              icon: 'none',
-              title: responseData.msg || responseData.message || '请求错误',
-            })
-          }
-          return resolve(responseData.data)
+          // // 处理业务逻辑错误
+          // if (code !== ResultEnum.Success0 && code !== ResultEnum.Success200) {
+          //   uni.showToast({
+          //     icon: 'none',
+          //     title: responseData.msg || responseData.message || '请求错误',
+          //   })
+          // }
+          return resolve(responseData)
         }
 
         // 处理其他错误

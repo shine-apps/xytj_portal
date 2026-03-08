@@ -20,6 +20,10 @@ console.log('index/index 首页打印了')
 onLoad(() => {
   console.log('测试 uni API 自动引入: onLoad')
 })
+
+function goToCourses() {
+  uni.navigateTo({ url: '/pages/courses/courses' })
+}
 </script>
 
 <template>
@@ -48,6 +52,12 @@ onLoad(() => {
       <text class="text-green-500">
         https://unibest.tech
       </text>
+    </view>
+
+    <view class="mt-8 text-center">
+      <button class="rounded bg-blue-500 px-4 py-2 text-white" @click="goToCourses">
+        Go to Online Courses
+      </button>
     </view>
   </view>
 </template>

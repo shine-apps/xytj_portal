@@ -278,6 +278,7 @@ function uploadFile<T>({
         // #ifndef H5
         'Content-Type': 'multipart/form-data',
         // #endif
+        'Cache-Control': 'max-age=31622400',
       },
       // 确保文件名称合法
       success: (uploadFileRes) => {

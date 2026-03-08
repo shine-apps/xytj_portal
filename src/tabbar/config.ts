@@ -62,15 +62,24 @@ export const customTabbarList: CustomTabBarItem[] = [
   //   icon: '/static/tabbar/scan.png',
   //   isBulge: true,
   // },
+  // {
+  //   pagePath: 'pages/about/about',
+  //   text: '关于',
+  //   // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
+  //   // 2）配置到 unocss.config.ts 的 safelist 中
+  //   iconType: 'unocss',
+  //   icon: 'i-carbon-menu',
+  //   // badge: 10,
+  //   roles: ['admin'],
+  // },
   {
-    pagePath: 'pages/about/about',
-    text: '关于',
+    pagePath: 'pages/courses/courses',
+    text: '课程',
     // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
     // 2）配置到 unocss.config.ts 的 safelist 中
     iconType: 'unocss',
-    icon: 'i-carbon-menu',
+    icon: 'i-carbon-course',
     // badge: 10,
-    roles: ['admin'],
   },
   {
     pagePath: 'pages/me/me',
