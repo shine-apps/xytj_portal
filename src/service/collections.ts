@@ -13,7 +13,28 @@ export interface ICollection {
   }
 }
 
+export interface IVideo {
+  id: string
+  title: string
+  url: string
+  coverUrl?: string | null
+  size: number
+  mimeType: string
+  collectionId: string
+  userId: string
+  createdAt: string
+}
+
+export interface ICollectionDetail extends ICollection {
+  videos: IVideo[]
+}
+
 /** Get all collections */
 export function getCollectionsAPI() {
   return http.Get<ICollection[]>('/api/collections/all')
+}
+
+/** Get collection detail */
+export function getCollectionDetailAPI(id: string) {
+  return http.Get<ICollectionDetail>(`/api/collections/${id}`)
 }

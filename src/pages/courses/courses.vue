@@ -57,8 +57,7 @@ async function queryList(pageNo: number, pageSize: number) {
 }
 
 function goToDetail(id: string) {
-  // Navigate to detail page if exists, or just show toast for now
-  uni.showToast({ title: `Clicked ${id}`, icon: 'none' })
+  uni.navigateTo({ url: `/pages/courses/detail?id=${id}` })
 }
 
 function formatDate(date: string) {
