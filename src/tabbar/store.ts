@@ -1,14 +1,23 @@
 import type { CustomTabBarItem, CustomTabBarItemBadge } from './types'
 import { computed, reactive } from 'vue'
+import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 
-import { tabbarList as _tabbarList, selectedTabbarStrategy, TABBAR_STRATEGY_MAP } from './config'
+import {
+  tabbarList as _tabbarList,
+  selectedTabbarStrategy,
+  TABBAR_STRATEGY_MAP,
+} from './config'
 
 /** tabbarList 里面的 path 从 pages.config.ts 得到 */
-const baseTabbarList = reactive<CustomTabBarItem[]>(_tabbarList.map(item => ({
-  ...item,
-  pagePath: item.pagePath.startsWith('/') ? item.pagePath : `/${item.pagePath}`, // 统一成 '/' 开头的路径
-})))
+const baseTabbarList = reactive<CustomTabBarItem[]>(
+  _tabbarList.map(item => ({
+    ...item,
+    pagePath: item.pagePath.startsWith('/')
+      ? item.pagePath
+      : `/${item.pagePath}`, // 统一成 '/' 开头的路径
+  })),
+)
 
 const userRoles = computed(() => {
   const userStore = useUserStore()
@@ -24,10 +33,30 @@ const userRoles = computed(() => {
 
 const tabbarList = computed(() => {
   const roles = userRoles.value
+  const settingsStore = useSettingsStore()
+  const hiddenVideo = settingsStore.hiddenVideo
+  const hiddenActivity = settingsStore.hiddenActivity
+
+  const list = baseTabbarList.filter((item) => {
+    const path = item.pagePath as string
+    if (path === '/pages/courses/courses' && hiddenVideo) {
+      return false
+    }
+    if (path === '/pages/activities/activities' && hiddenActivity) {
+      return false
+    }
+    return true
+  })
+
   if (roles.length === 0) {
-    return baseTabbarList.filter(item => !item.roles || item.roles.length === 0)
+    return list.filter(item => !item.roles || item.roles.length === 0)
   }
-  return baseTabbarList.filter(item => !item.roles || item.roles.length === 0 || item.roles.some(role => roles.includes(role)))
+  return list.filter(
+    item =>
+      !item.roles
+      || item.roles.length === 0
+      || item.roles.some(role => roles.includes(role)),
+  )
 })
 
 export function isPageTabbar(path: string) {
@@ -70,7 +99,9 @@ const tabbarStore = reactive({
     const index = list.findIndex(item => item.pagePath === path)
     // console.log('tabbarList:', tabbarList)
     if (index === -1) {
-      const pagesPathList = getCurrentPages().map(item => item.route.startsWith('/') ? item.route : `/${item.route}`)
+      const pagesPathList = getCurrentPages().map(item =>
+        item.route.startsWith('/') ? item.route : `/${item.route}`,
+      )
       // console.log(pagesPathList)
       const flag = list.some(item => pagesPathList.includes(item.pagePath))
       if (!flag) {

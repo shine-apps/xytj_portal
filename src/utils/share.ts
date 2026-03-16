@@ -3,7 +3,7 @@ import { getAllPages } from '@/utils'
 function getPageTitle(view: any): string {
   const allPages = getAllPages()
   const currentPageConfig = allPages.find(page => page.path === `/${view.route}`)
-  return `${currentPageConfig?.style?.navigationBarTitleText}--翔云太极`
+  return `${currentPageConfig?.style?.navigationBarTitleText}`
 }
 
 export default {
@@ -34,7 +34,7 @@ export default {
       }
     }
     return {
-      title: '翔云太极',
+      title: `翔云文武`,
       path: '/pages/index/index',
     }
   },
@@ -53,7 +53,7 @@ export default {
       }
     }
     return {
-      title: '翔云太极',
+      title: '翔云文武',
     }
   },
 }

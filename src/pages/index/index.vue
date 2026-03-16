@@ -1,5 +1,7 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { useToast } from 'wot-design-uni'
+import { useSettingsStore } from '@/store/settings'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
 
 defineOptions({
@@ -14,33 +16,50 @@ definePage({
 })
 
 const toast = useToast()
+const settingsStore = useSettingsStore()
 
-const features = [
+const baseFeatures = [
   {
     title: '线上课程',
     desc: '传统武术视频教学',
     icon: 'i-carbon-video',
     url: '/pages/courses/courses',
+    hiddenKey: 'hiddenVideo' as const,
   },
   {
     title: '线下活动',
     desc: '武术交流活动, 线下集训报名',
     icon: 'i-carbon-location',
     url: '/pages/activities/index',
+    hiddenKey: 'hiddenActivity' as const,
   },
   {
     title: '线下课程',
     desc: '武术长期课程',
     icon: 'i-carbon-calendar',
     url: '',
+    hiddenKey: null,
   },
   {
     title: '学员风采',
     desc: '优秀学员展示',
     icon: 'i-carbon-star',
     url: '',
+    hiddenKey: null,
   },
 ]
+
+const features = computed(() => {
+  return baseFeatures.filter((item) => {
+    if (item.hiddenKey === 'hiddenVideo' && settingsStore.hiddenVideo) {
+      return false
+    }
+    if (item.hiddenKey === 'hiddenActivity' && settingsStore.hiddenActivity) {
+      return false
+    }
+    return true
+  })
+})
 
 const courses = [
   {
@@ -78,7 +97,7 @@ function makePhoneCall() {
 }
 
 onLoad(() => {
-  console.log('翔云太极小程序首页加载完成')
+  console.log('翔云文武小程序首页加载完成')
 })
 </script>
 
