@@ -31,6 +31,7 @@
     <view class="bg-white">
       <wd-cell-group>
         <wd-cell v-if="isLoggedIn" title="个人信息" is-link to="/pages/profile/profile" border />
+        <wd-cell v-if="isLoggedIn" title="购买历史" is-link to="/pages/purchases/index" border />
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
       </wd-cell-group>

@@ -9,15 +9,23 @@
         >
           <image v-if="item.coverUrl" :src="item.coverUrl" mode="aspectFill" class="h-40 w-full" />
           <view class="p-3">
-            <view class="truncate text-lg font-bold">
-              {{ item.title }}
+            <view class="flex items-center justify-between">
+              <view class="truncate text-lg font-bold">
+                {{ item.title }}
+              </view>
+              <view class="text-sm font-bold" :class="item.price > 0 ? 'text-red-500' : 'text-green-500'">
+                {{ item.price > 0 ? `¥${item.price}` : '免费' }}
+              </view>
             </view>
             <view class="line-clamp-2 mt-1 text-sm text-gray-500">
               {{ item.description || "No description" }}
             </view>
-            <view class="mt-2 flex items-center justify-between text-xs text-gray-400">
-              <text>{{ item._count?.videos || 0 }} videos</text>
-              <text>{{ formatDate(item.createdAt) }}</text>
+            <view class="mt-2 flex items-center justify-between text-xs">
+              <text class="text-gray-400">{{ item._count?.videos || 0 }} 个视频</text>
+              <view>
+                <text v-if="purchasedCollections.includes(item.id)" class="text-green-500">已购买</text>
+                <text v-else class="text-gray-400">{{ formatDate(item.createdAt) }}</text>
+              </view>
             </view>
           </view>
         </view>
@@ -29,8 +37,8 @@
 <script setup lang="ts">
 import type { ICollection } from '@/service/collections'
 import dayjs from 'dayjs'
-import { ref } from 'vue'
-import { getCollectionsAPI } from '@/service/collections'
+import { ref, onMounted } from 'vue'
+import { getCollectionsAPI, getPurchasesAPI } from '@/service/collections'
 
 definePage({
   style: {
@@ -40,6 +48,21 @@ definePage({
 
 const paging = ref<any>(null)
 const dataList = ref<ICollection[]>([])
+const purchasedCollections = ref<string[]>([])
+
+onMounted(() => {
+  // Get user's purchased collections
+  getPurchasedCollections()
+})
+
+async function getPurchasedCollections() {
+  try {
+    const purchases = await getPurchasesAPI()
+    purchasedCollections.value = purchases.map(purchase => purchase.collection.id)
+  } catch (error) {
+    console.error('Error getting purchased collections:', error)
+  }
+}
 
 async function queryList(pageNo: number, pageSize: number) {
   // Since the API returns all data at once, we only fetch on the first page

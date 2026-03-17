@@ -15,12 +15,31 @@
           <view v-if="collection.description" class="mb-2 text-sm text-gray-500">
             {{ collection.description }}
           </view>
+          <view class="mb-3 flex items-center justify-between">
+            <view class="text-xs text-gray-400">
+              创建于: {{ formatDate(collection.createdAt) }}
+            </view>
+            <view class="text-lg font-bold" :class="collection.price > 0 ? 'text-red-500' : 'text-green-500'">
+              {{ collection.price > 0 ? `¥${collection.price}` : '免费' }}
+            </view>
+          </view>
           <view class="flex items-center justify-between text-xs text-gray-400">
-            <text>创建于: {{ formatDate(collection.createdAt) }}</text>
             <text>{{ collection.videos?.length || 0 }} 个视频</text>
+            <text v-if="isPurchased" class="text-green-500">已购买</text>
+          </view>
+          <view v-if="collection.price > 0 && !isPurchased" class="mt-3">
+            <button
+              class="w-full rounded-lg bg-blue-500 py-2 text-white font-medium"
+              @click="handlePurchase"
+            >
+              立即购买
+            </button>
           </view>
         </view>
-        <view class="px-4 py-2 text-sm text-gray-500 font-medium">
+        <view v-if="!isPurchased && collection?.price > 0" class="bg-yellow-50 px-4 py-4 text-center text-yellow-700">
+          您还未购买此课程，请先购买后查看内容
+        </view>
+        <view v-else class="px-4 py-2 text-sm text-gray-500 font-medium">
           视频列表
         </view>
       </template>
@@ -93,7 +112,8 @@ import type { ICollectionDetail, IVideo } from '@/service/collections'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
-import { getCollectionDetailAPI } from '@/service/collections'
+import { checkPurchaseAPI, getCollectionDetailAPI, purchaseCollectionAPI } from '@/service/collections'
+import { createOrderAPI, processWechatPayment } from '@/service/payment'
 
 definePage({
   style: {
@@ -109,6 +129,8 @@ const collection = ref<ICollectionDetail | null>(null)
 const videoList = ref<IVideo[]>([])
 const showVideoPlayer = ref(false)
 const currentVideo = ref<IVideo | null>(null)
+const isPurchased = ref(false)
+const isLoading = ref(false)
 
 onLoad((options) => {
   if (options?.id) {
@@ -141,10 +163,62 @@ async function queryList(pageNo: number, pageSize: number) {
     collection.value = res
     // Update navigation title
     uni.setNavigationBarTitle({ title: res.title })
-    paging.value.complete(res.videos || [])
+
+    // Check if user has purchased this collection
+    if (res.price > 0) {
+      const purchaseStatus = await checkPurchaseAPI(collectionId.value)
+      isPurchased.value = purchaseStatus.purchased
+    }
+    else {
+      isPurchased.value = true // Free collections are always accessible
+    }
+
+    // Only show videos if purchased or free
+    if (isPurchased.value || res.price === 0) {
+      paging.value.complete(res.videos || [])
+    }
+    else {
+      paging.value.complete([])
+    }
   }
   catch (e) {
     paging.value.complete(false)
+  }
+}
+
+async function handlePurchase() {
+  if (!collectionId.value || !collection.value)
+    return
+
+  isLoading.value = true
+  try {
+    // Create payment order
+    const orderResponse = await createOrderAPI(collectionId.value)
+
+    // Process WeChat payment
+    const paymentSuccess = await processWechatPayment(orderResponse.payParams)
+
+    if (paymentSuccess) {
+      // Create purchase record
+      await purchaseCollectionAPI(collectionId.value)
+
+      // Update purchase status
+      isPurchased.value = true
+
+      // Reload video list
+      setTimeout(() => {
+        paging.value?.reload()
+      }, 100)
+
+      uni.showToast({ title: '购买成功', icon: 'success' })
+    }
+  }
+  catch (error) {
+    console.error('Purchase failed:', error)
+    uni.showToast({ title: '购买失败，请重试', icon: 'none' })
+  }
+  finally {
+    isLoading.value = false
   }
 }
 

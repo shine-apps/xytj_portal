@@ -8,6 +8,7 @@ export interface ICollection {
   userId: string
   createdAt: string
   updatedAt: string
+  price: number
   _count?: {
     videos: number
   }
@@ -37,4 +38,19 @@ export function getCollectionsAPI() {
 /** Get collection detail */
 export function getCollectionDetailAPI(id: string) {
   return http.Get<ICollectionDetail>(`/api/collections/${id}`)
+}
+
+/** Purchase collection */
+export function purchaseCollectionAPI(collectionId: string) {
+  return http.Post<{ id: string; collection: ICollection }>('/api/purchases', { collectionId })
+}
+
+/** Check if collection is purchased */
+export function checkPurchaseAPI(collectionId: string) {
+  return http.Get<{ purchased: boolean }>(`/api/purchases/check?collectionId=${collectionId}`)
+}
+
+/** Get user's purchases */
+export function getPurchasesAPI() {
+  return http.Get<{ id: string; collection: ICollection; createdAt: string }[]>('/api/purchases')
 }
