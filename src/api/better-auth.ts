@@ -227,19 +227,36 @@ export function signUpEmail(data: SignUpParams) {
  * 获取当前会话 - 使用uni.request实现
  */
 export function getSession() {
-  return http.get<BetterAuthResponse>(`${AUTH_BASE}/get-session`, {}, {}, { isRaw: true })
+  return http.get<BetterAuthResponse>(
+    `${AUTH_BASE}/get-session`,
+    {},
+    {},
+    { isRaw: true },
+  )
 }
 
 /**
  * 更新用户信息
  */
 export function updateUser(data: { name?: string, image?: string }) {
-  return http.post<BetterAuthUser>(`${AUTH_BASE}/user/update`, data, {}, {}, { isRaw: true })
+  return http.post<BetterAuthUser>(
+    `${AUTH_BASE}/update-user`,
+    data,
+    {},
+    {},
+    { isRaw: true },
+  )
 }
 
 /**
  * 退出登录 - 使用uni.request实现
  */
 export function signOut() {
-  return http.post<{ success: boolean }>(`${AUTH_BASE}/sign-out`, {}, {}, {}, { isRaw: true })
+  return http.post<{ success: boolean }>(
+    `${AUTH_BASE}/sign-out`,
+    {},
+    {},
+    {},
+    { isRaw: true },
+  )
 }
