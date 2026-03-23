@@ -8,6 +8,8 @@ const userInfoState: IUserInfoRes = {
   userId: '',
   username: '',
   nickname: '',
+  phoneNumber: '',
+  email: '',
   avatar: '/static/images/default-avatar.png',
 }
 
@@ -82,6 +84,8 @@ export const useUserStore = defineStore(
             username: res.user.email || res.user.phoneNumber || '',
             nickname: res.user.name,
             avatar: res.user.image,
+            phoneNumber: res.user.phoneNumber,
+            email: res.user.email,
           }
           setUserInfo(mappedUser)
         }
@@ -131,6 +135,8 @@ export const useUserStore = defineStore(
           username: res.user.email || res.user.phoneNumber || '',
           nickname: res.user.name,
           avatar: res.user.image,
+          phoneNumber: res.user.phoneNumber || userInfoState.phone,
+          email: res.user.email || userInfoState.email,
         }
         setUserInfo(mappedUser)
       }
@@ -152,6 +158,8 @@ export const useUserStore = defineStore(
           username: res.user.email || res.user.phoneNumber || '',
           nickname: res.user.name,
           avatar: res.user.image,
+          phoneNumber: res.user.phoneNumber,
+          email: res.user.email,
         }
         setUserInfo(mappedUser)
       }
@@ -173,6 +181,8 @@ export const useUserStore = defineStore(
           username: res.user.email || res.user.phoneNumber || '',
           nickname: res.user.name,
           avatar: res.user.image,
+          phoneNumber: res.user.phoneNumber,
+          email: res.user.email,
         }
         setUserInfo(mappedUser)
       }

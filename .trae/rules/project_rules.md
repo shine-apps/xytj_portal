@@ -100,29 +100,29 @@
 ```vue
 <script setup lang="ts">
 // #ifdef H5
-import { h5Api } from '@/utils/h5'
+import { h5Api } from "@/utils/h5";
 // #endif
 
 // #ifdef MP-WEIXIN
-import { mpApi } from '@/utils/mp'
+import { mpApi } from "@/utils/mp";
 // #endif
 
 const handleClick = () => {
   // #ifdef H5
-  h5Api.showToast('H5 平台')
+  h5Api.showToast("H5 平台");
   // #endif
-  
+
   // #ifdef MP-WEIXIN
-  mpApi.showToast('微信小程序')
+  mpApi.showToast("微信小程序");
   // #endif
-}
+};
 </script>
 
 <template>
   <view class="page">
     <!-- uni-app 组件 -->
     <button @click="handleClick">点击</button>
-    
+
     <!-- 条件渲染 -->
     <!-- #ifdef H5 -->
     <view>H5 特有内容</view>

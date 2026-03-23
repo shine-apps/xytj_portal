@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useToast } from 'wot-design-uni'
 import { useSettingsStore } from '@/store/settings'
+import { isPageTabbar } from '@/tabbar/store'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
 
 defineOptions({
@@ -30,23 +31,23 @@ const baseFeatures = [
     title: '线下活动',
     desc: '武术交流活动, 线下集训报名',
     icon: 'i-carbon-location',
-    url: '/pages/activities/index',
+    url: '/pages/activities/activities',
     hiddenKey: 'hiddenActivity' as const,
   },
   {
-    title: '线下课程',
-    desc: '武术长期课程',
-    icon: 'i-carbon-calendar',
-    url: '',
+    title: '请老师上课',
+    desc: '邀请老师来上课',
+    icon: 'i-carbon-user-speaker',
+    url: '/pages/teacher-invitations/create',
     hiddenKey: null,
   },
-  {
-    title: '学员风采',
-    desc: '优秀学员展示',
-    icon: 'i-carbon-star',
-    url: '',
-    hiddenKey: null,
-  },
+  // {
+  //   title: '学员风采',
+  //   desc: '优秀学员展示',
+  //   icon: 'i-carbon-star',
+  //   url: '',
+  //   hiddenKey: null,
+  // },
 ]
 
 const features = computed(() => {
@@ -59,6 +60,10 @@ const features = computed(() => {
     }
     return true
   })
+})
+
+const formattedPhoneNumber = computed(() => {
+  return settingsStore.phoneNumber.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
 })
 
 const courses = [
@@ -87,12 +92,17 @@ function navigateTo(url: string) {
     toast.info({ msg: '暂未开放，敬请期待' })
     return
   }
-  uni.switchTab({ url })
+  if (isPageTabbar(url)) {
+    uni.switchTab({ url })
+  }
+  else {
+    uni.navigateTo({ url })
+  }
 }
 
 function makePhoneCall() {
   uni.makePhoneCall({
-    phoneNumber: '400-123-4567',
+    phoneNumber: settingsStore.phoneNumber,
   })
 }
 
@@ -153,18 +163,15 @@ onLoad(() => {
         <text class="mb-6 block text-[#555] leading-relaxed">
           <text class="font-bold">嘉兴翔云教育科技有限公司</text>专注于传统武术教育，致力于青少年武术教学和中老年太极养生培训。我们秉承"习武学文，养性修德"的理念，传承中华武术文化，推广健康生活方式。
         </text>
-        <view class="space-y-3">
+        <view v-if="settingsStore.phoneNumber" class="space-y-3" @click="makePhoneCall">
           <view class="flex items-center">
-            <text class="mr-3 text-orange-500">📞</text>
-            <text class="text-gray-700">咨询热线：***-****-****</text>
+            <text class="text-gray-700">咨询热线：</text>
+            <text class="px-2 text-gray-500">{{ formattedPhoneNumber }}</text>
+            <text class="i-carbon-phone mr-3 text-green-500" />
           </view>
           <view class="flex items-center">
-            <text class="mr-3 text-orange-500">📍</text>
-            <text class="text-gray-700">地址：中国·嘉兴·桐乡</text>
-          </view>
-          <view class="flex items-center">
-            <text class="mr-3 text-orange-500">📧</text>
-            <text class="text-gray-700">邮箱：***@xiangyunww.com</text>
+            <text class="text-gray-700">地址：</text>
+            <text class="text-gray-500">中国·嘉兴·桐乡</text>
           </view>
         </view>
       </view>

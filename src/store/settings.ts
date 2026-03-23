@@ -25,6 +25,10 @@ export const useSettingsStore = defineStore(
       return settingsMap.value.hiddenActivity === 'true'
     })
 
+    const phoneNumber = computed(() => {
+      return settingsMap.value.phoneNumber || '15706725301'
+    })
+
     const fetchSettings = async () => {
       if (isLoaded.value)
         return settings.value
@@ -52,6 +56,7 @@ export const useSettingsStore = defineStore(
       settingsMap,
       hiddenVideo,
       hiddenActivity,
+      phoneNumber,
       fetchSettings,
       refreshSettings,
     }

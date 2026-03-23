@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '我的',
-  },
-}
-</route>
-
 <template>
   <view class="me-page min-h-screen bg-gray-100">
     <!-- User Info Section -->
@@ -33,6 +25,7 @@
         <wd-cell v-if="isLoggedIn" title="个人信息" is-link to="/pages/profile/profile" border />
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
+        <wd-cell v-if="isLoggedIn" title="上课申请列表" is-link to="/pages/teacher-invitations/list" border />
       </wd-cell-group>
     </view>
 
@@ -49,6 +42,10 @@
 import { computed } from 'vue'
 import { useUserStore } from '@/store/user'
 import { toLoginPage } from '@/utils/toLoginPage'
+
+definePage({
+  navigationBarTitleText: '我的',
+})
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
