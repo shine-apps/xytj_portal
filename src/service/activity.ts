@@ -119,3 +119,12 @@ export const updateMemberRoleAPI = (activityId: string, userId: string, role: 'A
 export const removeMemberAPI = (activityId: string, userId: string) => {
   return http.delete<void>(`/api/activities/${activityId}/members/${userId}`)
 }
+
+/**
+ * 更新活动
+ * @param id 活动ID
+ * @param data 更新数据
+ */
+export const updateActivityAPI = (id: string, data: Partial<IActivity>) => {
+  return http.patch<IActivity>(`/api/activities/${id}`, data)
+}

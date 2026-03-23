@@ -99,11 +99,11 @@ function formatLocation(loc: any) {
             class="group overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md transition-all duration-300 hover:shadow-lg"
             @click="navigateToDetail(item.id)"
           >
-            <view class="relative h-48 w-full">
+            <view class="relative w-full">
               <image
                 :src="item.coverUrl"
-                class="group-hover:scale-105" h-full w-full object-cover sepia-20 filter transition-transform duration-700
-                mode="aspectFill"
+                class="group-hover:scale-105" w-full object-cover sepia-20 filter transition-transform duration-700
+                mode="widthFix"
               />
               <view class="absolute right-4 top-4 rounded bg-[#a33327]/90 px-3 py-1 text-xs text-white shadow-sm">
                 {{ getStatus(item.startTime, item.endTime) }}

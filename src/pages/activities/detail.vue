@@ -3,8 +3,11 @@ import type ActivityMembersPanel from '@/components/ActivityMembersPanel.vue'
 import type { IActivity } from '@/service/activity'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { getActivityDetailAPI } from '@/service/activity'
+import { useUserStore } from '@/store/user'
+
+const userStore = useUserStore()
 
 definePage({
   style: {
@@ -43,6 +46,22 @@ async function loadData() {
   }
 }
 
+// 是否可以编辑
+const canEdit = computed(() => {
+  // 1. 全局管理员
+  if (userStore.isAdmin)
+    return true
+  // 2. 活动管理员 - 通过 membersPanelRef 获取
+  return membersPanelRef.value?.isAdmin || false
+})
+
+// 跳转到编辑页
+function navigateToEdit() {
+  uni.navigateTo({
+    url: `/pages/activities/edit?id=${activityId.value}`,
+  })
+}
+
 // Format Helpers
 function formatTime(time: string) {
   if (!time)
@@ -76,15 +95,24 @@ function formatLocation(loc: any) {
   <view class="min-h-screen bg-[#f7f7f7] pb-24">
     <view v-if="activity">
       <!-- Header Image -->
-      <view class="relative h-60 w-full">
+      <view class="relative w-full">
         <image
-          :src="activity.coverUrl || 'https://images.unsplash.com/photo-1544367563-12123d895951?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60'"
-          class="h-full w-full object-cover"
-          mode="aspectFill"
+          :src="activity.coverUrl"
+          class="w-full"
+          mode="widthFix"
         />
         <view class="absolute inset-0 from-black/60 to-transparent bg-gradient-to-t" />
         <view class="absolute bottom-4 left-4 right-4 text-white">
           <text class="text-2xl font-bold">{{ activity.title }}</text>
+        </view>
+        <!-- 编辑按钮 -->
+        <view v-if="canEdit" class="absolute right-4 top-4">
+          <button
+            class="rounded-full bg-white/80 p-2 backdrop-blur-sm transition-opacity active:opacity-70"
+            @click="navigateToEdit"
+          >
+            <view class="i-carbon-edit text-lg text-gray-800" />
+          </button>
         </view>
       </view>
 
