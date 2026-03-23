@@ -61,9 +61,11 @@ export const getActivitiesAPI = (params?: { collectionId?: string }) => {
 /**
  * 获取活动详情
  * @param id 活动ID
+ * @param withMembers 是否包含成员列表
  */
-export const getActivityDetailAPI = (id: string) => {
-  return http.get<IActivity>(`/api/activities/${id}`)
+export const getActivityDetailAPI = (id: string, withMembers?: boolean) => {
+  const params = withMembers ? { withMembers: 'true' } : undefined
+  return http.get<IActivity>(`/api/activities/${id}`, params)
 }
 
 /**
@@ -93,6 +95,19 @@ export const updateMemberStatusAPI = (activityId: string, userId: string, status
   return http.patch<IActivityMember>(
     `/api/activities/${activityId}/members/${userId}`,
     { status },
+  )
+}
+
+/**
+ * 更新成员角色
+ * @param activityId 活动ID
+ * @param userId 用户ID
+ * @param role 角色
+ */
+export const updateMemberRoleAPI = (activityId: string, userId: string, role: 'ADMIN' | 'ASSISTANT' | 'GENERAL') => {
+  return http.patch<IActivityMember>(
+    `/api/activities/${activityId}/members/${userId}`,
+    { role },
   )
 }
 

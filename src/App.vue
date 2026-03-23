@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { navigateToInterceptor } from '@/router/interceptor'
-import { useSettingsStore } from '@/store/settings'
+import { useSettingsStore, useUserStore } from '@/store'
 
 onLaunch(async (options) => {
   console.log('App.vue onLaunch', options)
   const settingsStore = useSettingsStore()
   await settingsStore.fetchSettings()
+  const { hasValidLogin, fetchUserInfo } = useUserStore()
+  if (hasValidLogin) {
+    fetchUserInfo()
+  }
 })
 onShow((options) => {
   console.log('App.vue onShow', options)

@@ -212,11 +212,17 @@ export const useUserStore = defineStore(
       return false
     }
 
+    const isAdmin = computed(() => {
+      const role = userInfo.value.role
+      return role === 'admin' || role === 'xytj_admin'
+    })
+
     return {
       userInfo,
       tokenInfo,
       hasValidLogin,
       hasUserInfo,
+      isAdmin,
       login,
       loginBySendOtp,
       loginByWechatPhone,

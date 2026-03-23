@@ -26,7 +26,7 @@
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
         <wd-cell v-if="isLoggedIn" title="上课申请列表" is-link to="/pages/teacher-invitations/list" border />
-        <wd-cell v-if="isAdminRole" title="管理后台" icon="computer" is-link border @click="openAdminWebview" />
+        <wd-cell v-if="userStore.isAdmin" title="管理后台" icon="computer" is-link border @click="openAdminWebview" />
       </wd-cell-group>
     </view>
 
@@ -53,10 +53,6 @@ const userInfo = computed(() => userStore.userInfo)
 // Check if userId is valid (assuming -1 is default/invalid)
 const isLoggedIn = computed(() => userStore.hasValidLogin)
 const defaultAvatar = '/static/images/default-avatar.png'
-
-const isAdminRole = computed(() => {
-  return userStore.userInfo?.role === 'admin' || userStore.userInfo?.role === 'xytj_admin'
-})
 
 onShow(() => {
   if (userStore.hasValidLogin && !userStore.hasUserInfo) {
