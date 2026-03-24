@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type ActivityMembersPanel from '@/components/ActivityMembersPanel.vue'
-import type { IActivity } from '@/service/activity'
+import type { IActivity, IActivityMember } from '@/service/activity'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
+import CheckInQRCode from '@/components/CheckInQRCode.vue'
+import CheckInStatus from '@/components/CheckInStatus.vue'
 import { getActivityDetailAPI } from '@/service/activity'
 import { useUserStore } from '@/store/user'
 
@@ -18,6 +20,7 @@ definePage({
 const activityId = ref('')
 const activity = ref<IActivity | null>(null)
 const membersPanelRef = ref<InstanceType<typeof ActivityMembersPanel> | null>(null)
+const currentUserMember = ref<IActivityMember | null>(null)
 
 // Loading states
 const loading = ref(false)
@@ -34,8 +37,9 @@ async function loadData() {
     return
   loading.value = true
   try {
-    const res = await getActivityDetailAPI(activityId.value, false)
+    const res = await getActivityDetailAPI(activityId.value, true)
     activity.value = res
+    currentUserMember.value = res.members.find(m => m.userId === userStore.userInfo?.id) || null
   }
   catch (e) {
     console.error(e)
@@ -53,6 +57,20 @@ const canEdit = computed(() => {
     return true
   // 2. 活动管理员 - 通过 membersPanelRef 获取
   return membersPanelRef.value?.isAdmin || false
+})
+
+// 是否是活动管理员
+const isActivityAdmin = computed(() => {
+  // 1. 全局管理员
+  if (userStore.isAdmin)
+    return true
+  // 2. 活动管理员 - 通过 membersPanelRef 获取
+  return membersPanelRef.value?.isAdmin || false
+})
+
+// 是否是活动成员（已加入）
+const isActivityMember = computed(() => {
+  return currentUserMember.value?.status === 'JOINED'
 })
 
 // 跳转到编辑页
@@ -118,27 +136,26 @@ function formatLocation(loc: any) {
 
       <!-- Basic Info -->
       <view class="m-4 rounded-lg bg-white p-4 shadow-sm">
-        <view class="mb-3 flex items-start space-x-3">
+        <!-- 所属集合 -->
+        <view v-if="activity.collection" class="mb-3 flex items-center space-x-3">
+          <view class="i-carbon-folder mt-1 text-lg text-[#a33327]" />
+          <text class="text-sm text-gray-600">
+            {{ activity.collection.title }}
+          </text>
+        </view>
+
+        <view class="mb-3 flex items-center space-x-3">
           <view class="i-carbon-time mt-1 text-lg text-[#a33327]" />
-          <view>
-            <view class="text-gray-900 font-medium">
-              活动时间
-            </view>
-            <view class="text-sm text-gray-600">
-              {{ formatTime(activity.startTime) }} ~ {{ formatTime(activity.endTime) }}
-            </view>
+
+          <view class="text-sm text-gray-600">
+            {{ formatTime(activity.startTime) }} ~ {{ formatTime(activity.endTime) }}
           </view>
         </view>
 
-        <view class="flex items-start space-x-3">
+        <view class="flex items-center space-x-3">
           <view class="i-carbon-location mt-1 text-lg text-[#a33327]" />
-          <view>
-            <view class="text-gray-900 font-medium">
-              活动地点
-            </view>
-            <view class="text-sm text-gray-600">
-              {{ formatLocation(activity.location) }}
-            </view>
+          <view class="text-sm text-gray-600">
+            {{ formatLocation(activity.location) }}
           </view>
         </view>
       </view>
@@ -150,6 +167,18 @@ function formatLocation(loc: any) {
         </view>
         <rich-text :nodes="activity.content || activity.summary || '暂无详情'" class="text-gray-700 leading-relaxed" />
       </view>
+
+      <!-- Check In Section - Admin View -->
+      <CheckInQRCode
+        v-if="activityId && isActivityAdmin"
+        :activity-id="activityId"
+      />
+
+      <!-- Check In Section - Member View -->
+      <CheckInStatus
+        v-if="activityId && isActivityMember && !isActivityAdmin"
+        :activity-id="activityId"
+      />
 
       <!-- Members Panel Component -->
       <ActivityMembersPanel
