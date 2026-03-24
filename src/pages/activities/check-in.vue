@@ -21,12 +21,17 @@ const result = ref<{
 } | null>(null)
 
 onLoad((options) => {
+  if (options?.scene) {
+    code.value = decodeURIComponent(options.scene as string)
+    handleCheckIn()
+    return
+  }
+
   if (options?.activity) {
     activityId.value = options.activity as string
   }
   if (options?.code) {
     code.value = options.code as string
-    // 自动执行签到
     handleCheckIn()
   }
 })
@@ -43,6 +48,7 @@ async function handleCheckIn() {
   loading.value = true
   try {
     const res = await scanCheckInAPI(code.value)
+    activityId.value = res.activityId
     result.value = {
       success: true,
       message: '签到成功',

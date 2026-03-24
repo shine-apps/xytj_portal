@@ -18,8 +18,15 @@ const qrCodeUrl = computed(() => {
   if (!checkInCode.value)
     return ''
 
-  const text = `https://xytj.shinehe.cn/activity_checkin/?activity=${props.activityId}&code=${checkInCode.value.code}`
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}`
+  if (checkInCode.value.wxaCodeUrl) {
+    return checkInCode.value.wxaCodeUrl
+  }
+  else {
+    return ''
+  }
+
+  // const text = `https://xytj.shinehe.cn/activity_checkin/?activity=${props.activityId}&code=${checkInCode.value.code}`
+  // return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}`
 })
 
 // async function generateQrCode() {
@@ -80,10 +87,22 @@ async function fetchCurrentCode() {
   }
 }
 
+function getEnvVersion(): 'release' | 'trial' | 'develop' {
+  // #ifdef MP-WEIXIN
+  const accountInfo = uni.getAccountInfoSync()
+  const env = accountInfo.miniProgram?.envVersion
+  if (env === 'release' || env === 'trial' || env === 'develop') {
+    return env
+  }
+  // #endif
+  return 'release'
+}
+
 async function generateCode() {
   loading.value = true
   try {
-    const res = await generateCheckInCodeAPI(props.activityId, 60)
+    const envVersion = getEnvVersion()
+    const res = await generateCheckInCodeAPI(props.activityId, 60, envVersion)
     checkInCode.value = res
     startCountdown()
     uni.showToast({ title: '二维码已生成', icon: 'success' })

@@ -23,6 +23,7 @@ export interface IActivityCheckInCode {
   validUntil: string
   isActive: boolean
   createdBy: string
+  wxaCodeUrl?: string
   createdAt: string
 }
 
@@ -40,10 +41,12 @@ export interface ICheckInStatus {
  * 生成签到二维码（管理员）
  * @param activityId 活动ID
  * @param validMinutes 有效期（分钟，默认60）
+ * @param envVersion 小程序环境版本: 'release' | 'trial' | 'develop'
  */
-export const generateCheckInCodeAPI = (activityId: string, validMinutes?: number) => {
+export const generateCheckInCodeAPI = (activityId: string, validMinutes?: number, envVersion?: 'release' | 'trial' | 'develop') => {
   return http.post<IActivityCheckInCode>(`/api/activities/${activityId}/check-in-code`, {
     validMinutes: validMinutes || 60,
+    envVersion: envVersion || 'release',
   })
 }
 
