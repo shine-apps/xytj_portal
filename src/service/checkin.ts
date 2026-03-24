@@ -10,6 +10,11 @@ export interface IActivityCheckIn {
   checkInDate: string
   consecutiveDays: number
   createdAt: string
+  user: {
+    id: string
+    nickname: string
+    avatarUrl: string | null
+  }
 }
 
 /**
@@ -90,4 +95,12 @@ export const getCheckInStatusAPI = (activityId: string) => {
  */
 export const getCheckInHistoryAPI = (activityId: string, params?: { page?: number; limit?: number }) => {
   return http.get<IActivityCheckIn[]>(`/api/activities/${activityId}/check-in/history`, params)
+}
+
+/**
+ * 获取今日签到人数（管理员）
+ * @param activityId 活动ID
+ */
+export const getTodayCheckInCountAPI = (activityId: string) => {
+  return http.get<{ count: number }>(`/api/activities/${activityId}/check-in/today-count`)
 }

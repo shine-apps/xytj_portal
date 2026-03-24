@@ -4,6 +4,7 @@ import type { IActivity, IActivityMember } from '@/service/activity'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
+import CheckInHistory from '@/components/CheckInHistory.vue'
 import CheckInQRCode from '@/components/CheckInQRCode.vue'
 import CheckInStatus from '@/components/CheckInStatus.vue'
 import { getActivityDetailAPI } from '@/service/activity'
@@ -24,6 +25,9 @@ const currentUserMember = ref<IActivityMember | null>(null)
 
 // Loading states
 const loading = ref(false)
+
+// TabBar
+const activeTab = ref('members')
 
 onLoad((options) => {
   if (options && options.id) {
@@ -163,9 +167,9 @@ function formatLocation(loc: any) {
       <!-- Content -->
       <view class="m-4 rounded-lg bg-white p-4 shadow-sm">
         <view class="mb-3 border-b border-gray-100 pb-2 text-lg text-gray-900 font-bold">
-          活动详情
+          活动介绍
         </view>
-        <rich-text :nodes="activity.content || activity.summary || '暂无详情'" class="text-gray-700 leading-relaxed" />
+        <rich-text :nodes="activity.summary || activity.content || '暂无详情'" class="text-gray-700 leading-relaxed" />
       </view>
 
       <!-- Check In Section - Admin View -->
@@ -180,12 +184,24 @@ function formatLocation(loc: any) {
         :activity-id="activityId"
       />
 
-      <!-- Members Panel Component -->
-      <ActivityMembersPanel
-        v-if="activityId"
-        ref="membersPanelRef"
-        :activity-id="activityId"
-      />
+      <!-- TabBar -->
+      <view class="m-4 rounded-lg bg-white shadow-sm">
+        <wd-tabs v-model="activeTab">
+          <wd-tab title="成员列表" name="members">
+            <ActivityMembersPanel
+              v-if="activityId"
+              ref="membersPanelRef"
+              :activity-id="activityId"
+            />
+          </wd-tab>
+          <wd-tab title="签到历史" name="history">
+            <CheckInHistory
+              v-if="activityId"
+              :activity-id="activityId"
+            />
+          </wd-tab>
+        </wd-tabs>
+      </view>
     </view>
   </view>
 </template>

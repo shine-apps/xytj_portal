@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { IActivityCheckInCode } from '@/service/checkin'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { generateCheckInCodeAPI, getCurrentCheckInCodeAPI, invalidateCheckInCodeAPI } from '@/service/checkin'
+import { generateCheckInCodeAPI, getCurrentCheckInCodeAPI, getTodayCheckInCountAPI, invalidateCheckInCodeAPI } from '@/service/checkin'
 
 const props = defineProps<{
   activityId: string
@@ -13,6 +13,7 @@ const countdown = ref(0)
 const todayCount = ref(0)
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null
+let todayCountTimer: ReturnType<typeof setInterval> | null = null
 
 const qrCodeUrl = computed(() => {
   if (!checkInCode.value)
@@ -87,6 +88,24 @@ async function fetchCurrentCode() {
   }
 }
 
+async function fetchTodayCount() {
+  try {
+    const res = await getTodayCheckInCountAPI(props.activityId)
+    todayCount.value = res.count
+  }
+  catch (error) {
+    console.error('获取今日签到人数失败', error)
+  }
+}
+
+function startTodayCountRefresh() {
+  if (todayCountTimer)
+    clearInterval(todayCountTimer)
+
+  fetchTodayCount()
+  todayCountTimer = setInterval(fetchTodayCount, 5000)
+}
+
 function getEnvVersion(): 'release' | 'trial' | 'develop' {
   // #ifdef MP-WEIXIN
   const accountInfo = uni.getAccountInfoSync()
@@ -136,11 +155,14 @@ async function invalidateCode() {
 onMounted(() => {
   console.log(props.activityId)
   fetchCurrentCode()
+  startTodayCountRefresh()
 })
 
 onUnmounted(() => {
   if (countdownTimer)
     clearInterval(countdownTimer)
+  if (todayCountTimer)
+    clearInterval(todayCountTimer)
 })
 </script>
 
