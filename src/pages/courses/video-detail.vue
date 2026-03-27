@@ -43,7 +43,7 @@ definePage({
     navigationBarTitleText: '视频详情',
   },
   // 视频详情页需要登录检查
-  excludeLoginPath: false,
+  excludeLoginPath: true,
 })
 
 const video = ref<IVideo | null>(null)
