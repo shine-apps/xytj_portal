@@ -75,19 +75,6 @@ function startCountdown() {
   countdownTimer = setInterval(updateCountdown, 1000)
 }
 
-async function fetchCurrentCode() {
-  try {
-    const res = await getCurrentCheckInCodeAPI(props.activityId)
-    checkInCode.value = res
-    if (res) {
-      startCountdown()
-    }
-  }
-  catch (error) {
-    console.error('获取二维码失败', error)
-  }
-}
-
 async function fetchTodayCount() {
   try {
     const res = await getTodayCheckInCountAPI(props.activityId)
@@ -103,7 +90,7 @@ function startTodayCountRefresh() {
     clearInterval(todayCountTimer)
 
   fetchTodayCount()
-  todayCountTimer = setInterval(fetchTodayCount, 5000)
+  todayCountTimer = setInterval(fetchTodayCount, 10000)
 }
 
 function getEnvVersion(): 'release' | 'trial' | 'develop' {
@@ -124,6 +111,7 @@ async function generateCode() {
     const res = await generateCheckInCodeAPI(props.activityId, 60, envVersion)
     checkInCode.value = res
     startCountdown()
+    startTodayCountRefresh()
     uni.showToast({ title: '二维码已生成', icon: 'success' })
   }
   catch (error) {
@@ -155,7 +143,12 @@ async function invalidateCode() {
 onMounted(() => {
   console.log(props.activityId)
   // 不自动获取二维码，需要用户手动点击生成
-  startTodayCountRefresh()
+  // 只有二维码显示时才按频率10秒一次拉取签到人数
+})
+
+onShow(() => {
+  if (!checkInCode.value)
+    fetchTodayCount()
 })
 
 onUnmounted(() => {

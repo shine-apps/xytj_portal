@@ -112,6 +112,19 @@ export const updateMemberRoleAPI = (activityId: string, userId: string, role: 'A
 }
 
 /**
+ * 更新成员昵称
+ * @param activityId 活动ID
+ * @param userId 用户ID
+ * @param nickname 昵称
+ */
+export const updateMemberNicknameAPI = (activityId: string, userId: string, nickname: string) => {
+  return http.patch<IActivityMember>(
+    `/api/activities/${activityId}/members/${userId}`,
+    { nickname },
+  )
+}
+
+/**
  * 移除成员
  * @param activityId 活动ID
  * @param userId 用户ID

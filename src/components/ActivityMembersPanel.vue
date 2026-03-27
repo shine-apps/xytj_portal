@@ -6,6 +6,7 @@ import {
   getActivityMembersAPI,
   joinActivityAPI,
   removeMemberAPI,
+  updateMemberNicknameAPI,
   updateMemberRoleAPI,
   updateMemberStatusAPI,
 } from '@/service/activity'
@@ -24,7 +25,11 @@ const members = ref<IActivityMember[]>([])
 const loading = ref(false)
 const showJoinPopup = ref(false)
 const showRoleActionSheet = ref(false)
+const showNicknamePopup = ref(false)
 const selectedMemberId = ref('')
+const nicknameForm = ref({
+  nickname: '',
+})
 const roleActions = ref([
   { name: '普通成员', value: 'GENERAL' },
   { name: '助教', value: 'ASSISTANT' },
@@ -171,6 +176,34 @@ async function handleRoleSelect({ item }: { item: { name: string, value: string 
   }
 }
 
+// 打开修改昵称弹窗
+function openNicknamePopup() {
+  const myInfo = myMemberInfo.value
+  if (!myInfo)
+    return
+  nicknameForm.value.nickname = myInfo.nickname || ''
+  showNicknamePopup.value = true
+}
+
+// 提交修改昵称
+async function submitNicknameUpdate() {
+  if (!nicknameForm.value.nickname.trim()) {
+    uni.showToast({ title: '请输入昵称', icon: 'none' })
+    return
+  }
+
+  try {
+    await updateMemberNicknameAPI(props.activityId, currentUserId.value as string, nicknameForm.value.nickname.trim())
+    uni.showToast({ title: '昵称已更新', icon: 'success' })
+    showNicknamePopup.value = false
+    await loadMembers()
+    emit('update')
+  }
+  catch (e) {
+    uni.showToast({ title: '修改失败', icon: 'none' })
+  }
+}
+
 defineExpose({
   loadMembers,
   myMemberInfo,
@@ -196,13 +229,19 @@ defineExpose({
       >
         加入审核中
       </button>
-      <button
-        v-else-if="joinStatus === 'JOINED'"
-        class="w-full rounded-full bg-green-100 py-2 text-green-600 font-bold"
-        disabled
-      >
-        已报名
-      </button>
+      <view v-else-if="joinStatus === 'JOINED'" class="w-full flex items-center space-x-2">
+        <view
+          class="flex-1 rounded-full bg-green-100 py-2 text-center text-sm text-green-600"
+        >
+          {{ myMemberInfo?.nickname || '用户' }}，欢迎加入
+        </view>
+        <button
+          class="rounded-full bg-blue-100 px-3 py-2 text-xs text-blue-600"
+          @click="openNicknamePopup"
+        >
+          修改昵称
+        </button>
+      </view>
       <button
         v-else-if="joinStatus === 'CREATOR'"
         class="w-full rounded-full bg-gray-100 py-2 text-gray-600 font-bold"
@@ -384,6 +423,41 @@ defineExpose({
       title="选择角色"
       @select="handleRoleSelect"
     />
+
+    <!-- Nickname Edit Popup -->
+    <wd-popup v-model="showNicknamePopup" position="bottom" custom-style="border-radius: 16px 16px 0 0; z-index: 100; overflow: hidden;">
+      <view class="bg-white p-6 pb-safe">
+        <view class="mb-6 text-center text-lg font-bold">
+          修改昵称
+        </view>
+
+        <view class="mb-6">
+          <text class="mb-1 block text-sm text-gray-700 font-medium">昵称</text>
+          <input
+            v-model="nicknameForm.nickname"
+            type="text"
+            class="border-gray-300 rounded-lg border-solid p-3 text-base"
+            placeholder="请输入您的昵称"
+            :maxlength="50"
+          >
+        </view>
+
+        <view class="flex space-x-3">
+          <button
+            class="flex-1 rounded-lg bg-gray-200 py-3 text-gray-700 font-bold"
+            @click="showNicknamePopup = false"
+          >
+            取消
+          </button>
+          <button
+            class="flex-1 rounded-lg bg-[#a33327] py-3 text-white font-bold"
+            @click="submitNicknameUpdate"
+          >
+            确认修改
+          </button>
+        </view>
+      </view>
+    </wd-popup>
 
     <view class="h-24" />
   </view>
