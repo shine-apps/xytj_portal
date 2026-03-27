@@ -54,7 +54,7 @@ export function http<T>(options: CustomRequestOptions) {
         !options.hideErrorToast
         && uni.showToast({
           icon: 'none',
-          title: (res.data as any).msg || '请求错误',
+          title: (res.data as any).msg || (res.data as any).message || '请求错误',
         })
         reject(res)
       },

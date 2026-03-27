@@ -154,7 +154,7 @@ async function invalidateCode() {
 
 onMounted(() => {
   console.log(props.activityId)
-  fetchCurrentCode()
+  // 不自动获取二维码，需要用户手动点击生成
   startTodayCountRefresh()
 })
 
