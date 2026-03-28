@@ -21,6 +21,13 @@ const settingsStore = useSettingsStore()
 
 const baseFeatures = [
   {
+    title: '线下活动',
+    desc: '线下活动报名',
+    icon: 'i-carbon-calendar',
+    url: '/pages/activities/activities',
+    showKey: null,
+  },
+  {
     title: '线上课程',
     desc: '传统武术视频教学',
     icon: 'i-carbon-video',
@@ -156,8 +163,8 @@ onLoad(() => {
         <view v-if="settingsStore.phoneNumber" class="space-y-3" @click="makePhoneCall">
           <view class="flex items-center">
             <text class="text-gray-700">咨询热线：</text>
-            <text class="px-2 text-gray-500">{{ formattedPhoneNumber }}</text>
             <text class="i-carbon-phone mr-3 text-green-500" />
+            <text class="px-2 text-gray-500">{{ formattedPhoneNumber }}</text>
           </view>
           <view class="flex items-center">
             <text class="text-gray-700">地址：</text>
