@@ -137,7 +137,7 @@ async function handleSubmit() {
   <view class="min-h-screen bg-[#f7f7f7]">
     <view class="p-4">
       <wd-form ref="formRef" :model="form" :rules="rules">
-        <wd-cell-group border>
+        <wd-cell-group border value="填入地点和时间，请翔云文武的老师过去上课">
           <wd-datetime-picker
             v-model="form.startTime"
             :default-value="Date.now()"

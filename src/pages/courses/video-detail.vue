@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import type { IVideo } from '@/service/collections'
+import { useSettingsStore } from '@/store/settings'
 import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 
@@ -46,10 +47,17 @@ definePage({
   excludeLoginPath: true,
 })
 
+const settingsStore = useSettingsStore()
 const video = ref<IVideo | null>(null)
 const collectionTitle = ref('')
 
-onLoad((options) => {
+onLoad(async (options) => {
+  await settingsStore.fetchSettings()
+  if (!settingsStore.showVideo) {
+    uni.switchTab({ url: '/pages/index/index' })
+    return
+  }
+
   if (options?.video) {
     try {
       // Parse video data passed from navigation

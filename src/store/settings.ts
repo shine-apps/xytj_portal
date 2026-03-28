@@ -17,12 +17,8 @@ export const useSettingsStore = defineStore(
       return map
     })
 
-    const hiddenVideo = computed(() => {
-      return settingsMap.value.hiddenVideo === 'true'
-    })
-
-    const hiddenActivity = computed(() => {
-      return settingsMap.value.hiddenActivity === 'true'
+    const showVideo = computed(() => {
+      return settingsMap.value.showVideo === 'true'
     })
 
     const phoneNumber = computed(() => {
@@ -54,8 +50,7 @@ export const useSettingsStore = defineStore(
       settings,
       isLoaded,
       settingsMap,
-      hiddenVideo,
-      hiddenActivity,
+      showVideo,
       phoneNumber,
       fetchSettings,
       refreshSettings,

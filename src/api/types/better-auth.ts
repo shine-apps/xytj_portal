@@ -8,6 +8,7 @@ export interface BetterAuthUser {
   createdAt: Date
   updatedAt: Date
   image?: string
+  role?: string | null
 }
 
 export interface BetterAuthSession {

@@ -34,15 +34,11 @@ const userRoles = computed(() => {
 const tabbarList = computed(() => {
   const roles = userRoles.value
   const settingsStore = useSettingsStore()
-  const hiddenVideo = settingsStore.hiddenVideo
-  const hiddenActivity = settingsStore.hiddenActivity
+  const showVideo = settingsStore.showVideo
 
   const list = baseTabbarList.filter((item) => {
     const path = item.pagePath as string
-    if (path === '/pages/courses/courses' && hiddenVideo) {
-      return false
-    }
-    if (path === '/pages/activities/activities' && hiddenActivity) {
+    if (path === '/pages/courses/courses' && !showVideo) {
       return false
     }
     return true

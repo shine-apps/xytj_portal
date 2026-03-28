@@ -120,9 +120,9 @@ export default defineManifestConfig({
   'mp-weixin': {
     appid: VITE_WX_APPID,
     setting: {
-      urlCheck: false,
+      urlCheck: true,
       // 是否启用 ES6 转 ES5
-      es6: true,
+      es6: false,
       minified: true,
     },
     optimization: {
@@ -134,6 +134,15 @@ export default defineManifestConfig({
     // styleIsolation: 'shared',
     usingComponents: true,
     // __usePrivacyCheck__: true,
+    permission: {
+      'scope.userLocation': {
+        desc: '您的位置信息将用于小程序位置接口的效果展示',
+      },
+    },
+    requiredPrivateInfos: [
+      'getLocation',
+      'chooseLocation',
+    ],
   },
   'mp-alipay': {
     usingComponents: true,

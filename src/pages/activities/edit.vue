@@ -94,7 +94,7 @@ function navigateToCropper() {
   // 活动封面使用 16:9 比例
   const aspectRatio = '16:9'
   uni.navigateTo({
-    url: `/pages/activities/img-cropper?aspect-ratio=${aspectRatio}`,
+    url: `/pages/tools/img-cropper?aspect-ratio=${aspectRatio}`,
   })
 }
 

@@ -1,7 +1,15 @@
 import type { IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { getSession, signInEmail, signInPhone, signInWePhone, signOut, updateUser, verifyPhoneOtp } from '@/api/better-auth'
+import {
+  getSession,
+  signInEmail,
+  signInPhone,
+  signInWePhone,
+  signOut,
+  updateUser,
+  verifyPhoneOtp,
+} from '@/api/better-auth'
 
 // 初始化状态
 const userInfoState: IUserInfoRes = {
@@ -78,14 +86,16 @@ export const useUserStore = defineStore(
     const fetchUserInfo = async () => {
       try {
         const res = await getSession()
+        console.log('获取用户信息', res)
         if (res && res.user) {
           const mappedUser: IUserInfoRes = {
             userId: res.user.id,
-            username: res.user.email || res.user.phoneNumber || '',
+            username: res.user.phoneNumber || res.user.email || '',
             nickname: res.user.name,
             avatar: res.user.image,
             phoneNumber: res.user.phoneNumber,
             email: res.user.email,
+            role: res.user.role || 'user',
           }
           setUserInfo(mappedUser)
         }
@@ -111,6 +121,43 @@ export const useUserStore = defineStore(
       return !!userInfo.value.userId
     })
 
+    /**
+     * 处理登录成功后的通用逻辑
+     * @param res 登录接口返回的数据
+     */
+    const handleLoginSuccess = (res: {
+      token: string
+      user: {
+        id: string
+        email?: string | null
+        phoneNumber?: string | null
+        name?: string | null
+        image?: string | null
+        role?: string | null
+      }
+    }) => {
+      if (!res || !res.token || !res.user) {
+        throw new Error('Login failed')
+      }
+
+      setTokenInfo({
+        token: res.token,
+        userId: res.user.id,
+        expiresAt: Date.now() + 7 * 24 * 3600 * 1000, // 默认7天过期
+      })
+
+      const mappedUser: IUserInfoRes = {
+        userId: res.user.id,
+        username: res.user.email || res.user.phoneNumber || '',
+        nickname: res.user.name,
+        avatar: res.user.image,
+        phoneNumber: res.user.phoneNumber || userInfoState.phone,
+        email: res.user.email || userInfoState.email,
+        role: res.user.role || 'user',
+      }
+      setUserInfo(mappedUser)
+    }
+
     const login = async (username: string, password: string) => {
       const isPhone = /^1[3-9]\d{9}$/.test(username)
       let res = null
@@ -124,74 +171,23 @@ export const useUserStore = defineStore(
         })
       }
 
-      if (res && res.token && res.user) {
-        setTokenInfo({
-          token: res.token,
-          userId: res.user.id,
-          expiresAt: Date.now() + 7 * 24 * 3600 * 1000, // 默认7天过期
-        })
-        const mappedUser: IUserInfoRes = {
-          userId: res.user.id,
-          username: res.user.email || res.user.phoneNumber || '',
-          nickname: res.user.name,
-          avatar: res.user.image,
-          phoneNumber: res.user.phoneNumber || userInfoState.phone,
-          email: res.user.email || userInfoState.email,
-        }
-        setUserInfo(mappedUser)
-      }
-      else {
-        throw new Error('Login failed')
-      }
+      handleLoginSuccess(res)
     }
 
     const loginBySendOtp = async (phoneNumber: string, code: string) => {
       const res = await verifyPhoneOtp({ phoneNumber, code })
-      if (res && res.token && res.user) {
-        setTokenInfo({
-          token: res.token,
-          userId: res.user.id,
-          expiresAt: Date.now() + 7 * 24 * 3600 * 1000, // 默认7天过期
-        })
-        const mappedUser: IUserInfoRes = {
-          userId: res.user.id,
-          username: res.user.email || res.user.phoneNumber || '',
-          nickname: res.user.name,
-          avatar: res.user.image,
-          phoneNumber: res.user.phoneNumber,
-          email: res.user.email,
-        }
-        setUserInfo(mappedUser)
-      }
-      else {
-        throw new Error('Login failed')
-      }
+      handleLoginSuccess(res)
     }
 
     const loginByWechatPhone = async (code: string) => {
       const res = await signInWePhone({ code })
-      if (res && res.token && res.user) {
-        setTokenInfo({
-          token: res.token,
-          userId: res.user.id,
-          expiresAt: Date.now() + 7 * 24 * 3600 * 1000, // 默认7天过期
-        })
-        const mappedUser: IUserInfoRes = {
-          userId: res.user.id,
-          username: res.user.email || res.user.phoneNumber || '',
-          nickname: res.user.name,
-          avatar: res.user.image,
-          phoneNumber: res.user.phoneNumber,
-          email: res.user.email,
-        }
-        setUserInfo(mappedUser)
-      }
-      else {
-        throw new Error('Login failed')
-      }
+      handleLoginSuccess(res)
     }
 
-    const updateProfile = async (data: { nickname?: string, avatar?: string }) => {
+    const updateProfile = async (data: {
+      nickname?: string
+      avatar?: string
+    }) => {
       const updateData: { name?: string, image?: string } = {}
       if (data.nickname)
         updateData.name = data.nickname

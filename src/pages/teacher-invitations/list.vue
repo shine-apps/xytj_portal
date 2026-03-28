@@ -8,7 +8,7 @@ import { useUserStore } from '@/store/user'
 
 definePage({
   style: {
-    navigationBarTitleText: '请老师上课',
+    navigationBarTitleText: '我的邀请列表',
   },
 })
 

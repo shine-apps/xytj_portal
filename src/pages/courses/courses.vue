@@ -28,14 +28,25 @@
 
 <script setup lang="ts">
 import type { ICollection } from '@/service/collections'
+import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { getCollectionsAPI } from '@/service/collections'
+import { useSettingsStore } from '@/store/settings'
 
 definePage({
   style: {
     navigationBarTitleText: '线上课程',
   },
+})
+
+const settingsStore = useSettingsStore()
+
+onLoad(async () => {
+  await settingsStore.fetchSettings()
+  if (!settingsStore.showVideo) {
+    uni.switchTab({ url: '/pages/index/index' })
+  }
 })
 
 const paging = ref<any>(null)

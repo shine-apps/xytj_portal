@@ -94,6 +94,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { getCollectionDetailAPI } from '@/service/collections'
+import { useSettingsStore } from '@/store/settings'
 
 definePage({
   style: {
@@ -103,6 +104,7 @@ definePage({
   excludeLoginPath: false,
 })
 
+const settingsStore = useSettingsStore()
 const paging = ref<any>(null)
 const collectionId = ref('')
 const collection = ref<ICollectionDetail | null>(null)
@@ -110,7 +112,13 @@ const videoList = ref<IVideo[]>([])
 const showVideoPlayer = ref(false)
 const currentVideo = ref<IVideo | null>(null)
 
-onLoad((options) => {
+onLoad(async (options) => {
+  await settingsStore.fetchSettings()
+  if (!settingsStore.showVideo) {
+    uni.switchTab({ url: '/pages/index/index' })
+    return
+  }
+
   if (options?.id) {
     collectionId.value = options.id
     // Manually trigger refresh after getting ID

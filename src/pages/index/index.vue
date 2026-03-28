@@ -25,37 +25,27 @@ const baseFeatures = [
     desc: '传统武术视频教学',
     icon: 'i-carbon-video',
     url: '/pages/courses/courses',
-    hiddenKey: 'hiddenVideo' as const,
-  },
-  {
-    title: '线下活动',
-    desc: '武术交流活动, 线下集训报名',
-    icon: 'i-carbon-location',
-    url: '/pages/activities/activities',
-    hiddenKey: 'hiddenActivity' as const,
+    showKey: 'showVideo' as const,
   },
   {
     title: '请老师上课',
     desc: '邀请老师来上课',
     icon: 'i-carbon-user-speaker',
     url: '/pages/teacher-invitations/create',
-    hiddenKey: null,
+    showKey: null,
   },
   // {
   //   title: '学员风采',
   //   desc: '优秀学员展示',
   //   icon: 'i-carbon-star',
   //   url: '',
-  //   hiddenKey: null,
+  //   showKey: null,
   // },
 ]
 
 const features = computed(() => {
   return baseFeatures.filter((item) => {
-    if (item.hiddenKey === 'hiddenVideo' && settingsStore.hiddenVideo) {
-      return false
-    }
-    if (item.hiddenKey === 'hiddenActivity' && settingsStore.hiddenActivity) {
+    if (item.showKey === 'showVideo' && !settingsStore.showVideo) {
       return false
     }
     return true

@@ -25,7 +25,7 @@
         <wd-cell v-if="isLoggedIn" title="个人信息" is-link to="/pages/profile/profile" border />
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
-        <wd-cell v-if="isLoggedIn" title="上课申请列表" is-link to="/pages/teacher-invitations/list" border />
+        <wd-cell v-if="isLoggedIn" title="我的上课邀请" is-link to="/pages/teacher-invitations/list" border />
         <wd-cell v-if="userStore.isAdmin" title="管理后台" icon="computer" is-link border @click="openAdminWebview" />
       </wd-cell-group>
     </view>
@@ -55,6 +55,7 @@ const isLoggedIn = computed(() => userStore.hasValidLogin)
 const defaultAvatar = '/static/images/default-avatar.png'
 
 onShow(() => {
+  console.log('onShow', userStore.hasValidLogin, userStore.hasUserInfo)
   if (userStore.hasValidLogin && !userStore.hasUserInfo) {
     userStore.fetchUserInfo()
   }
