@@ -204,17 +204,18 @@ function formatLocation(loc: any) {
 
         <!-- 活动标题和详情 -->
         <view class="absolute bottom-0 left-0 right-0 bg-black/40 p-4 backdrop-blur-sm">
-          <text class="mb-2 block text-2xl text-white font-bold">{{ activity.title }}</text>
+          <text class="mb-2 block text-2xl text-white font-bold" selectable user-select>{{ activity.title }}</text>
           <rich-text
             :nodes="activity.summary"
-            class="line-clamp-2 text-sm text-white/90 leading-relaxed"
+            class="line-clamp-4 select-all text-sm text-white/90 leading-relaxed"
+            selectable
           />
         </view>
         <!-- 管理菜单 -->
         <view v-if="isActivityAdmin" class="absolute right-4 top-4">
           <wd-popover mode="menu" :content="adminMenu" placement="left-start" @menuclick="handleAdminMenuClick">
             <view
-              class="rounded-full bg-white/80 p-2 backdrop-blur-sm transition-opacity active:opacity-80"
+              class="rounded-full bg-white/60 p-2 backdrop-blur-sm transition-opacity active:opacity-80"
             >
               <view class="i-carbon-overflow-menu-vertical text-lg text-gray-800" />
             </view>
