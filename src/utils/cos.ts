@@ -48,8 +48,9 @@ function getCosInstance(authData: CosAuthData) {
  * Upload file to COS
  * @param filePath Local file path
  * @param fileName File name (optional)
+ * @param cacheMaxAge Cache max age in seconds (default: 31536000 = 1 year)
  */
-export async function uploadToCos(filePath: string, fileName?: string) {
+export async function uploadToCos(filePath: string, fileName?: string, cacheMaxAge: number = 31536000) {
   try {
     // 1. Get credentials
     const authData = await new Promise<CosAuthData>((resolve, reject) => {
@@ -83,6 +84,9 @@ export async function uploadToCos(filePath: string, fileName?: string) {
         Region: authData.region,
         Key: key,
         FilePath: filePath,
+        Headers: {
+          'Cache-Control': `max-age=${cacheMaxAge}`,
+        },
         onProgress: (info: any) => {
           console.log('Upload progress:', info)
         },
@@ -106,6 +110,9 @@ export async function uploadToCos(filePath: string, fileName?: string) {
           Region: authData.region,
           Key: key,
           Body: body,
+          Headers: {
+            'Cache-Control': `max-age=${cacheMaxAge}`,
+          },
           onProgress: (info: any) => {
             console.log('Upload progress:', info)
           },

@@ -16,10 +16,13 @@ definePage({
 
 const paging = ref<any>(null)
 const activities = ref<IActivity[]>([])
+const searchKeyword = ref('')
 
 async function queryList(pageNo: number, pageSize: number) {
   try {
-    const res = await getActivitiesAPI()
+    const res = await getActivitiesAPI({
+      keyword: searchKeyword.value || undefined,
+    })
     // Since the API returns all data, we just return it on the first page
     if (pageNo === 1) {
       paging.value.complete(res)
@@ -31,6 +34,10 @@ async function queryList(pageNo: number, pageSize: number) {
   catch (e) {
     paging.value.complete(false)
   }
+}
+
+function onSearch() {
+  paging.value.reload()
 }
 
 function navigateToDetail(id: string) {
@@ -86,6 +93,17 @@ function formatLocation(loc: any) {
       />
 
       <view class="relative z-8 p-4">
+        <!-- 搜索框 -->
+        <view class="mb-4">
+          <wd-search
+            v-model="searchKeyword"
+            placeholder="搜索活动标题"
+            hide-cancel
+            @search="onSearch"
+            @clear="onSearch"
+          />
+        </view>
+
         <view class="mb-6 flex items-center justify-center">
           <view class="h-[1px] w-12 bg-[#a33327] opacity-50" />
           <text class="mx-4 text-xl text-[#1a1a1a] font-bold tracking-widest">近期活动</text>

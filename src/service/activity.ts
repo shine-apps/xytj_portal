@@ -54,7 +54,7 @@ export interface IActivityMember {
  * 获取活动列表
  * @param params 查询参数
  */
-export const getActivitiesAPI = (params?: { collectionId?: string }) => {
+export const getActivitiesAPI = (params?: { collectionId?: string, keyword?: string }) => {
   return http.get<IActivity[]>('/api/activities', params)
 }
 

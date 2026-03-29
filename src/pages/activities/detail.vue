@@ -201,17 +201,14 @@ function formatLocation(loc: any) {
           mode="widthFix"
         />
         <!-- 渐变遮罩 -->
-        <view class="absolute inset-0 from-black/70 via-black/30 to-transparent bg-gradient-to-t" />
-        <!-- 活动介绍半透明层 -->
-        <view class="absolute inset-x-4 bottom-16 max-h-40 overflow-hidden rounded-lg bg-black/40 p-4 backdrop-blur-sm">
+
+        <!-- 活动标题和详情 -->
+        <view class="absolute bottom-0 left-0 right-0 bg-black/40 p-4 backdrop-blur-sm">
+          <text class="mb-2 block text-2xl text-white font-bold">{{ activity.title }}</text>
           <rich-text
-            :nodes="activity.summary || activity.content || '暂无详情'"
-            class="line-clamp-4 text-sm text-white/90 leading-relaxed"
+            :nodes="activity.summary"
+            class="line-clamp-2 text-sm text-white/90 leading-relaxed"
           />
-        </view>
-        <!-- 标题 -->
-        <view class="absolute bottom-4 left-4 right-4 text-white">
-          <text class="text-2xl font-bold">{{ activity.title }}</text>
         </view>
         <!-- 管理菜单 -->
         <view v-if="isActivityAdmin" class="absolute right-4 top-4">
@@ -284,7 +281,7 @@ function formatLocation(loc: any) {
           </wd-tab>
           <!-- 相册Tab - 只有活动成员可见 -->
 
-          <wd-tab title="签到历史" name="history" lazy>
+          <wd-tab title="签到记录" name="history" lazy>
             <CheckInHistory
               v-if="activeTab === 'history'"
               :activity-id="activityId"
