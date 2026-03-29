@@ -82,29 +82,10 @@ defineExpose({
 </script>
 
 <template>
-  <view class="scan-check-in">
-    <button class="scan-btn" :loading="loading" @click="scanCode">
+  <view class="p-4">
+    <button class="h-12 w-full flex items-center justify-center rounded-lg bg-#a33327 text-base font-medium text-white" :loading="loading" @click="scanCode">
       <text class="i-carbon-scan-alt mr-2 text-lg" />
       <text>扫码签到</text>
     </button>
   </view>
 </template>
-
-<style scoped lang="scss">
-.scan-check-in {
-  padding: 16px;
-}
-
-.scan-btn {
-  width: 100%;
-  height: 48px;
-  background: #a33327;
-  color: #fff;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>

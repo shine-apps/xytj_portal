@@ -33,14 +33,7 @@ function onMessage(e: any) {
 </script>
 
 <template>
-  <view class="webview-container">
+  <view class="h-screen w-full">
     <web-view :src="url" @message="onMessage" />
   </view>
 </template>
-
-<style lang="scss" scoped>
-.webview-container {
-  width: 100%;
-  height: 100vh;
-}
-</style>

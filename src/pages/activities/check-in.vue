@@ -82,200 +82,53 @@ function goToHome() {
 </script>
 
 <template>
-  <view class="check-in-page">
-    <view class="content">
+  <view class="min-h-screen flex items-center justify-center bg-gray-100">
+    <view class="w-full px-8 py-8">
       <!-- 加载中 -->
-      <view v-if="loading" class="loading-section">
-        <view class="loading-spinner" />
-        <text class="loading-text">正在签到...</text>
+      <view v-if="loading" class="flex flex-col items-center gap-4">
+        <view class="h-12 w-12 animate-spin border-3 border-gray-100 border-t-#a33327 rounded-full" />
+        <text class="text-sm text-gray-600">正在签到...</text>
       </view>
 
       <!-- 签到结果 -->
-      <view v-else-if="result" class="result-section">
+      <view v-else-if="result" class="flex flex-col items-center rounded-2xl bg-white p-10 shadow-lg">
         <!-- 成功状态 -->
         <template v-if="result.success">
-          <view class="success-icon">
+          <view class="mb-4">
             <text class="i-carbon-checkmark-filled text-6xl text-green-500" />
           </view>
-          <text class="result-title success">签到成功</text>
-          <view class="consecutive-days">
-            <text class="days-number">{{ result.consecutiveDays }}</text>
-            <text class="days-label">连续签到天数</text>
+          <text class="mb-6 text-xl text-green-500 font-semibold">签到成功</text>
+          <view class="mb-6 flex flex-col items-center gap-1 rounded-xl bg-green-50 px-8 py-4">
+            <text class="text-4xl text-#a33327 font-bold">{{ result.consecutiveDays }}</text>
+            <text class="text-xs text-gray-600">连续签到天数</text>
           </view>
         </template>
 
         <!-- 失败状态 -->
         <template v-else>
-          <view class="error-icon">
+          <view class="mb-4">
             <text class="i-carbon-close-filled text-6xl text-red-500" />
           </view>
-          <text class="result-title error">签到失败</text>
-          <text class="error-message">{{ result.message }}</text>
+          <text class="mb-6 text-xl text-red-500 font-semibold">签到失败</text>
+          <text class="mb-6 text-center text-sm text-gray-600">{{ result.message }}</text>
         </template>
 
         <!-- 操作按钮 -->
-        <view class="actions">
-          <button v-if="activityId" class="action-btn primary" @click="goToActivityDetail">
+        <view class="w-full flex flex-col gap-3">
+          <button v-if="activityId" class="h-12 w-full flex items-center justify-center rounded-lg bg-#a33327 text-base text-white font-medium" @click="goToActivityDetail">
             查看活动详情
           </button>
-          <button class="action-btn secondary" @click="goToHome">
+          <button class="h-12 w-full flex items-center justify-center rounded-lg bg-gray-100 text-base text-gray-600 font-medium" @click="goToHome">
             返回首页
           </button>
         </view>
       </view>
 
       <!-- 无参数状态 -->
-      <view v-else class="empty-section">
+      <view v-else class="flex flex-col items-center gap-4">
         <text class="i-carbon-qr-code text-6xl text-gray-300" />
-        <text class="empty-text">请使用微信扫码签到</text>
+        <text class="text-sm text-gray-400">请使用微信扫码签到</text>
       </view>
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.check-in-page {
-  min-height: 100vh;
-  background: #f7f7f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.content {
-  width: 100%;
-  padding: 32px;
-}
-
-// 加载中
-.loading-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-
-  .loading-spinner {
-    width: 48px;
-    height: 48px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #a33327;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  .loading-text {
-    font-size: 14px;
-    color: #666;
-  }
-}
-
-// 结果区域
-.result-section {
-  background: #fff;
-  border-radius: 16px;
-  padding: 40px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-
-  .success-icon,
-  .error-icon {
-    margin-bottom: 16px;
-  }
-
-  .result-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 24px;
-
-    &.success {
-      color: #22c55e;
-    }
-
-    &.error {
-      color: #ef4444;
-    }
-  }
-
-  .consecutive-days {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 16px 32px;
-    background: #f0fdf4;
-    border-radius: 12px;
-    margin-bottom: 24px;
-
-    .days-number {
-      font-size: 36px;
-      font-weight: 700;
-      color: #a33327;
-    }
-
-    .days-label {
-      font-size: 12px;
-      color: #666;
-    }
-  }
-
-  .error-message {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 24px;
-    text-align: center;
-  }
-}
-
-// 操作按钮
-.actions {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  .action-btn {
-    width: 100%;
-    height: 48px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &.primary {
-      background: #a33327;
-      color: #fff;
-    }
-
-    &.secondary {
-      background: #f5f5f5;
-      color: #666;
-    }
-  }
-}
-
-// 空状态
-.empty-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-
-  .empty-text {
-    font-size: 14px;
-    color: #999;
-  }
-}
-</style>

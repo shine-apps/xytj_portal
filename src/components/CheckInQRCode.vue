@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { IActivityCheckInCode } from '@/service/checkin'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { generateCheckInCodeAPI, getCurrentCheckInCodeAPI, getTodayCheckInCountAPI, invalidateCheckInCodeAPI } from '@/service/checkin'
+import { generateCheckInCodeAPI, getTodayCheckInCountAPI, invalidateCheckInCodeAPI } from '@/service/checkin'
 
 const props = defineProps<{
   activityId: string
 }>()
+
+const emit = defineEmits(['update:checkInCode'])
 
 const checkInCode = ref<IActivityCheckInCode | null>(null)
 const loading = ref(false)
@@ -110,6 +112,7 @@ async function generateCode() {
     const envVersion = getEnvVersion()
     const res = await generateCheckInCodeAPI(props.activityId, 60, envVersion)
     checkInCode.value = res
+    emit('update:checkInCode', res)
     startCountdown()
     startTodayCountRefresh()
     uni.showToast({ title: '二维码已生成', icon: 'success' })
@@ -130,6 +133,7 @@ async function invalidateCode() {
   try {
     await invalidateCheckInCodeAPI(props.activityId, checkInCode.value.id)
     checkInCode.value = null
+    emit('update:checkInCode', null)
     if (countdownTimer)
       clearInterval(countdownTimer)
     uni.showToast({ title: '已停止签到', icon: 'success' })
@@ -141,14 +145,7 @@ async function invalidateCode() {
 }
 
 onMounted(() => {
-  console.log(props.activityId)
-  // 不自动获取二维码，需要用户手动点击生成
-  // 只有二维码显示时才按频率10秒一次拉取签到人数
-})
-
-onShow(() => {
-  if (!checkInCode.value)
-    fetchTodayCount()
+  console.log('CheckInQRCode mounted with activityId:', props.activityId)
 })
 
 onUnmounted(() => {
@@ -157,173 +154,56 @@ onUnmounted(() => {
   if (todayCountTimer)
     clearInterval(todayCountTimer)
 })
+
+defineExpose({
+  generateCodeIfNotExist() {
+    if (!checkInCode.value)
+      generateCode()
+  },
+})
 </script>
 
 <template>
-  <view class="check-in-qr-code">
-    <view class="qr-card">
-      <view class="qr-header">
-        <text class="title">签到二维码</text>
-        <view v-if="isValid" class="countdown">
+  <view class="p-4">
+    <view class="rounded-xl bg-white p-5 shadow-sm">
+      <view class="mb-4 flex items-center justify-between">
+        <text class="text-base text-gray-800 font-semibold">签到二维码</text>
+        <view v-if="isValid" class="flex items-center gap-1 rounded bg-red-50 px-2 py-1">
           <text class="i-carbon-time text-[#a33327]" />
-          <text class="time">{{ formatCountdown }}</text>
+          <text class="text-sm text-[#a33327] font-semibold">{{ formatCountdown }}</text>
         </view>
       </view>
 
-      <view class="qr-content">
+      <view class="flex flex-col items-center py-5">
         <template v-if="isValid">
-          <image :src="qrCodeUrl" class="qr-image" mode="aspectFit" />
-          <text class="qr-tip">请成员使用微信扫码签到</text>
+          <image :src="qrCodeUrl" class="h-50 w-50 rounded-lg" mode="aspectFit" />
+          <text class="mt-3 text-sm text-gray-600">请成员使用微信扫码签到</text>
         </template>
         <template v-else>
-          <view class="no-code">
+          <view class="flex flex-col items-center gap-3 py-10">
             <text class="i-carbon-qr-code text-6xl text-gray-300" />
-            <text class="no-code-text">暂无有效二维码</text>
+            <text class="text-sm text-gray-400">暂无有效二维码</text>
           </view>
         </template>
       </view>
 
-      <view class="qr-actions">
-        <button v-if="!isValid" class="action-btn primary" :loading="loading" @click="generateCode">
+      <view class="mt-4">
+        <button v-if="!isValid" class="h-11 w-full flex items-center justify-center rounded-lg bg-#a33327 text-base text-white font-medium" :loading="loading" @click="generateCode">
           <text class="i-carbon-renew mr-1" />
           生成二维码
         </button>
-        <button v-else class="action-btn danger" @click="invalidateCode">
+        <button v-else class="h-11 w-full flex items-center justify-center rounded-lg bg-red-50 text-base text-[#a33327] font-medium" @click="invalidateCode">
           <text class="i-carbon-close mr-1" />
           停止签到
         </button>
       </view>
 
-      <view class="stats">
-        <view class="stat-item">
-          <text class="stat-value">{{ todayCount }}</text>
-          <text class="stat-label">今日签到</text>
+      <view class="mt-4 flex justify-center border-t border-gray-100 pt-4">
+        <view class="flex flex-col items-center gap-1">
+          <text class="text-2xl text-[#a33327] font-bold">{{ todayCount }}</text>
+          <text class="text-xs text-gray-400">今日签到</text>
         </view>
       </view>
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.check-in-qr-code {
-  padding: 16px;
-}
-
-.qr-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.qr-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-
-  .title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-  }
-
-  .countdown {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #fef2f2;
-    padding: 4px 8px;
-    border-radius: 4px;
-
-    .time {
-      font-size: 14px;
-      font-weight: 600;
-      color: #a33327;
-    }
-  }
-}
-
-.qr-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px 0;
-
-  .qr-image {
-    width: 200px;
-    height: 200px;
-    border-radius: 8px;
-  }
-
-  .qr-tip {
-    margin-top: 12px;
-    font-size: 13px;
-    color: #666;
-  }
-
-  .no-code {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 40px 0;
-
-    .no-code-text {
-      font-size: 14px;
-      color: #999;
-    }
-  }
-}
-
-.qr-actions {
-  margin-top: 16px;
-
-  .action-btn {
-    width: 100%;
-    height: 44px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    &.primary {
-      background: #a33327;
-      color: #fff;
-    }
-
-    &.danger {
-      background: #fef2f2;
-      color: #a33327;
-    }
-  }
-}
-
-.stats {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: center;
-
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #a33327;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #999;
-    }
-  }
-}
-</style>

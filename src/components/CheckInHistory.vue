@@ -10,11 +10,12 @@ const props = defineProps<{
 
 const history = ref<IActivityCheckIn[]>([])
 const loading = ref(false)
+const refreshing = ref(false)
 const hasMore = ref(true)
 const page = ref(1)
 const limit = 20
 
-async function loadHistory(reset = false) {
+async function loadHistory(reset = false, isRefresh = false) {
   if (!props.activityId)
     return
   if (reset) {
@@ -25,7 +26,12 @@ async function loadHistory(reset = false) {
   if (!hasMore.value && !reset)
     return
 
-  loading.value = true
+  if (isRefresh) {
+    refreshing.value = true
+  }
+  else {
+    loading.value = true
+  }
   try {
     const res = await getCheckInHistoryAPI(props.activityId, { page: page.value, limit })
     if (reset) {
@@ -43,7 +49,13 @@ async function loadHistory(reset = false) {
   }
   finally {
     loading.value = false
+    refreshing.value = false
   }
+}
+
+// 刷新数据
+async function onRefresh() {
+  await loadHistory(true, true)
 }
 
 watch(() => props.activityId, (newId) => {
@@ -62,227 +74,74 @@ function onLoadMore() {
 </script>
 
 <template>
-  <view class="check-in-history">
-    <view class="history-card">
-      <view class="history-header">
-        <text class="title">签到历史</text>
-        <text class="subtitle">共 {{ history.length }} 条记录</text>
+  <view class="p-4">
+    <view class="rounded-xl bg-white p-4 shadow-sm">
+      <view class="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
+        <view class="flex items-center gap-2">
+          <text class="text-base text-gray-800 font-semibold">签到历史</text>
+          <text class="text-xs text-gray-400">共 {{ history.length }} 条记录</text>
+        </view>
+        <wd-button
+          type="icon"
+          size="small"
+          :loading="refreshing"
+          @click="onRefresh"
+        >
+          <text class="i-carbon-renew text-lg" />
+        </wd-button>
       </view>
 
-      <view v-if="loading && history.length === 0" class="loading-state">
-        <view class="loading-spinner" />
-        <text class="loading-text">加载中...</text>
+      <view v-if="loading && history.length === 0" class="flex flex-col items-center gap-3 py-10">
+        <view class="h-8 w-8 animate-spin border-2 border-gray-100 border-t-#a33327 rounded-full" />
+        <text class="text-sm text-gray-400">加载中...</text>
       </view>
 
-      <view v-else-if="history.length === 0" class="empty-state">
+      <view v-else-if="history.length === 0" class="flex flex-col items-center gap-3 py-10">
         <text class="i-carbon-calendar text-4xl text-gray-300" />
-        <text class="empty-text">暂无签到记录</text>
+        <text class="text-sm text-gray-400">暂无签到记录</text>
       </view>
 
-      <view v-else class="history-list">
+      <view v-else class="flex flex-col gap-3">
         <view
           v-for="item in history"
           :key="item.id"
-          class="history-item"
+          class="flex items-center gap-3 rounded-lg bg-gray-50 p-3"
         >
-          <view class="item-left">
+          <view class="flex-shrink-0">
             <image
               v-if="item.user?.avatarUrl"
               :src="item.user.avatarUrl"
-              class="user-avatar"
+              class="h-12 w-12 rounded-full bg-gray-100"
               mode="aspectFill"
             />
-            <view v-else class="user-avatar-placeholder">
+            <view v-else class="h-12 w-12 flex items-center justify-center rounded-full bg-gray-100">
               <text class="i-carbon-user text-lg text-gray-400" />
             </view>
           </view>
-          <view class="item-center">
-            <text class="user-name">{{ item.user?.nickname || '未知用户' }}</text>
-            <view class="check-in-info">
-              <text class="check-in-date">{{ formatDate(item.checkInDate) }}</text>
-              <text class="check-in-time">{{ dayjs(item.createdAt).format('HH:mm') }}</text>
+          <view class="flex flex-1 flex-col gap-1">
+            <text class="text-base text-gray-800 font-medium">{{ item.user?.nickname || '未知用户' }}</text>
+            <view class="flex items-center gap-2">
+              <text class="text-xs text-gray-500">{{ formatDate(item.checkInDate) }}</text>
+              <text class="text-xs text-gray-400">{{ dayjs(item.createdAt).format('HH:mm') }}</text>
             </view>
           </view>
-          <view class="item-right">
-            <view class="consecutive-badge">
+          <view class="flex-shrink-0">
+            <view class="flex items-center gap-1 rounded-full bg-#a33327 px-2 py-1">
               <text class="i-carbon-fire text-xs text-white" />
-              <text class="days-text">{{ item.consecutiveDays }}天</text>
+              <text class="text-xs text-white">{{ item.consecutiveDays }}天</text>
             </view>
           </view>
         </view>
 
-        <view v-if="hasMore" class="load-more" @click="onLoadMore">
-          <text v-if="loading" class="load-text">加载中...</text>
-          <text v-else class="load-text">点击加载更多</text>
+        <view v-if="hasMore" class="py-3 text-center active:opacity-70" @click="onLoadMore">
+          <text v-if="loading" class="text-xs text-gray-400">加载中...</text>
+          <text v-else class="text-xs text-gray-400">点击加载更多</text>
         </view>
 
-        <view v-else-if="history.length > 0" class="no-more">
-          <text class="no-more-text">没有更多了</text>
+        <view v-else-if="history.length > 0" class="py-3 text-center">
+          <text class="text-xs text-gray-400">没有更多了</text>
         </view>
       </view>
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.check-in-history {
-  padding: 16px;
-}
-
-.history-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.history-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
-
-  .title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-  }
-
-  .subtitle {
-    font-size: 12px;
-    color: #999;
-  }
-}
-
-.loading-state,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 0;
-  gap: 12px;
-
-  .loading-spinner {
-    width: 32px;
-    height: 32px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #a33327;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  .loading-text,
-  .empty-text {
-    font-size: 14px;
-    color: #999;
-  }
-}
-
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.history-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f9f9f9;
-  border-radius: 8px;
-
-  .item-left {
-    .user-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #f0f0f0;
-    }
-
-    .user-avatar-placeholder {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #f0f0f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
-
-  .item-center {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    .user-name {
-      font-size: 15px;
-      color: #333;
-      font-weight: 500;
-    }
-
-    .check-in-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .check-in-date {
-        font-size: 12px;
-        color: #666;
-      }
-
-      .check-in-time {
-        font-size: 12px;
-        color: #999;
-      }
-    }
-  }
-
-  .item-right {
-    .consecutive-badge {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      background: #a33327;
-      border-radius: 12px;
-
-      .days-text {
-        font-size: 11px;
-        color: #fff;
-      }
-    }
-  }
-}
-
-.load-more,
-.no-more {
-  text-align: center;
-  padding: 12px 0;
-
-  .load-text,
-  .no-more-text {
-    font-size: 12px;
-    color: #999;
-  }
-}
-
-.load-more {
-  &:active {
-    opacity: 0.7;
-  }
-}
-</style>

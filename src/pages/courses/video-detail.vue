@@ -35,9 +35,9 @@
 
 <script setup lang="ts">
 import type { IVideo } from '@/service/collections'
-import { useSettingsStore } from '@/store/settings'
 import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
+import { useSettingsStore } from '@/store/settings'
 
 definePage({
   style: {

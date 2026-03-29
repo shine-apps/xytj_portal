@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { uploadToCos } from '@/utils/cos'
 
-type TfileType = 'image' | 'file'
+type TfileType = 'image' | 'video' | 'file'
 type TImage = 'png' | 'jpg' | 'jpeg' | 'webp' | '*'
 type TFile = 'doc' | 'docx' | 'ppt' | 'zip' | 'xls' | 'xlsx' | 'txt' | TImage
 
@@ -37,17 +37,6 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
       return
     }
 
-    // const fileExtension = file?.tempFiles?.name?.split('.').pop()?.toLowerCase()
-    // const isTypeValid = accept.some((type) => type === '*' || type.toLowerCase() === fileExtension)
-
-    // if (!isTypeValid) {
-    //   uni.showToast({
-    //     title: `仅支持 ${accept.join(', ')} 格式的文件`,
-    //     icon: 'none',
-    //   })
-    //   return
-    // }
-
     loading.value = true
     uploadToCos(tempFilePath)
       .then((res) => {
@@ -70,11 +59,6 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
       count: 1,
       success: (res: any) => {
         console.log('File selected successfully:', res)
-        // 小程序中res:{errMsg: "chooseImage:ok", tempFiles: [{fileType: "image", size: 48976, tempFilePath: "http://tmp/5iG1WpIxTaJf3ece38692a337dc06df7eb69ecb49c6b.jpeg"}]}
-        // h5中res:{errMsg: "chooseImage:ok", tempFilePaths: "blob:http://localhost:9000/f74ab6b8-a14d-4cb6-a10d-fcf4511a0de5", tempFiles: [File]}
-        // h5的File有以下字段：{name: "girl.jpeg", size: 48976, type: "image/jpeg"}
-        // App中res:{errMsg: "chooseImage:ok", tempFilePaths: "file:///Users/feige/xxx/gallery/1522437259-compressed-IMG_0006.jpg", tempFiles: [File]}
-        // App的File有以下字段：{path: "file:///Users/feige/xxx/gallery/1522437259-compressed-IMG_0006.jpg", size: 48976}
         let tempFilePath = ''
         let size = 0
         // #ifdef MP-WEIXIN
@@ -105,6 +89,22 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
       // #ifndef MP-WEIXIN
       uni.chooseImage(chooseFileOptions)
       // #endif
+    }
+    else if (fileType === 'video') {
+      // 微信小程序和非微信小程序都使用 uni.chooseVideo
+      uni.chooseVideo({
+        sourceType: ['album', 'camera'],
+        maxDuration: 60,
+        success: (res: any) => {
+          handleFileChoose({ tempFilePath: res.tempFilePath, size: res.size || 0 })
+        },
+        fail: (err: any) => {
+          console.error('Video selection failed:', err)
+          uni.showToast({ title: '选择视频失败', icon: 'none' })
+          error.value = err
+          onError?.(err)
+        },
+      })
     }
     else {
       uni.chooseFile({

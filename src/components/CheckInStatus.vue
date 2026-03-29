@@ -39,25 +39,25 @@ defineExpose({
 </script>
 
 <template>
-  <view class="check-in-status">
-    <view class="status-card">
-      <view class="status-header">
-        <text class="title">每日签到</text>
-        <view v-if="status?.todayCheckedIn" class="checked-badge">
+  <view class="p-4">
+    <view class="rounded-xl bg-white p-5 shadow-sm">
+      <view class="mb-4 flex items-center justify-between">
+        <text class="text-base text-gray-800 font-semibold">每日签到</text>
+        <view v-if="status?.todayCheckedIn" class="flex items-center gap-1 rounded-xl bg-green-500 px-2 py-1">
           <text class="i-carbon-checkmark-filled text-xs text-white" />
           <text class="text-xs text-white">已签到</text>
         </view>
       </view>
 
-      <view class="status-stats">
-        <view class="stat-item">
-          <text class="stat-value">{{ status?.consecutiveDays || 0 }}</text>
-          <text class="stat-label">连续签到</text>
+      <view class="mb-5 flex items-center justify-center gap-8 rounded-lg bg-gray-50 p-4">
+        <view class="flex flex-col items-center gap-1">
+          <text class="text-2xl text-[#a33327] font-bold">{{ status?.consecutiveDays || 0 }}</text>
+          <text class="text-xs text-gray-400">连续签到</text>
         </view>
-        <view class="stat-divider" />
-        <view class="stat-item">
-          <text class="stat-value">{{ status?.totalDays || 0 }}</text>
-          <text class="stat-label">累计签到</text>
+        <view class="h-10 w-px bg-gray-200" />
+        <view class="flex flex-col items-center gap-1">
+          <text class="text-2xl text-[#a33327] font-bold">{{ status?.totalDays || 0 }}</text>
+          <text class="text-xs text-gray-400">累计签到</text>
         </view>
       </view>
 
@@ -67,102 +67,11 @@ defineExpose({
         @success="onCheckInSuccess"
       />
 
-      <view v-else class="checked-in-tip">
+      <view v-else class="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-5">
         <text class="i-carbon-checkmark-outline text-2xl text-green-500" />
-        <text class="tip-text">今日已完成签到</text>
-        <text class="time-text">{{ new Date(status?.todayCheckIn?.createdAt || '').toLocaleTimeString() }}</text>
+        <text class="text-sm text-green-500 font-medium">今日已完成签到</text>
+        <text class="text-xs text-gray-400">{{ new Date(status?.todayCheckIn?.createdAt || '').toLocaleTimeString() }}</text>
       </view>
     </view>
   </view>
 </template>
-
-<style scoped lang="scss">
-.check-in-status {
-  padding: 16px;
-}
-
-.status-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.status-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-
-  .title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-  }
-
-  .checked-badge {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #22c55e;
-    padding: 4px 8px;
-    border-radius: 12px;
-  }
-}
-
-.status-stats {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 32px;
-  margin-bottom: 20px;
-  padding: 16px;
-  background: #fafafa;
-  border-radius: 8px;
-
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #a33327;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #999;
-    }
-  }
-
-  .stat-divider {
-    width: 1px;
-    height: 40px;
-    background: #e5e5e5;
-  }
-}
-
-.checked-in-tip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 20px;
-  background: #f0fdf4;
-  border-radius: 8px;
-
-  .tip-text {
-    font-size: 14px;
-    color: #22c55e;
-    font-weight: 500;
-  }
-
-  .time-text {
-    font-size: 12px;
-    color: #999;
-  }
-}
-</style>

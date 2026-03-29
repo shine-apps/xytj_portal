@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const userStore = useUserStore()
 const members = ref<IActivityMember[]>([])
 const loading = ref(false)
+const refreshing = ref(false)
 const showJoinPopup = ref(false)
 const showRoleActionSheet = ref(false)
 const showNicknamePopup = ref(false)
@@ -40,10 +41,15 @@ const joinForm = ref({
   joinReason: '',
 })
 
-async function loadMembers() {
+async function loadMembers(isRefresh = false) {
   if (!props.activityId)
     return
-  loading.value = true
+  if (isRefresh) {
+    refreshing.value = true
+  }
+  else {
+    loading.value = true
+  }
   try {
     const res = await getActivityMembersAPI(props.activityId)
     members.value = res
@@ -53,7 +59,13 @@ async function loadMembers() {
   }
   finally {
     loading.value = false
+    refreshing.value = false
   }
+}
+
+// 刷新数据
+async function onRefresh() {
+  await loadMembers(true)
 }
 
 watch(() => props.activityId, (newId) => {
@@ -253,13 +265,23 @@ defineExpose({
 
     <!-- Members List (for all users) -->
     <view v-if="!canManageMembers && joinedMembers.length > 0" class="m-4 rounded-lg bg-white p-4 shadow-sm">
-      <view class="mb-3 border-b border-gray-100 pb-2">
-        <text class="text-lg text-gray-900 font-bold">
-          已加入成员
-        </text>
-        <text class="ml-2 text-xs text-gray-500">
-          共 {{ joinedMembers.length }} 人
-        </text>
+      <view class="mb-3 flex items-center justify-between border-b border-gray-100 pb-2">
+        <view class="flex items-center">
+          <text class="text-lg text-gray-900 font-bold">
+            已加入成员
+          </text>
+          <text class="ml-2 text-xs text-gray-500">
+            共 {{ joinedMembers.length }} 人
+          </text>
+        </view>
+        <wd-button
+          type="icon"
+          size="small"
+          :loading="refreshing"
+          @click="onRefresh"
+        >
+          <text class="i-carbon-renew text-lg" />
+        </wd-button>
       </view>
       <view class="space-y-2">
         <view
@@ -288,12 +310,22 @@ defineExpose({
     <!-- Admin Panel -->
     <view v-if="canManageMembers" class="m-4 rounded-lg bg-white p-4 shadow-sm">
       <view class="mb-3 flex items-center justify-between border-b border-gray-100 pb-2">
-        <text class="text-lg text-gray-900 font-bold">
-          管理面板
-        </text>
-        <text class="text-xs text-gray-500">
-          共 {{ members.length }} 人
-        </text>
+        <view class="flex items-center">
+          <text class="text-lg text-gray-900 font-bold">
+            管理面板
+          </text>
+          <text class="ml-2 text-xs text-gray-500">
+            共 {{ members.length }} 人
+          </text>
+        </view>
+        <wd-button
+          type="icon"
+          size="small"
+          :loading="refreshing"
+          @click="onRefresh"
+        >
+          <text class="i-carbon-renew text-lg" />
+        </wd-button>
       </view>
 
       <view v-if="pendingMembers.length > 0" class="mb-6">

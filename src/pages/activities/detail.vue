@@ -4,6 +4,8 @@ import type { IActivity, IActivityMember } from '@/service/activity'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
+import { useQueue } from 'wot-design-uni'
+import ActivityAlbum from '@/components/ActivityAlbum.vue'
 import CheckInHistory from '@/components/CheckInHistory.vue'
 import CheckInQRCode from '@/components/CheckInQRCode.vue'
 import CheckInStatus from '@/components/CheckInStatus.vue'
@@ -12,6 +14,7 @@ import { useUserStore } from '@/store/user'
 import { setPageShareConfig } from '@/utils/share'
 
 const userStore = useUserStore()
+const { closeOutside } = useQueue()
 
 const activityId = ref('')
 const activity = ref<IActivity | null>(null)
@@ -23,6 +26,7 @@ const loading = ref(false)
 
 // TabBar
 const activeTab = ref('members')
+const qrCodeRef = ref<InstanceType<typeof CheckInQRCode> | null>(null)
 
 // 设置分享标题
 function getShareTitle() {
@@ -67,8 +71,9 @@ async function loadData() {
   try {
     const res = await getActivityDetailAPI(activityId.value, true)
     activity.value = res
-    currentUserMember.value = res.members.find(m => m.userId === userStore.userInfo?.id) || null
-
+    currentUserMember.value = res.members.find(m => m.userId === userStore.userInfo?.userId) || null
+    console.log('userStore.userInfo', userStore.userInfo)
+    console.log('currentUserMember.value', currentUserMember.value)
     // 动态设置导航栏标题
     uni.setNavigationBarTitle({
       title: getShareTitle() || '活动详情',
@@ -99,15 +104,6 @@ async function loadData() {
   }
 }
 
-// 是否可以编辑
-const canEdit = computed(() => {
-  // 1. 全局管理员
-  if (userStore.isAdmin)
-    return true
-  // 2. 活动管理员 - 通过 membersPanelRef 获取
-  return membersPanelRef.value?.isAdmin || false
-})
-
 // 是否是活动管理员
 const isActivityAdmin = computed(() => {
   // 1. 全局管理员
@@ -127,6 +123,42 @@ function navigateToEdit() {
   uni.navigateTo({
     url: `/pages/activities/edit?id=${activityId.value}`,
   })
+}
+
+// 管理菜单数据
+const adminMenu = ref([
+  { content: '编辑活动' },
+  { content: '生成签到二维码' },
+  { content: '分享活动' },
+])
+
+// 签到二维码弹窗显示状态
+const showQRCodePopup = ref(false)
+
+// 处理签到二维码更新
+function handleCheckInCodeUpdate(newCode: object | null) {
+  if (!newCode) {
+    showQRCodePopup.value = false
+    return
+  }
+}
+
+// 处理管理菜单点击
+function handleAdminMenuClick({ item, index }: { item: { iconClass: string, content: string }, index: number }) {
+  console.log('菜单点击:', item, index)
+  if (item.content === '编辑活动') {
+    navigateToEdit()
+  }
+  else if (item.content === '生成签到二维码') {
+    showQRCodePopup.value = true
+  }
+  else if (item.content === '分享活动') {
+    // 触发分享
+    uni.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline'],
+    })
+  }
 }
 
 // Format Helpers
@@ -159,7 +191,7 @@ function formatLocation(loc: any) {
 </script>
 
 <template>
-  <view class="min-h-screen bg-[#f7f7f7] pb-24">
+  <view class="min-h-screen bg-[#f7f7f7] pb-24" @click="closeOutside">
     <view v-if="activity">
       <!-- Header Image with Activity Summary Overlay -->
       <view class="relative w-full">
@@ -181,14 +213,15 @@ function formatLocation(loc: any) {
         <view class="absolute bottom-4 left-4 right-4 text-white">
           <text class="text-2xl font-bold">{{ activity.title }}</text>
         </view>
-        <!-- 编辑按钮 -->
-        <view v-if="canEdit" class="absolute right-4 top-4">
-          <view
-            class="rounded-full bg-white/80 p-2 backdrop-blur-sm transition-opacity active:opacity-70"
-            @click="navigateToEdit"
-          >
-            <view class="i-carbon-edit text-lg text-gray-800" />
-          </view>
+        <!-- 管理菜单 -->
+        <view v-if="isActivityAdmin" class="absolute right-4 top-4">
+          <wd-popover mode="menu" :content="adminMenu" placement="left-start" @menuclick="handleAdminMenuClick">
+            <view
+              class="rounded-full bg-white/80 p-2 backdrop-blur-sm transition-opacity active:opacity-80"
+            >
+              <view class="i-carbon-overflow-menu-vertical text-lg text-gray-800" />
+            </view>
+          </wd-popover>
         </view>
       </view>
 
@@ -226,36 +259,55 @@ function formatLocation(loc: any) {
         <rich-text :nodes="activity.summary || activity.content || '暂无详情'" class="text-gray-700 leading-relaxed" />
       </view> -->
 
-      <!-- Check In Section - Admin View -->
-      <CheckInQRCode
-        v-if="activityId && isActivityAdmin"
-        :activity-id="activityId"
-      />
-
       <!-- Check In Section - Member View -->
       <CheckInStatus
-        v-if="activityId && isActivityMember && !isActivityAdmin"
+        v-if="activityId && isActivityMember"
         :activity-id="activityId"
       />
 
       <!-- TabBar -->
-      <view class="m-4 rounded-lg bg-white shadow-sm">
-        <wd-tabs v-model="activeTab">
-          <wd-tab title="成员列表" name="members">
+      <view v-if="activityId" class="m-4 rounded-lg bg-white shadow-sm">
+        <wd-tabs v-model="activeTab" auto-line-width>
+          <wd-tab title="相册" name="album" lazy>
+            <ActivityAlbum
+              v-if="activeTab === 'album'"
+              :activity-id="activityId"
+              :is-activity-admin="isActivityAdmin"
+            />
+          </wd-tab>
+          <wd-tab title="成员" name="members" lazy>
             <ActivityMembersPanel
-              v-if="activityId"
+              v-if="activeTab === 'members'"
               ref="membersPanelRef"
               :activity-id="activityId"
             />
           </wd-tab>
-          <wd-tab title="签到历史" name="history">
+          <!-- 相册Tab - 只有活动成员可见 -->
+
+          <wd-tab title="签到历史" name="history" lazy>
             <CheckInHistory
-              v-if="activityId"
+              v-if="activeTab === 'history'"
               :activity-id="activityId"
             />
           </wd-tab>
         </wd-tabs>
       </view>
+
+      <!-- 签到二维码弹窗 -->
+      <wd-popup
+        v-model="showQRCodePopup" position="center" :z-index="100" :close-on-click-modal="false"
+        closable
+        round lazy-render hide-when-close @enter="qrCodeRef?.generateCodeIfNotExist"
+      >
+        <view class="w-80">
+          <CheckInQRCode
+            v-if="activityId && isActivityMember && isActivityAdmin"
+            ref="qrCodeRef"
+            :activity-id="activityId"
+            @update:check-in-code="handleCheckInCodeUpdate"
+          />
+        </view>
+      </wd-popup>
     </view>
   </view>
 </template>
