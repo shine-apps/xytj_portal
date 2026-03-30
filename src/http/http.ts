@@ -37,9 +37,9 @@ export function http<T>(options: CustomRequestOptions) {
             return resolve(res as any)
           }
           // 如果是原始请求，直接返回数据
-          if (options.isRaw) {
-            return resolve(res.data as any)
-          }
+          // if (options.isRaw) {
+          //   return resolve(res.data as any)
+          // }
           // // 处理业务逻辑错误
           // if (code !== ResultEnum.Success0 && code !== ResultEnum.Success200) {
           //   uni.showToast({

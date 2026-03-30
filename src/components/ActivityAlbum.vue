@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import type { IActivityAlbum } from '@/service/album'
-import dayjs from 'dayjs'
 import { ref } from 'vue'
 import useUpload from '@/hooks/useUpload'
-import { http } from '@/http/http'
-import { deleteAlbumAPI, getActivityAlbumsAPI } from '@/service/album'
+import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI } from '@/service/album'
 import { useUserStore } from '@/store/user'
+import { formatTime } from '@/utils/dateUtil'
 
 const props = defineProps<{
   activityId: string
@@ -31,11 +30,13 @@ const imageUpload = useUpload({
   fileType: 'image',
   maxSize: 10 * 1024 * 1024, // 10MB
   success: (res) => {
-    createAlbumRecord('IMAGE', res.url)
+    createAlbumRecord('IMAGE', res.url, res.size)
   },
   error: (err) => {
     console.error('图片上传失败', err)
-    uni.showToast({ title: '上传失败', icon: 'none' })
+    // 用户可能取消上传，不显示错误提示
+    if (err)
+      uni.showToast({ title: '上传失败', icon: 'none' })
   },
 })
 
@@ -44,11 +45,13 @@ const videoUpload = useUpload({
   fileType: 'video',
   maxSize: 100 * 1024 * 1024, // 100MB
   success: (res) => {
-    createAlbumRecord('VIDEO', res.url)
+    createAlbumRecord('VIDEO', res.url, res.size)
   },
   error: (err) => {
     console.error('视频上传失败', err)
-    uni.showToast({ title: '上传失败', icon: 'none' })
+    // 用户可能取消上传，不显示错误提示
+    if (err)
+      uni.showToast({ title: '上传失败', icon: 'none' })
   },
 })
 
@@ -104,28 +107,58 @@ function showUploadOptions() {
   showActionSheet.value = true
 }
 
+watch(() => imageUpload.loading, (value) => {
+  if (value) {
+    uni.showLoading({
+      title: '图片上传中',
+      mask: true,
+    })
+  }
+  else {
+    uni.hideLoading()
+  }
+})
+
+watch(() => videoUpload.loading, (value) => {
+  if (value) {
+    uni.showLoading({
+      title: '视频上传中',
+      mask: true,
+    })
+  }
+  else {
+    uni.hideLoading()
+  }
+})
+
 // 选择图片
 function chooseImage() {
+  uni.showLoading({
+    title: '图片上传中',
+    mask: true,
+  })
   imageUpload.run()
   showActionSheet.value = false
 }
 
 // 选择视频
 function chooseVideo() {
+  uni.showLoading({
+    title: '视频上传中',
+    mask: true,
+  })
   videoUpload.run()
+  uni.hideLoading()
   showActionSheet.value = false
 }
 
 // 创建相册记录
-async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string) {
+async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: number) {
   if (!props.activityId)
     return
 
   try {
-    await http.post(`/api/activities/${props.activityId}/albums`, {
-      type,
-      url,
-    })
+    await createAlbumAPI(props.activityId, { type, url, size })
 
     uni.showToast({ title: '上传成功', icon: 'success' })
     // 刷新列表
@@ -186,13 +219,15 @@ async function deleteAlbum(album: IActivityAlbum) {
 
 // 判断是否可以删除
 function canDelete(album: IActivityAlbum): boolean {
-  const userId = userStore.userInfo?.id
+  // 管理员可以删除
+  if (props.isActivityAdmin)
+    return true
+  const userId = userStore.userInfo?.userId
   if (!userId)
     return false
   // 上传者本人可以删除
   if (album.userId === userId)
     return true
-  // 管理员可以删除（需要额外判断，这里简化处理）
   return false
 }
 
@@ -203,11 +238,6 @@ function formatSize(size: number): string {
   if (size < 1024 * 1024)
     return `${(size / 1024).toFixed(1)}KB`
   return `${(size / (1024 * 1024)).toFixed(1)}MB`
-}
-
-// 格式化时间
-function formatTime(time: string): string {
-  return dayjs(time).format('MM-DD HH:mm')
 }
 
 const actionList = ref([
@@ -322,6 +352,7 @@ onMounted(() => {
           <!-- 文件信息 -->
           <view class="mt-2.5 flex justify-between border-t border-gray-100 pt-2.5">
             <text class="text-xs text-gray-500">{{ album.type === 'IMAGE' ? '照片' : '视频' }}</text>
+            <text v-if="album.size > 0" class="text-xs text-gray-400">{{ formatSize(album.size) }}</text>
           </view>
         </view>
 

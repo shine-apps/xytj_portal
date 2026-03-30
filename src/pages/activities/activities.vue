@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { getActivitiesAPI } from '@/service/activity'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
+import { formatTime } from '@/utils/dateUtil'
 
 defineOptions({
   name: 'Activities',
@@ -42,10 +43,6 @@ function onSearch() {
 
 function navigateToDetail(id: string) {
   uni.navigateTo({ url: `/pages/activities/detail?id=${id}` })
-}
-
-function formatTime(time: string) {
-  return dayjs(time).format('YYYY-MM-DD HH:mm')
 }
 
 function getStatus(start: string, end: string) {

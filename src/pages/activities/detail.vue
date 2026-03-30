@@ -11,6 +11,7 @@ import CheckInQRCode from '@/components/CheckInQRCode.vue'
 import CheckInStatus from '@/components/CheckInStatus.vue'
 import { getActivityDetailAPI } from '@/service/activity'
 import { useUserStore } from '@/store/user'
+import { formatTime } from '@/utils/dateUtil'
 import { setPageShareConfig } from '@/utils/share'
 
 const userStore = useUserStore()
@@ -162,12 +163,6 @@ function handleAdminMenuClick({ item, index }: { item: { iconClass: string, cont
 }
 
 // Format Helpers
-function formatTime(time: string) {
-  if (!time)
-    return ''
-  return dayjs(time).format('YYYY-MM-DD HH:mm')
-}
-
 function formatLocation(loc: any) {
   if (!loc)
     return '地点待定'

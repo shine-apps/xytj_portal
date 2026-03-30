@@ -10,7 +10,7 @@ interface TOptions<T extends TfileType> {
   maxSize?: number
   accept?: T extends 'image' ? TImage[] : TFile[]
   fileType?: T
-  success?: (params: any) => void
+  success?: (params: { url: string, key: string, size: number }) => void
   error?: (err: any) => void
 }
 
@@ -39,9 +39,9 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
 
     loading.value = true
     uploadToCos(tempFilePath)
-      .then((res) => {
-        data.value = res
-        success?.(res)
+      .then(({ url, key }) => {
+        data.value = { url, key }
+        success?.({ url, key, size })
       })
       .catch((err) => {
         error.value = err
@@ -74,7 +74,8 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
       fail: (err: any) => {
         console.error('File selection failed:', err)
         error.value = err
-        onError?.(err)
+        // 用户取消选择文件，不触发 success 回调
+        onError?.(null)
       },
     }
 
@@ -100,9 +101,10 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
         },
         fail: (err: any) => {
           console.error('Video selection failed:', err)
-          uni.showToast({ title: '选择视频失败', icon: 'none' })
+          // uni.showToast({ title: '选择视频失败', icon: 'none' })
           error.value = err
-          onError?.(err)
+          // 用户取消选择文件，不触发 success 回调
+          onError?.(null)
         },
       })
     }

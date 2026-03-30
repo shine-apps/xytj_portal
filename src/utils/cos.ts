@@ -90,7 +90,8 @@ export async function uploadToCos(filePath: string, fileName?: string, cacheMaxA
         onProgress: (info: any) => {
           console.log('Upload progress:', info)
         },
-      }, (err: any, data: any) => {
+      }, (err: any, data) => {
+        console.log('Upload result:', err, data)
         if (err) {
           reject(err)
         }
@@ -117,6 +118,7 @@ export async function uploadToCos(filePath: string, fileName?: string, cacheMaxA
             console.log('Upload progress:', info)
           },
         }, (err: any, data: any) => {
+          console.log('Upload result:', err, data)
           if (err) {
             reject(err)
           }

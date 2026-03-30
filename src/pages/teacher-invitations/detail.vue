@@ -10,6 +10,7 @@ import {
   handleTeacherApplicationAPI,
 } from '@/service/teacher-invitation'
 import { useUserStore } from '@/store/user'
+import { formatTime } from '@/utils/dateUtil'
 
 definePage({
   style: {
@@ -96,12 +97,6 @@ const applyStatus = computed(() => {
 
 const pendingApplications = computed(() => applications.value.filter(a => a.status === 'PENDING'))
 const acceptedApplications = computed(() => applications.value.filter(a => a.status === 'ACCEPTED'))
-
-function formatTime(time: string) {
-  if (!time)
-    return ''
-  return dayjs(time).format('YYYY-MM-DD HH:mm')
-}
 
 function formatLocation(loc: any) {
   if (!loc)

@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { listMyInvitationsAPI } from '@/service/teacher-invitation'
 import { useUserStore } from '@/store/user'
+import { formatTime } from '@/utils/dateUtil'
 
 definePage({
   style: {
@@ -34,12 +35,6 @@ async function loadData() {
     loading.value = false
     paging.value?.complete(true)
   }
-}
-
-function formatTime(time: string) {
-  if (!time)
-    return ''
-  return dayjs(time).format('MM-DD HH:mm')
 }
 
 function formatLocation(loc: any) {

@@ -56,9 +56,10 @@ async function handleCheckIn() {
     }
   }
   catch (error: any) {
+    activityId.value = error.data?.data?.activityId || ''
     result.value = {
       success: false,
-      message: error.message || '签到失败',
+      message: error.data?.message || '签到失败',
     }
   }
   finally {
@@ -115,10 +116,17 @@ function goToHome() {
 
         <!-- 操作按钮 -->
         <view class="w-full flex flex-col gap-3">
-          <button v-if="activityId" class="h-12 w-full flex items-center justify-center rounded-lg bg-#a33327 text-base text-white font-medium" @click="goToActivityDetail">
+          <button
+            v-if="activityId"
+            class="h-12 w-full flex items-center justify-center rounded-lg bg-#a33327 text-base text-white font-medium"
+            @click="goToActivityDetail"
+          >
             查看活动详情
           </button>
-          <button class="h-12 w-full flex items-center justify-center rounded-lg bg-gray-100 text-base text-gray-600 font-medium" @click="goToHome">
+          <button
+            class="h-12 w-full flex items-center justify-center rounded-lg bg-gray-100 text-base text-gray-600 font-medium"
+            @click="goToHome"
+          >
             返回首页
           </button>
         </view>

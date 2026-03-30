@@ -2,6 +2,7 @@
 import type { ICheckInStatus } from '@/service/checkin'
 import { onMounted, ref } from 'vue'
 import { getCheckInStatusAPI } from '@/service/checkin'
+import { formatTime } from '@/utils/dateUtil'
 import ScanCheckIn from './ScanCheckIn.vue'
 
 const props = defineProps<{
@@ -70,7 +71,7 @@ defineExpose({
       <view v-else class="flex flex-col items-center gap-2 rounded-lg bg-green-50 p-5">
         <text class="i-carbon-checkmark-outline text-2xl text-green-500" />
         <text class="text-sm text-green-500 font-medium">今日已完成签到</text>
-        <text class="text-xs text-gray-400">{{ new Date(status?.todayCheckIn?.createdAt || '').toLocaleTimeString() }}</text>
+        <text class="text-xs text-gray-400">{{ formatTime(status?.todayCheckIn?.createdAt || '') || '' }}</text>
       </view>
     </view>
   </view>

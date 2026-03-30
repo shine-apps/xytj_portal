@@ -151,7 +151,7 @@ export const useUserStore = defineStore(
         username: res.user.email || res.user.phoneNumber || '',
         nickname: res.user.name,
         avatar: res.user.image,
-        phoneNumber: res.user.phoneNumber || userInfoState.phone,
+        phoneNumber: res.user.phoneNumber || userInfoState.phoneNumber,
         email: res.user.email || userInfoState.email,
         role: res.user.role || 'user',
       }
