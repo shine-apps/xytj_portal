@@ -57,8 +57,18 @@ export const uploadAlbumAPI = (activityId: string, data: FormData) => {
  * @param activityId 活动ID
  * @param data 相册数据
  */
-export const createAlbumAPI = (activityId: string, data: { type: 'IMAGE' | 'VIDEO'; url: string; size: number }) => {
+export const createAlbumAPI = (activityId: string, data: { type: 'IMAGE' | 'VIDEO'; url: string; size: number; description?: string }) => {
   return http.post<IActivityAlbum>(`/api/activities/${activityId}/albums`, data)
+}
+
+/**
+ * 更新相册描述
+ * @param activityId 活动ID
+ * @param albumId 相册ID
+ * @param description 描述内容
+ */
+export const updateAlbumDescriptionAPI = (activityId: string, albumId: string, description: string) => {
+  return http.patch<IActivityAlbum>(`/api/activities/${activityId}/albums/${albumId}`, { description })
 }
 
 /**

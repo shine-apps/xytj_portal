@@ -2,7 +2,7 @@
 import type { IActivityAlbum } from '@/service/album'
 import { ref } from 'vue'
 import useUpload from '@/hooks/useUpload'
-import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI } from '@/service/album'
+import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI, updateAlbumDescriptionAPI } from '@/service/album'
 import { useUserStore } from '@/store/user'
 import { formatTime } from '@/utils/dateUtil'
 
@@ -30,7 +30,8 @@ const imageUpload = useUpload({
   fileType: 'image',
   maxSize: 10 * 1024 * 1024, // 10MB
   success: (res) => {
-    createAlbumRecord('IMAGE', res.url, res.size)
+    // 弹出对话框让用户输入描述
+    showDescriptionDialog('IMAGE', res.url, res.size)
   },
   error: (err) => {
     console.error('图片上传失败', err)
@@ -45,7 +46,8 @@ const videoUpload = useUpload({
   fileType: 'video',
   maxSize: 100 * 1024 * 1024, // 100MB
   success: (res) => {
-    createAlbumRecord('VIDEO', res.url, res.size)
+    // 弹出对话框让用户输入描述
+    showDescriptionDialog('VIDEO', res.url, res.size)
   },
   error: (err) => {
     console.error('视频上传失败', err)
@@ -152,13 +154,35 @@ function chooseVideo() {
   showActionSheet.value = false
 }
 
+// 显示描述输入对话框
+function showDescriptionDialog(type: 'IMAGE' | 'VIDEO', url: string, size: number) {
+  uni.showModal({
+    title: '添加描述',
+    content: '',
+    editable: true,
+    placeholderText: '请输入图片描述（可选）',
+    cancelText: '直接上传',
+    confirmText: '确定',
+    success: (res) => {
+      if (res.confirm) {
+        // 用户点击确定，使用输入的描述
+        createAlbumRecord(type, url, size, res.content)
+      }
+      else {
+        // 用户点击取消，不传递描述
+        createAlbumRecord(type, url, size)
+      }
+    },
+  })
+}
+
 // 创建相册记录
-async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: number) {
+async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: number, description?: string) {
   if (!props.activityId)
     return
 
   try {
-    await createAlbumAPI(props.activityId, { type, url, size })
+    await createAlbumAPI(props.activityId, { type, url, size, description })
 
     uni.showToast({ title: '上传成功', icon: 'success' })
     // 刷新列表
@@ -194,6 +218,29 @@ function previewMedia(index: number) {
 function closeVideoPlayer() {
   showVideoPlayer.value = false
   currentVideoUrl.value = ''
+}
+
+// 编辑描述
+function editDescription(album: IActivityAlbum) {
+  uni.showModal({
+    title: '编辑描述',
+    content: album.description || '',
+    editable: true,
+    placeholderText: '请输入描述',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await updateAlbumDescriptionAPI(props.activityId, album.id, res.content)
+          uni.showToast({ title: '修改成功', icon: 'success' })
+          album.description = res.content
+        }
+        catch (e) {
+          console.error('修改描述失败', e)
+          uni.showToast({ title: '修改失败', icon: 'none' })
+        }
+      }
+    },
+  })
 }
 
 // 删除相册
@@ -265,7 +312,7 @@ onMounted(() => {
 <template>
   <view class="h-full min-h-400px flex flex-col">
     <!-- 头部刷新栏 -->
-    <view class="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3">
+    <view class="flex items-center justify-between border-b border-gray-100 bg-white px-8 py-3">
       <text class="text-sm text-gray-500">
         共 {{ albums.length }} 条记录
       </text>
@@ -293,11 +340,11 @@ onMounted(() => {
       </view>
 
       <!-- 列表内容 -->
-      <view v-else class="flex flex-col gap-4 p-4">
+      <view v-else class="flex flex-col">
         <view
           v-for="(album, index) in albums"
           :key="album.id"
-          class="rounded-xl bg-white p-3 shadow-sm"
+          class="rounded-xl bg-white px-8 py-2 shadow-sm"
         >
           <!-- 用户信息 -->
           <view class="mb-2.5 flex items-center gap-2.5">
@@ -310,14 +357,19 @@ onMounted(() => {
               <text class="text-sm text-gray-800 font-medium">{{ album.user?.nickname || '未知用户' }}</text>
               <text class="text-xs text-gray-400">{{ formatTime(album.createdAt) }}</text>
             </view>
-            <view v-if="canDelete(album)" class="p-2 opacity-70 active:opacity-100" @click="deleteAlbum(album)">
-              <text class="i-carbon-trash-can text-gray-400" />
+            <view v-if="canDelete(album)">
+              <wd-button type="icon" size="small" @click="editDescription(album)">
+                <text class="i-carbon-edit text-gray-400" />
+              </wd-button>
+              <wd-button type="icon" size="small" @click="deleteAlbum(album)">
+                <text class="i-carbon-trash-can text-gray-400" />
+              </wd-button>
             </view>
           </view>
 
           <!-- 描述 -->
-          <view v-if="album.description" class="mb-2.5 text-sm text-gray-800 leading-relaxed">
-            <text>{{ album.description }}</text>
+          <view v-if="album.description" class="mb-2.5 flex items-center justify-between text-sm text-gray-800 leading-relaxed">
+            <text class="flex-1">{{ album.description || '' }}</text>
           </view>
 
           <!-- 媒体内容 -->
@@ -354,6 +406,7 @@ onMounted(() => {
             <text class="text-xs text-gray-500">{{ album.type === 'IMAGE' ? '照片' : '视频' }}</text>
             <text v-if="album.size > 0" class="text-xs text-gray-400">{{ formatSize(album.size) }}</text>
           </view>
+          <wd-divider dashed />
         </view>
 
         <!-- 加载更多 -->
