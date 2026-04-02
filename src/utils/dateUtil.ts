@@ -16,3 +16,15 @@ export function formatTime(time: string | number | Date): string {
   }
   return date.format('YYYY-MM-DD HH:mm')
 }
+
+export function formatDate(time: string | number | Date): string {
+  if (!time)
+    return ''
+  const date = dayjs(time)
+  const now = dayjs()
+
+  if (date.year() === now.year()) {
+    return date.format('MM-DD')
+  }
+  return date.format('YYYY-MM-DD')
+}

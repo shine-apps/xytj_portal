@@ -2,11 +2,10 @@
 import type ActivityMembersPanel from '@/components/ActivityMembersPanel.vue'
 import type { IActivity, IActivityMember } from '@/service/activity'
 import { onLoad } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 import { useQueue } from 'wot-design-uni'
 import ActivityAlbum from '@/components/ActivityAlbum.vue'
-import CheckInHistory from '@/components/CheckInHistory.vue'
+import CheckInMembers from '@/components/CheckInMembers.vue'
 import CheckInQRCode from '@/components/CheckInQRCode.vue'
 import CheckInStatus from '@/components/CheckInStatus.vue'
 import { getActivityDetailAPI } from '@/service/activity'
@@ -183,6 +182,12 @@ function formatLocation(loc: any) {
   }
   return String(loc)
 }
+
+function toLoginPage() {
+  uni.navigateTo({
+    url: '/pages/login/login',
+  })
+}
 </script>
 
 <template>
@@ -263,25 +268,43 @@ function formatLocation(loc: any) {
         <wd-tabs v-model="activeTab" auto-line-width>
           <wd-tab title="相册" name="album" lazy>
             <ActivityAlbum
-              v-if="activeTab === 'album'"
+              v-if="userStore.hasValidLogin && activeTab === 'album'"
               :activity-id="activityId"
               :is-activity-admin="isActivityAdmin"
             />
+            <view v-else class="min-h-50 flex flex-col items-center justify-center">
+              <text>请先登录才能查看相册。</text>
+              <wd-button type="primary" @click="toLoginPage">
+                去登录
+              </wd-button>
+            </view>
           </wd-tab>
+
+          <wd-tab title="签到记录" name="history" lazy>
+            <CheckInMembers
+              v-if="userStore.hasValidLogin && activeTab === 'history'"
+              :activity-id="activityId"
+            />
+            <view v-else class="min-h-50 flex flex-col items-center justify-center">
+              <text>请先登录才能查看签到记录。</text>
+              <wd-button type="primary" @click="toLoginPage">
+                去登录
+              </wd-button>
+            </view>
+          </wd-tab>
+
           <wd-tab title="成员" name="members" lazy>
             <ActivityMembersPanel
-              v-if="activeTab === 'members'"
+              v-if="userStore.hasValidLogin && activeTab === 'members'"
               ref="membersPanelRef"
               :activity-id="activityId"
             />
-          </wd-tab>
-          <!-- 相册Tab - 只有活动成员可见 -->
-
-          <wd-tab title="签到记录" name="history" lazy>
-            <CheckInHistory
-              v-if="activeTab === 'history'"
-              :activity-id="activityId"
-            />
+            <view v-else class="min-h-50 flex flex-col items-center justify-center">
+              <text>请先登录才能查看成员列表。</text>
+              <wd-button type="primary" @click="toLoginPage">
+                去登录
+              </wd-button>
+            </view>
           </wd-tab>
         </wd-tabs>
       </view>

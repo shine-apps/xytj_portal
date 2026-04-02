@@ -104,3 +104,29 @@ export const getCheckInHistoryAPI = (activityId: string, params?: { page?: numbe
 export const getTodayCheckInCountAPI = (activityId: string) => {
   return http.get<{ count: number }>(`/api/activities/${activityId}/check-in/today-count`)
 }
+
+/**
+ * 成员签到状态
+ */
+export interface IActivityMemberCheckIn {
+  id: string
+  userId: string
+  activityId: string
+  nickname: string | null
+  role: 'ADMIN' | 'ASSISTANT' | 'GENERAL'
+  status: 'JOINED' | 'JOINING'
+  joinReason: string | null
+  createdAt: string
+  updatedAt: string
+  totalCheckIns: number
+  lastCheckInDate: string | null
+  consecutiveDays: number
+}
+
+/**
+ * 获取活动成员签到状态列表
+ * @param activityId 活动ID
+ */
+export const getCheckInMembersAPI = (activityId: string) => {
+  return http.get<IActivityMemberCheckIn[]>(`/api/activities/${activityId}/check-in/members`)
+}

@@ -135,22 +135,13 @@ watch(() => videoUpload.loading, (value) => {
 
 // 选择图片
 function chooseImage() {
-  uni.showLoading({
-    title: '图片上传中',
-    mask: true,
-  })
   imageUpload.run()
   showActionSheet.value = false
 }
 
 // 选择视频
 function chooseVideo() {
-  uni.showLoading({
-    title: '视频上传中',
-    mask: true,
-  })
   videoUpload.run()
-  uni.hideLoading()
   showActionSheet.value = false
 }
 
@@ -305,7 +296,8 @@ function onActionSelect({ item }: { item: { name: string } }) {
 // 初始化加载数据
 onMounted(() => {
   console.log('ActivityAlbum mounted')
-  loadData(1)
+  if (userStore.hasValidLogin)
+    loadData(1)
 })
 </script>
 

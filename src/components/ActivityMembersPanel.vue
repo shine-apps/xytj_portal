@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { IActivityMember } from '@/service/activity'
-import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
+
 import {
   getActivityMembersAPI,
   joinActivityAPI,
@@ -11,6 +11,7 @@ import {
   updateMemberStatusAPI,
 } from '@/service/activity'
 import { useUserStore } from '@/store/user'
+import { formatDate } from '@/utils/dateUtil'
 
 const props = defineProps<{
   activityId: string
@@ -283,7 +284,7 @@ defineExpose({
           <text class="i-carbon-renew text-lg" />
         </wd-button>
       </view>
-      <view class="space-y-2">
+      <view v-if="joinStatus === 'JOINED'" class="space-y-2">
         <view
           v-for="member in joinedMembers"
           :key="member.id"
@@ -301,9 +302,14 @@ defineExpose({
             </text>
           </view>
           <text class="text-xs text-gray-400">
-            {{ dayjs(member.createdAt).format('MM-DD') }}
+            {{ formatDate(member.createdAt) }}
           </text>
         </view>
+      </view>
+      <view v-else>
+        <text class="text-center text-gray-500">
+          仅活动成员可见
+        </text>
       </view>
     </view>
 
@@ -405,7 +411,7 @@ defineExpose({
                 @click="handleRemoveMember(member.userId)"
               />
               <text class="text-xs text-gray-400">
-                {{ dayjs(member.createdAt).format('MM-DD') }}
+                {{ formatDate(member.createdAt) }}
               </text>
             </view>
           </view>
