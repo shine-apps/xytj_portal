@@ -44,13 +44,34 @@ function getCosInstance(authData: CosAuthData) {
   return cosInstance
 }
 
+interface ThumbnailOptions {
+  enabled: boolean
+  width?: number
+  height?: number
+  quality?: number
+  mode?: 'scale' | 'cut' | 'cover'
+}
+
+interface UploadResult {
+  url: string
+  key: string
+  thumbnailUrl?: string
+  thumbnailKey?: string
+}
+
 /**
  * Upload file to COS
  * @param filePath Local file path
  * @param fileName File name (optional)
  * @param cacheMaxAge Cache max age in seconds (default: 31536000 = 1 year)
+ * @param thumbnail Thumbnail generation options (optional)
  */
-export async function uploadToCos(filePath: string, fileName?: string, cacheMaxAge: number = 31536000) {
+export async function uploadToCos(
+  filePath: string,
+  fileName?: string,
+  cacheMaxAge: number = 31536000,
+  thumbnail?: ThumbnailOptions,
+): Promise<UploadResult> {
   try {
     // 1. Get credentials
     const authData = await new Promise<CosAuthData>((resolve, reject) => {
@@ -76,8 +97,34 @@ export async function uploadToCos(filePath: string, fileName?: string, cacheMaxA
     const ext = fileName ? fileName.split('.').pop() : filePath.split('.').pop()
     const key = `uploads/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`
 
-    // 4. Upload
-    return new Promise<{ url: string, key: string }>((resolve, reject) => {
+    // 4. Build Pic-Operations header for thumbnail generation
+    let picOperations: string | undefined
+    if (thumbnail?.enabled) {
+      const thumbnailKey = key.replace(/\.([^./]+)$/, '_thumb.$1')
+      const rules: string[] = []
+
+      // Build thumbnail processing rules
+      if (thumbnail.width || thumbnail.height) {
+        const width = thumbnail.width || ''
+        const height = thumbnail.height || ''
+        rules.push(`imageMogr2/thumbnail/${width}x${height}`)
+      }
+      if (thumbnail.quality) {
+        rules.push(`/quality/${thumbnail.quality}`)
+      }
+
+      const operation = {
+        is_pic_info: 0,
+        rules: [{
+          fileid: thumbnailKey,
+          rule: rules.join(''),
+        }],
+      }
+      picOperations = JSON.stringify(operation)
+    }
+
+    // 5. Upload
+    return new Promise<UploadResult>((resolve, reject) => {
       // #ifdef MP-WEIXIN
       cos.postObject({
         Bucket: authData.bucket,
@@ -86,18 +133,28 @@ export async function uploadToCos(filePath: string, fileName?: string, cacheMaxA
         FilePath: filePath,
         Headers: {
           'Cache-Control': `max-age=${cacheMaxAge}`,
+          ...(picOperations && { 'Pic-Operations': picOperations }),
         },
         onProgress: (info: any) => {
           console.log('Upload progress:', info)
         },
-      }, (err: any, data) => {
+      }, (err: any, data: any) => {
         console.log('Upload result:', err, data)
         if (err) {
           reject(err)
         }
         else {
           const url = `https://${authData.bucket}.cos.${authData.region}.myqcloud.com/${key}`
-          resolve({ url, key })
+          const result: UploadResult = { url, key }
+
+          // Extract thumbnail info from response
+          if (data?.ProcessResults?.Object?.[0]) {
+            const thumbInfo = data.ProcessResults.Object[0]
+            result.thumbnailKey = thumbInfo.Key
+            result.thumbnailUrl = `https://${authData.bucket}.cos.${authData.region}.myqcloud.com/${thumbInfo.Key}`
+          }
+
+          resolve(result)
         }
       })
       // #endif
@@ -113,6 +170,7 @@ export async function uploadToCos(filePath: string, fileName?: string, cacheMaxA
           Body: body,
           Headers: {
             'Cache-Control': `max-age=${cacheMaxAge}`,
+            ...(picOperations && { 'Pic-Operations': picOperations }),
           },
           onProgress: (info: any) => {
             console.log('Upload progress:', info)
@@ -124,7 +182,16 @@ export async function uploadToCos(filePath: string, fileName?: string, cacheMaxA
           }
           else {
             const url = `https://${authData.bucket}.cos.${authData.region}.myqcloud.com/${key}`
-            resolve({ url, key })
+            const result: UploadResult = { url, key }
+
+            // Extract thumbnail info from response
+            if (data?.ProcessResults?.Object?.[0]) {
+              const thumbInfo = data.ProcessResults.Object[0]
+              result.thumbnailKey = thumbInfo.Key
+              result.thumbnailUrl = `https://${authData.bucket}.cos.${authData.region}.myqcloud.com/${thumbInfo.Key}`
+            }
+
+            resolve(result)
           }
         })
       }

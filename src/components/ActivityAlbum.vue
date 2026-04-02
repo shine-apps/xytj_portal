@@ -172,8 +172,15 @@ async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: num
   if (!props.activityId)
     return
 
+  let coverUrl = ''
+  if (type === 'IMAGE') {
+    coverUrl = `${url}?imageMogr2/thumbnail/200x`
+  }
+  else if (type === 'VIDEO') {
+    coverUrl = `${url}?ci-process=snapshot&time=1`
+  }
   try {
-    await createAlbumAPI(props.activityId, { type, url, size, description })
+    await createAlbumAPI(props.activityId, { type, url, size, description, coverUrl })
 
     uni.showToast({ title: '上传成功', icon: 'success' })
     // 刷新列表
@@ -369,7 +376,7 @@ onMounted(() => {
             <!-- 图片 -->
             <image
               v-if="album.type === 'IMAGE'"
-              :src="album.url"
+              :src="album.coverUrl || `${album.url}?imageMogr2/thumbnail/200x`"
               class="block w-full"
               mode="widthFix"
               lazy-load
@@ -377,7 +384,7 @@ onMounted(() => {
             <!-- 视频 -->
             <view v-else-if="album.type === 'VIDEO'" class="relative">
               <image
-                :src="album.coverUrl || album.url"
+                :src="album.coverUrl || `${album.url}?ci-process=snapshot&time=1`"
                 class="block w-full"
                 mode="widthFix"
                 lazy-load
