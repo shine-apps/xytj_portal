@@ -54,6 +54,15 @@ async function handleCheckIn() {
       message: '签到成功',
       consecutiveDays: res.consecutiveDays,
     }
+    // 签到成功后立即跳转到活动详情页
+    if (activityId.value) {
+      setTimeout(() => {
+        uni.redirectTo({
+          url: `/pages/activities/detail?id=${activityId.value}`,
+        })
+      }, 800)
+      return
+    }
   }
   catch (error: any) {
     activityId.value = error.data?.data?.activityId || ''

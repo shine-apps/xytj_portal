@@ -65,7 +65,7 @@ function formatDate(date: string | Date | null) {
 </script>
 
 <template>
-  <view class="p-4">
+  <view>
     <view class="rounded-xl bg-white p-4 shadow-sm">
       <view class="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
         <view class="flex items-center gap-2">
