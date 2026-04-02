@@ -391,7 +391,7 @@ onMounted(() => {
               />
               <view class="absolute inset-0 flex items-center justify-center bg-black/30">
                 <view class="h-15 w-15 flex items-center justify-center rounded-full bg-white/90">
-                  <text class="i-carbon-play-filled-alt text-2xl text-white" />
+                  <text class="i-carbon-play-filled-alt text-2xl text-gray-800" />
                 </view>
               </view>
               <view v-if="album.duration" class="absolute bottom-2 right-2 rounded bg-black/60 px-1.5 py-0.5">
