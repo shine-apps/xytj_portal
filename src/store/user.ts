@@ -96,7 +96,10 @@ export const useUserStore = defineStore(
             phoneNumber: res.user.phoneNumber,
             email: res.user.email,
             role: res.user.role || 'user',
+            roles: [],
           }
+          if (res.user.role)
+            mappedUser.roles.push(res.user.role)
           setUserInfo(mappedUser)
         }
         // if (res && res.session && res.session.token) {
@@ -154,7 +157,10 @@ export const useUserStore = defineStore(
         phoneNumber: res.user.phoneNumber || userInfoState.phoneNumber,
         email: res.user.email || userInfoState.email,
         role: res.user.role || 'user',
+        roles: [],
       }
+      if (res.user.role)
+        mappedUser.roles.push(res.user.role)
       setUserInfo(mappedUser)
     }
 

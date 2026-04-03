@@ -60,8 +60,9 @@ function formatLocation(loc: any) {
 
 function getStatusText(status: string) {
   const map: Record<string, string> = {
-    OPEN: '申请中',
-    FILLED: '已接受',
+    OPEN: '待审核',
+    ACCEPTED: '已通过',
+    REJECTED: '已拒绝',
     CANCELLED: '已取消',
     CLOSED: '已关闭',
   }
@@ -70,8 +71,9 @@ function getStatusText(status: string) {
 
 function getStatusClass(status: string) {
   const map: Record<string, string> = {
-    OPEN: 'bg-green-100 text-green-700',
-    FILLED: 'bg-blue-100 text-blue-700',
+    OPEN: 'bg-orange-100 text-orange-600',
+    ACCEPTED: 'bg-green-100 text-green-600',
+    REJECTED: 'bg-red-100 text-red-600',
     CANCELLED: 'bg-gray-100 text-gray-500',
     CLOSED: 'bg-gray-100 text-gray-500',
   }

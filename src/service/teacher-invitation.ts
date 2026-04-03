@@ -23,18 +23,10 @@ export interface ITeacherInvitation {
   feeNegotiable: boolean
   phone: string
   email?: string
-  status: 'OPEN' | 'FILLED' | 'CANCELLED' | 'CLOSED'
-  createdAt: string
-  updatedAt: string
-  applications?: ITeacherApplication[]
-}
-
-export interface ITeacherApplication {
-  id: string
-  invitationId: string
-  userId: string
-  message?: string
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+  status: 'OPEN' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'CLOSED'
+  reviewedBy?: string
+  reviewedAt?: string
+  reviewMessage?: string
   createdAt: string
   updatedAt: string
 }
@@ -69,7 +61,12 @@ export interface UpdateInvitationData {
   feeNegotiable?: boolean
   phone?: string
   email?: string
-  status?: 'OPEN' | 'FILLED' | 'CANCELLED' | 'CLOSED'
+  status?: 'OPEN' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'CLOSED'
+}
+
+export interface ReviewInvitationData {
+  status: 'ACCEPTED' | 'REJECTED'
+  message?: string
 }
 
 export const listMyInvitationsAPI = () => {
@@ -92,21 +89,28 @@ export const deleteTeacherInvitationAPI = (id: string) => {
   return http.delete<void>(`/api/teacher-invitations/${id}`)
 }
 
-export const applyTeacherInvitationAPI = (id: string, data?: { message?: string }) => {
-  return http.post<ITeacherApplication>(`/api/teacher-invitations/${id}/apply`, data || {})
+export const reviewTeacherInvitationAPI = (id: string, data: ReviewInvitationData) => {
+  return http.patch<ITeacherInvitation>(`/api/teacher-invitations/${id}/review`, data)
 }
 
-export const getTeacherApplicationsAPI = (invitationId: string) => {
-  return http.get<ITeacherApplication[]>(`/api/teacher-invitations/${invitationId}/applications`)
+// 分页响应格式
+export interface PaginatedResponse<T> {
+  list: T[]
+  total: number
+  page: number
+  pageSize: number
 }
 
-export const handleTeacherApplicationAPI = (
-  invitationId: string,
-  userId: string,
-  status: 'ACCEPTED' | 'REJECTED',
-) => {
-  return http.patch<ITeacherApplication>(
-    `/api/teacher-invitations/${invitationId}/applications/${userId}`,
-    { status },
-  )
+// 获取所有邀请（管理员，分页）
+export const listAllInvitationsAPI = (params?: {
+  page?: number
+  pageSize?: number
+  status?: string
+}) => {
+  return http.get<PaginatedResponse<ITeacherInvitation>>('/api/teacher-invitations', params)
+}
+
+// 获取待审核数量
+export const getPendingInvitationsCountAPI = () => {
+  return http.get<number>('/api/teacher-invitations/admin/pending-count')
 }

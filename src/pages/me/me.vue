@@ -26,6 +26,11 @@
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
         <wd-cell v-if="isLoggedIn" title="我的上课邀请" is-link to="/pages/teacher-invitations/list" border />
+        <wd-cell v-if="userStore.isAdmin" title=" 上课申请记录" is-link to="/pages/teacher-invitations/admin-list" border>
+          <template #default>
+            <wd-badge :model-value="pendingCount" />
+          </template>
+        </wd-cell>
         <wd-cell v-if="userStore.isAdmin" title="管理后台" icon="computer" is-link border @click="openAdminWebview" />
       </wd-cell-group>
     </view>
@@ -40,7 +45,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { getPendingInvitationsCountAPI } from '@/service/teacher-invitation'
 import { useUserStore } from '@/store/user'
 import { toLoginPage } from '@/utils/toLoginPage'
 
@@ -53,13 +59,28 @@ const userInfo = computed(() => userStore.userInfo)
 // Check if userId is valid (assuming -1 is default/invalid)
 const isLoggedIn = computed(() => userStore.hasValidLogin)
 const defaultAvatar = '/static/images/default-avatar.png'
+const pendingCount = ref(0)
 
 onShow(() => {
   console.log('onShow', userStore.hasValidLogin, userStore.hasUserInfo)
   if (userStore.hasValidLogin && !userStore.hasUserInfo) {
     userStore.fetchUserInfo()
   }
+  // 加载待审核数量
+  if (userStore.isAdmin) {
+    loadPendingCount()
+  }
 })
+
+async function loadPendingCount() {
+  try {
+    const count = await getPendingInvitationsCountAPI()
+    pendingCount.value = count
+  }
+  catch (e) {
+    console.error('Failed to load pending count', e)
+  }
+}
 
 function handleUserInfoClick() {
   if (!isLoggedIn.value) {
