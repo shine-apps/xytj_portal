@@ -2,7 +2,10 @@ import type { IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import {
+  changePassword,
   getSession,
+  requestPasswordReset,
+  resetPasswordWithOTP,
   signInEmail,
   signInPhone,
   signInWePhone,
@@ -201,12 +204,12 @@ export const useUserStore = defineStore(
         updateData.image = data.avatar
 
       const res = await updateUser(updateData)
-      if (res) {
+      if (res?.status) {
         // 更新本地用户信息
         const mappedUser: IUserInfoRes = {
           ...userInfo.value,
-          nickname: res.name || userInfo.value.nickname,
-          avatar: res.image || userInfo.value.avatar,
+          nickname: data.nickname || userInfo.value.nickname,
+          avatar: data.avatar || userInfo.value.avatar,
         }
         setUserInfo(mappedUser)
         return true
@@ -219,6 +222,32 @@ export const useUserStore = defineStore(
       return role === 'admin' || role === 'xytj_admin'
     })
 
+    /**
+     * 更新密码. 若当前密码为空, 则设置新密码. 否则修改密码.
+     * @param data
+     * @returns
+     */
+    const updatePassword = async (data: { currentPassword: string, newPassword: string }) => {
+      const res = await changePassword(data)
+      return res?.status || false
+    }
+
+    /**
+     * 请求密码重置OTP
+     */
+    const requestPasswordResetOTP = async (phoneNumber: string) => {
+      const res = await requestPasswordReset({ phoneNumber })
+      return res?.status || false
+    }
+
+    /**
+     * 使用OTP重置密码
+     */
+    const resetPasswordWithPhoneOTP = async (data: { phoneNumber: string, otp: string, newPassword: string }) => {
+      const res = await resetPasswordWithOTP(data)
+      return res?.status || false
+    }
+
     return {
       userInfo,
       tokenInfo,
@@ -229,6 +258,9 @@ export const useUserStore = defineStore(
       loginBySendOtp,
       loginByWechatPhone,
       updateProfile,
+      updatePassword,
+      requestPasswordResetOTP,
+      resetPasswordWithPhoneOTP,
       clearUserInfo,
       fetchUserInfo,
       setUserInfo,

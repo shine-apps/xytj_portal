@@ -239,7 +239,7 @@ export function getSession() {
  * 更新用户信息
  */
 export function updateUser(data: { name?: string, image?: string }) {
-  return http.post<BetterAuthUser>(
+  return http.post<{ status: boolean }>(
     `${AUTH_BASE}/update-user`,
     data,
     {},
@@ -252,9 +252,48 @@ export function updateUser(data: { name?: string, image?: string }) {
  * 退出登录 - 使用uni.request实现
  */
 export function signOut() {
-  return http.post<{ success: boolean }>(
+  return http.post<{ status: boolean }>(
     `${AUTH_BASE}/sign-out`,
     {},
+    {},
+    {},
+    { isRaw: true },
+  )
+}
+
+/**
+ * 修改密码
+ */
+export function changePassword(data: { currentPassword: string, newPassword: string }) {
+  return http.post<{ status: boolean }>(
+    `${AUTH_BASE}/change-password`,
+    data,
+    {},
+    {},
+    { isRaw: true },
+  )
+}
+
+/**
+ * 请求密码重置OTP
+ */
+export function requestPasswordReset(data: { phoneNumber: string }) {
+  return http.post<{ status: boolean }>(
+    `${AUTH_BASE}/phone-number/request-password-reset`,
+    data,
+    {},
+    {},
+    { isRaw: true },
+  )
+}
+
+/**
+ * 使用OTP重置密码
+ */
+export function resetPasswordWithOTP(data: { phoneNumber: string, otp: string, newPassword: string }) {
+  return http.post<{ status: boolean }>(
+    `${AUTH_BASE}/phone-number/reset-password`,
+    data,
     {},
     {},
     { isRaw: true },

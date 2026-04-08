@@ -69,19 +69,17 @@
     <!-- Video Player Modal -->
     <wd-popup
       v-model="showVideoPlayer"
-      custom-style="background: transparent; box-shadow: none; padding: 0;"
+      custom-style="box-shadow: none; padding: 0;"
       :close-on-click-modal="true"
       @close="onPopupClose"
     >
       <view class="w-[90vw] overflow-hidden rounded-lg bg-black">
-        <video
+        <VideoPlayer
           v-if="showVideoPlayer && currentVideo"
           :src="currentVideo.url"
-          :poster="currentVideo.coverUrl || ''"
-          autoplay
-          controls
-          object-fit="contain"
-          class="aspect-video w-full"
+          :poster="currentVideo.coverUrl"
+          video-id="courseVideo"
+          @close="onPopupClose"
         />
       </view>
     </wd-popup>
@@ -93,8 +91,10 @@ import type { ICollectionDetail, IVideo } from '@/service/collections'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
+import VideoPlayer from '@/components/VideoPlayer.vue'
 import { getCollectionDetailAPI } from '@/service/collections'
 import { useSettingsStore } from '@/store/settings'
+import { setPageShareConfig } from '@/utils/share'
 
 definePage({
   style: {
@@ -138,7 +138,6 @@ async function queryList(pageNo: number, pageSize: number) {
     return
   }
 
-  // Since the API returns the detail with all videos, we only fetch once
   if (pageNo > 1) {
     paging.value.complete([])
     return
@@ -147,8 +146,21 @@ async function queryList(pageNo: number, pageSize: number) {
   try {
     const res = await getCollectionDetailAPI(collectionId.value)
     collection.value = res
-    // Update navigation title
     uni.setNavigationBarTitle({ title: res.title })
+
+    setPageShareConfig({
+      onShareAppMessage: () => ({
+        title: res.title,
+        path: `/pages/courses/detail?id=${collectionId.value}`,
+      }),
+      onShareTimeline: () => ({
+        title: res.title,
+        query: `id=${collectionId.value}`,
+        imageUrl: res.coverUrl || '',
+        summary: res.description || '',
+      }),
+    })
+
     paging.value.complete(res.videos || [])
   }
   catch (e) {
@@ -162,7 +174,6 @@ function onVideoClick(video: IVideo) {
 }
 
 function onPopupClose() {
-  // Video will be destroyed due to v-if
   showVideoPlayer.value = false
 }
 
@@ -187,6 +198,3 @@ function formatSize(bytes: number) {
   return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 </script>
-
-<style lang="scss" scoped>
-</style>

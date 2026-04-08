@@ -2,16 +2,12 @@
   <view class="h-full bg-gray-50">
     <view v-if="video" class="bg-white">
       <!-- Video Player -->
-      <view class="relative aspect-video w-full bg-black">
-        <video
-          :src="video.url"
-          :poster="video.coverUrl || ''"
-          autoplay
-          controls
-          object-fit="contain"
-          class="h-full w-full"
-        />
-      </view>
+      <VideoPlayer
+        :src="video.url"
+        :poster="video.coverUrl || ''"
+        :container-width="750"
+        @close="handleClose"
+      />
 
       <!-- Video Info -->
       <view class="p-4">
@@ -37,13 +33,14 @@
 import type { IVideo } from '@/service/collections'
 import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
+import VideoPlayer from '@/components/VideoPlayer.vue'
 import { useSettingsStore } from '@/store/settings'
+import { setPageShareConfig } from '@/utils/share'
 
 definePage({
   style: {
     navigationBarTitleText: '视频详情',
   },
-  // 视频详情页需要登录检查
   excludeLoginPath: true,
 })
 
@@ -59,21 +56,34 @@ onLoad(async (options) => {
   }
 
   if (options?.video) {
+    if (options.collectionTitle) {
+      collectionTitle.value = decodeURIComponent(options.collectionTitle)
+    }
+
     try {
-      // Parse video data passed from navigation
       video.value = JSON.parse(decodeURIComponent(options.video))
-      // Update navigation title
       if (video.value?.title) {
         uni.setNavigationBarTitle({ title: video.value.title })
       }
+
+      const videoData = encodeURIComponent(options.video)
+      const collectionTitleParam = collectionTitle.value ? encodeURIComponent(collectionTitle.value) : ''
+
+      setPageShareConfig({
+        onShareAppMessage: () => ({
+          title: video.value?.title || '视频详情',
+          path: `/pages/courses/video-detail?video=${videoData}${collectionTitleParam ? `&collectionTitle=${collectionTitleParam}` : ''}`,
+        }),
+        onShareTimeline: () => ({
+          title: video.value?.title || '视频详情',
+          query: `video=${videoData}${collectionTitleParam ? `&collectionTitle=${collectionTitleParam}` : ''}`,
+          imageUrl: video.value?.coverUrl || '',
+        }),
+      })
     }
     catch (e) {
       uni.showToast({ title: 'Invalid video data', icon: 'none' })
       setTimeout(() => uni.navigateBack(), 1500)
-    }
-
-    if (options.collectionTitle) {
-      collectionTitle.value = decodeURIComponent(options.collectionTitle)
     }
   }
   else {
@@ -81,6 +91,27 @@ onLoad(async (options) => {
     setTimeout(() => uni.navigateBack(), 1500)
   }
 })
+
+function handleClose() {
+  const pages = getCurrentPages()
+  console.log('handleClose - 页面栈长度:', pages.length)
+  console.log('handleClose - 页面栈:', pages.map(p => p.route))
+
+  if (pages.length > 1) {
+    console.log('handleClose - 执行 navigateBack')
+    uni.navigateBack()
+  }
+  else if (video.value?.collectionId) {
+    console.log('handleClose - 执行 redirectTo 课程详情')
+    uni.redirectTo({
+      url: `/pages/courses/detail?id=${video.value.collectionId}`,
+    })
+  }
+  else {
+    console.log('handleClose - 执行 switchTab 首页')
+    uni.switchTab({ url: '/pages/index/index' })
+  }
+}
 
 function navigateToCollection() {
   if (!video.value?.collectionId)

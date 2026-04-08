@@ -22,10 +22,10 @@ onLoad((options) => {
   if (options && options['aspect-ratio']) {
     aspectRatio.value = options['aspect-ratio']
   }
-  console.log(aspectRatio.value)
 
   if (options && options.src) {
     imgSrc.value = decodeURIComponent(options.src)
+    console.log(options.src, imgSrc.value)
   }
   else {
     // 没有选择图片，先选择图片
@@ -70,18 +70,7 @@ function onConfirm({ tempFilePath }) {
   croppedImg.value = tempFilePath
 
   // 返回裁剪后的图片路径给上一页
-  const pages = getCurrentPages()
-  const prevPage = pages[pages.length - 2] as any
-  if (prevPage && prevPage.$vm) {
-    // 通过 eventChannel 传递数据
-    const eventChannel = prevPage.getOpenerEventChannel()
-    if (eventChannel) {
-      eventChannel.emit('cropperConfirm', { url: tempFilePath })
-    }
-    // 或者通过全局方式传递
-    uni.$emit('imgCropperConfirm', { url: tempFilePath })
-  }
-
+  uni.$emit('imgCropperConfirm', { url: tempFilePath })
   uni.navigateBack()
 }
 
@@ -97,7 +86,7 @@ function onCancel() {
       v-model="showCropper"
       :img-src="imgSrc"
       :aspect-ratio="aspectRatio"
-      :max-scale="3"
+      :max-scale="2"
       :min-scale="0.5"
       @confirm="onConfirm"
       @cancel="onCancel"
