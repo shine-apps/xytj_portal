@@ -26,6 +26,7 @@ onLoad((options) => {
   if (options && options.src) {
     imgSrc.value = decodeURIComponent(options.src)
     console.log(options.src, imgSrc.value)
+    showCropper.value = true
   }
   else {
     // 没有选择图片，先选择图片
