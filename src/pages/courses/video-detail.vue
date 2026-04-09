@@ -19,6 +19,26 @@
         <view v-if="collectionTitle" class="mb-4 text-sm text-gray-500">
           所属课程: <text class="text-blue-500 active:opacity-70" @click="navigateToCollection">{{ collectionTitle }}</text>
         </view>
+
+        <!-- Navigation Buttons -->
+        <view class="flex justify-between gap-4">
+          <view
+            class="flex flex-1 items-center justify-center rounded-lg bg-gray-100 py-3 transition active:bg-gray-200"
+            :class="{ 'opacity-50': !hasPreviousVideo }"
+            @click="navigateToPreviousVideo"
+          >
+            <text class="i-carbon-chevron-left mr-1 text-gray-600" />
+            <text class="text-sm text-gray-600">上一个视频</text>
+          </view>
+          <view
+            class="flex flex-1 items-center justify-center rounded-lg bg-gray-100 py-3 transition active:bg-gray-200"
+            :class="{ 'opacity-50': !hasNextVideo }"
+            @click="navigateToNextVideo"
+          >
+            <text class="text-sm text-gray-600">下一个视频</text>
+            <text class="i-carbon-chevron-right ml-1 text-gray-600" />
+          </view>
+        </view>
       </view>
     </view>
 
@@ -31,9 +51,10 @@
 
 <script setup lang="ts">
 import type { IVideo } from '@/service/collections'
-import { onLoad } from '@dcloudio/uni-app'
-import { ref } from 'vue'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
+import { computed, ref } from 'vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
+import { useCoursesStore } from '@/store/courses'
 import { useSettingsStore } from '@/store/settings'
 import { setPageShareConfig } from '@/utils/share'
 
@@ -45,8 +66,25 @@ definePage({
 })
 
 const settingsStore = useSettingsStore()
-const video = ref<IVideo | null>(null)
-const collectionTitle = ref('')
+const coursesStore = useCoursesStore()
+const videoId = ref('')
+const collectionId = ref('')
+
+const video = computed(() => {
+  return coursesStore.getVideoById(videoId.value)
+})
+
+const collectionTitle = computed(() => {
+  return coursesStore.currentCourse?.title || ''
+})
+
+const hasPreviousVideo = computed(() => {
+  return !!coursesStore.getPreviousVideo(videoId.value)
+})
+
+const hasNextVideo = computed(() => {
+  return !!coursesStore.getNextVideo(videoId.value)
+})
 
 onLoad(async (options) => {
   await settingsStore.fetchSettings()
@@ -55,39 +93,42 @@ onLoad(async (options) => {
     return
   }
 
-  if (options?.video) {
-    if (options.collectionTitle) {
-      collectionTitle.value = decodeURIComponent(options.collectionTitle)
-    }
+  if (options?.id && options?.collectionId) {
+    videoId.value = options.id
+    collectionId.value = options.collectionId
 
     try {
-      video.value = JSON.parse(decodeURIComponent(options.video))
+      // 先获取课程详情
+      await coursesStore.fetchCourseDetail(collectionId.value)
+
+      // 检查视频是否存在
+      if (!video.value) {
+        throw new Error('Video not found')
+      }
+
       if (video.value?.title) {
         uni.setNavigationBarTitle({ title: video.value.title })
       }
 
-      const videoData = encodeURIComponent(options.video)
-      const collectionTitleParam = collectionTitle.value ? encodeURIComponent(collectionTitle.value) : ''
-
       setPageShareConfig({
         onShareAppMessage: () => ({
           title: video.value?.title || '视频详情',
-          path: `/pages/courses/video-detail?video=${videoData}${collectionTitleParam ? `&collectionTitle=${collectionTitleParam}` : ''}`,
+          path: `/pages/courses/video-detail?id=${videoId.value}&collectionId=${collectionId.value}`,
         }),
         onShareTimeline: () => ({
           title: video.value?.title || '视频详情',
-          query: `video=${videoData}${collectionTitleParam ? `&collectionTitle=${collectionTitleParam}` : ''}`,
+          query: `id=${videoId.value}&collectionId=${collectionId.value}`,
           imageUrl: video.value?.coverUrl || '',
         }),
       })
     }
     catch (e) {
-      uni.showToast({ title: 'Invalid video data', icon: 'none' })
+      uni.showToast({ title: 'Failed to load video', icon: 'none' })
       setTimeout(() => uni.navigateBack(), 1500)
     }
   }
   else {
-    uni.showToast({ title: 'No video data provided', icon: 'none' })
+    uni.showToast({ title: 'No video ID provided', icon: 'none' })
     setTimeout(() => uni.navigateBack(), 1500)
   }
 })
@@ -101,10 +142,10 @@ function handleClose() {
     console.log('handleClose - 执行 navigateBack')
     uni.navigateBack()
   }
-  else if (video.value?.collectionId) {
+  else if (collectionId.value) {
     console.log('handleClose - 执行 redirectTo 课程详情')
     uni.redirectTo({
-      url: `/pages/courses/detail?id=${video.value.collectionId}`,
+      url: `/pages/courses/detail?id=${collectionId.value}`,
     })
   }
   else {
@@ -114,7 +155,7 @@ function handleClose() {
 }
 
 function navigateToCollection() {
-  if (!video.value?.collectionId)
+  if (!collectionId.value)
     return
 
   const pages = getCurrentPages()
@@ -132,8 +173,26 @@ function navigateToCollection() {
   }
 
   uni.navigateTo({
-    url: `/pages/courses/detail?id=${video.value.collectionId}`,
+    url: `/pages/courses/detail?id=${collectionId.value}`,
   })
+}
+
+function navigateToPreviousVideo() {
+  const previousVideo = coursesStore.getPreviousVideo(videoId.value)
+  if (!previousVideo)
+    return
+
+  videoId.value = previousVideo.id
+  uni.setNavigationBarTitle({ title: previousVideo.title })
+}
+
+function navigateToNextVideo() {
+  const nextVideo = coursesStore.getNextVideo(videoId.value)
+  if (!nextVideo)
+    return
+
+  videoId.value = nextVideo.id
+  uni.setNavigationBarTitle({ title: nextVideo.title })
 }
 </script>
 

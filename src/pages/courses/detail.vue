@@ -2,22 +2,22 @@
   <view class="h-full bg-gray-50">
     <z-paging ref="paging" v-model="videoList" :auto="false" @query="queryList">
       <template #top>
-        <view v-if="collection" class="mb-2 bg-white p-4 shadow-sm">
+        <view v-if="coursesStore.currentCourse" class="mb-2 bg-white p-4 shadow-sm">
           <image
-            v-if="collection.coverUrl"
-            :src="collection.coverUrl"
+            v-if="coursesStore.currentCourse.coverUrl"
+            :src="coursesStore.currentCourse.coverUrl"
             mode="aspectFill"
             class="mb-3 h-48 w-full rounded-lg"
           />
           <view class="mb-2 text-xl font-bold">
-            {{ collection.title }}
+            {{ coursesStore.currentCourse.title }}
           </view>
-          <view v-if="collection.description" class="mb-2 text-sm text-gray-500">
-            {{ collection.description }}
+          <view v-if="coursesStore.currentCourse.description" class="mb-2 text-sm text-gray-500">
+            {{ coursesStore.currentCourse.description }}
           </view>
           <view class="flex items-center justify-between text-xs text-gray-400">
-            <text>创建于: {{ formatDate(collection.createdAt) }}</text>
-            <text>{{ collection.videos?.length || 0 }} 个视频</text>
+            <text>创建于: {{ formatDate(coursesStore.currentCourse.createdAt) }}</text>
+            <text>{{ coursesStore.currentCourse.videos?.length || 0 }} 个视频</text>
           </view>
         </view>
         <view class="px-4 py-2 text-sm text-gray-500 font-medium">
@@ -88,11 +88,11 @@
 
 <script setup lang="ts">
 import type { ICollectionDetail, IVideo } from '@/service/collections'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
-import { getCollectionDetailAPI } from '@/service/collections'
+import { useCoursesStore } from '@/store/courses'
 import { useSettingsStore } from '@/store/settings'
 import { setPageShareConfig } from '@/utils/share'
 
@@ -105,9 +105,9 @@ definePage({
 })
 
 const settingsStore = useSettingsStore()
+const coursesStore = useCoursesStore()
 const paging = ref<any>(null)
 const collectionId = ref('')
-const collection = ref<ICollectionDetail | null>(null)
 const videoList = ref<IVideo[]>([])
 const showVideoPlayer = ref(false)
 const currentVideo = ref<IVideo | null>(null)
@@ -144,8 +144,7 @@ async function queryList(pageNo: number, pageSize: number) {
   }
 
   try {
-    const res = await getCollectionDetailAPI(collectionId.value)
-    collection.value = res
+    const res = await coursesStore.fetchCourseDetail(collectionId.value)
     uni.setNavigationBarTitle({ title: res.title })
 
     setPageShareConfig({
@@ -178,12 +177,15 @@ function onPopupClose() {
 }
 
 function navigateToVideoDetail(video: IVideo) {
-  // Navigate to video detail page with video data and collection title
-  const collectionTitle = collection.value?.title || ''
+  // Navigate to video detail page with video ID
   uni.navigateTo({
-    url: `/pages/courses/video-detail?video=${encodeURIComponent(JSON.stringify(video))}&collectionTitle=${encodeURIComponent(collectionTitle)}`,
+    url: `/pages/courses/video-detail?id=${video.id}&collectionId=${video.collectionId}`,
   })
 }
+
+onUnload(() => {
+  coursesStore.clearCurrentCourse()
+})
 
 function formatDate(date: string) {
   return dayjs(date).format('YYYY-MM-DD')
