@@ -29,7 +29,7 @@
         <view
           v-for="item in videoList"
           :key="item.id"
-          class="mb-3 flex items-center rounded-lg bg-white p-3 shadow-sm transition active:bg-gray-50"
+          class="mb-3 flex items-center border border-gray-200 rounded-lg bg-white p-3 shadow transition active:bg-gray-50"
           @click="navigateToVideoDetail(item)"
         >
           <view
@@ -87,13 +87,13 @@
 </template>
 
 <script setup lang="ts">
-import type { ICollectionDetail, IVideo } from '@/service/collections'
+import type { IVideo } from '@/service/collections'
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { useCoursesStore } from '@/store/courses'
-import { useSettingsStore } from '@/store/settings'
+// import { useSettingsStore } from '@/store/settings'
 import { setPageShareConfig } from '@/utils/share'
 
 definePage({
@@ -101,10 +101,10 @@ definePage({
     navigationBarTitleText: '课程详情',
   },
   // 课程详情页需要登录检查
-  excludeLoginPath: false,
+  excludeLoginPath: true,
 })
 
-const settingsStore = useSettingsStore()
+// const settingsStore = useSettingsStore()
 const coursesStore = useCoursesStore()
 const paging = ref<any>(null)
 const collectionId = ref('')
@@ -113,11 +113,11 @@ const showVideoPlayer = ref(false)
 const currentVideo = ref<IVideo | null>(null)
 
 onLoad(async (options) => {
-  await settingsStore.fetchSettings()
-  if (!settingsStore.showVideo) {
-    uni.switchTab({ url: '/pages/index/index' })
-    return
-  }
+  // await settingsStore.fetchSettings()
+  // if (!settingsStore.showVideo) {
+  //   uni.switchTab({ url: '/pages/index/index' })
+  //   return
+  // }
 
   if (options?.id) {
     collectionId.value = options.id

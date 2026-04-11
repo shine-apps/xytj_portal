@@ -205,7 +205,7 @@ onUnmounted(() => {
       :show-progress="false"
       :enable-progress-gesture="false"
       :loop="isLoop"
-      class="w-full"
+      class="min-h-[200px] w-full"
       :style="{ height: computedVideoHeight }"
       :class="isMirrored ? 'mirror' : ''"
       @play="onPlay"
@@ -276,7 +276,7 @@ onUnmounted(() => {
             class="relative rounded-full px-3 py-1.5 transition-colors duration-200 active:bg-white/10"
             @click.stop="togglePlaybackRatePicker"
           >
-            <text class="text-xs text-white">{{ playbackRate }}x</text>
+            <text class="text-xs text-white">{{ playbackRate }}X</text>
             <!-- 倍速选择器 -->
             <view
               v-if="showPlaybackRatePicker"
@@ -289,7 +289,7 @@ onUnmounted(() => {
                 :class="playbackRate === rate ? 'bg-white/20' : ''"
                 @click.stop="setPlaybackRate(rate)"
               >
-                <text class="text-xs text-white">{{ rate }}x</text>
+                <text class="text-xs text-white">{{ rate }}X</text>
               </view>
             </view>
           </view>

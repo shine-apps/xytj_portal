@@ -50,12 +50,11 @@
 </template>
 
 <script setup lang="ts">
-import type { IVideo } from '@/service/collections'
-import { onLoad, onUnload } from '@dcloudio/uni-app'
+import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { useCoursesStore } from '@/store/courses'
-import { useSettingsStore } from '@/store/settings'
+// import { useSettingsStore } from '@/store/settings'
 import { setPageShareConfig } from '@/utils/share'
 
 definePage({
@@ -65,7 +64,7 @@ definePage({
   excludeLoginPath: true,
 })
 
-const settingsStore = useSettingsStore()
+// const settingsStore = useSettingsStore()
 const coursesStore = useCoursesStore()
 const videoId = ref('')
 const collectionId = ref('')
@@ -87,11 +86,11 @@ const hasNextVideo = computed(() => {
 })
 
 onLoad(async (options) => {
-  await settingsStore.fetchSettings()
-  if (!settingsStore.showVideo) {
-    uni.switchTab({ url: '/pages/index/index' })
-    return
-  }
+  // await settingsStore.fetchSettings()
+  // if (!settingsStore.showVideo) {
+  //   uni.switchTab({ url: '/pages/index/index' })
+  //   return
+  // }
 
   if (options?.id && options?.collectionId) {
     videoId.value = options.id

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { IActivityAlbum } from '@/service/album'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import useUpload from '@/hooks/useUpload'
 import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI, updateAlbumDescriptionAPI } from '@/service/album'
 import { useUserStore } from '@/store/user'
@@ -285,19 +285,50 @@ function formatSize(size: number): string {
   return `${(size / (1024 * 1024)).toFixed(1)}MB`
 }
 
-const actionList = ref([
-  { name: '拍照' },
-  { name: '从相册选择' },
-  { name: '选择视频' },
-])
+const actionList = computed(() => {
+  // #ifdef MP-WEIXIN
+  return [
+    { name: '从微信消息中选择' },
+    { name: '从相册选择' },
+    { name: '选择视频' },
+  ]
+  // #endif
+  // #ifndef MP-WEIXIN
+  return [
+    { name: '从相册选择' },
+    { name: '选择视频' },
+  ]
+  // #endif
+})
 
 function onActionSelect({ item }: { item: { name: string } }) {
-  if (item.name === '拍照' || item.name === '从相册选择') {
+  if (item.name === '从微信消息中选择') {
+    chooseFromMessage()
+  }
+  else if (item.name === '从相册选择') {
     chooseImage()
   }
   else if (item.name === '选择视频') {
     chooseVideo()
   }
+}
+
+function chooseFromMessage() {
+  // #ifdef MP-WEIXIN
+  wx.chooseMessageFile({
+    count: 1,
+    type: 'image',
+    success: (res) => {
+      const file = res.tempFiles[0]
+      showActionSheet.value = false
+      imageUpload.upload(file.path, file.size)
+    },
+    fail: (err) => {
+      console.error('从消息选择图片失败', err)
+      showActionSheet.value = false
+    },
+  })
+  // #endif
 }
 
 // 初始化加载数据

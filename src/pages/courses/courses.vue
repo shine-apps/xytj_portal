@@ -1,5 +1,5 @@
 <template>
-  <view class="h-full">
+  <view v-if="settingsStore.showVideo" class="h-full">
     <z-paging ref="paging" v-model="dataList" @query="queryList">
       <view class="p-4">
         <view

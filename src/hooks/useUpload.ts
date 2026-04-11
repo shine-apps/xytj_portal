@@ -116,8 +116,8 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
     }
   }
 
-  const upload = (tempFilePath: string) => {
-    handleFileChoose({ tempFilePath, size: 0 })
+  const upload = (tempFilePath: string, size: number = 0) => {
+    handleFileChoose({ tempFilePath, size })
   }
 
   return { loading, error, data, run, upload }

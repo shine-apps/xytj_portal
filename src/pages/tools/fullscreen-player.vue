@@ -212,6 +212,7 @@ function resetHideControlsTimer() {
 
 <template>
   <view
+    v-if="videoSrc"
     class="fixed inset-0 z-[9999] h-screen w-screen flex items-center justify-center bg-black transition-opacity duration-300"
     :class="isLandscape ? 'flex-row' : 'flex-col'"
     @click="resetHideControlsTimer"
