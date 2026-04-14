@@ -41,13 +41,13 @@ const baseFeatures = [
     url: '/pages/teacher-invitations/create',
     showKey: null,
   },
-  // {
-  //   title: '学员风采',
-  //   desc: '优秀学员展示',
-  //   icon: 'i-carbon-star',
-  //   url: '',
-  //   showKey: null,
-  // },
+  {
+    title: '教练团队',
+    desc: '专业教练团队展示',
+    icon: 'i-carbon-group',
+    url: '/pages/coach/index',
+    showKey: null,
+  },
 ]
 
 const features = computed(() => {

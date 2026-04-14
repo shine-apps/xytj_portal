@@ -1,11 +1,3 @@
-<route lang="json5">
-{
-  style: {
-    navigationBarTitleText: '个人信息',
-  },
-}
-</route>
-
 <template>
   <view class="min-h-screen bg-gray-100 p-4 pb-safe">
     <button
@@ -130,6 +122,12 @@ import { isMpWeixin } from '@uni-helper/uni-env'
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useUserStore } from '@/store/user'
 import { uploadToCos } from '@/utils/cos'
+
+definePage({
+  style: {
+    navigationBarTitleText: '个人信息',
+  },
+})
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
