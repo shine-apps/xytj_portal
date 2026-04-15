@@ -46,17 +46,14 @@
       </navigator>
     </view>
   </view>
-  <view v-else class="h-full flex items-center justify-center">
+  <view v-else class="h-screen flex items-center justify-center">
     <view class="text-center">
-      <view class="mb-4 text-lg text-gray-600">
-        请使用微信授权登录
-      </view>
       <button
         class="rounded-lg bg-green-500 px-6 py-3 text-white shadow-md transition active:bg-green-600"
         open-type="getPhoneNumber"
         @getphonenumber="handleWechatPhoneLogin"
       >
-        手机快捷登录
+        手机号快捷登录
       </button>
     </view>
   </view>
