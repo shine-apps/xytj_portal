@@ -293,12 +293,6 @@ const actionList = computed(() => {
     { name: '选择视频' },
   ]
   // #endif
-  // #ifndef MP-WEIXIN
-  return [
-    { name: '从相册选择' },
-    { name: '选择视频' },
-  ]
-  // #endif
 })
 
 function onActionSelect({ item }: { item: { name: string } }) {
@@ -407,7 +401,7 @@ onMounted(() => {
             <!-- 图片 -->
             <image
               v-if="album.type === 'IMAGE'"
-              :src="album.coverUrl || `${album.url}?imageMogr2/thumbnail/200x`"
+              :src="album.coverUrl || `${album.url}?imageMogr2/thumbnail/700x`"
               class="block w-full"
               mode="widthFix"
               lazy-load
