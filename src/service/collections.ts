@@ -23,6 +23,7 @@ export interface IVideo {
   collectionId: string
   userId: string
   createdAt: string
+  viewCount?: number
 }
 
 export interface ICollectionDetail extends ICollection {
@@ -37,4 +38,9 @@ export function getCollectionsAPI() {
 /** Get collection detail */
 export function getCollectionDetailAPI(id: string) {
   return http.Get<ICollectionDetail>(`/api/collections/${id}`)
+}
+
+/** Record video view */
+export function recordVideoViewAPI(id: string) {
+  return http.Post<{ success: boolean }>(`/api/videos/${id}/view`)
 }

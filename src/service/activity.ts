@@ -30,6 +30,7 @@ export interface IActivity {
   userId: string
   createdAt: string
   updatedAt: string
+  visitCount?: number
   collection?: IActivityCollection
   members?: IActivityMember[]
 }
@@ -140,4 +141,8 @@ export const removeMemberAPI = (activityId: string, userId: string) => {
  */
 export const updateActivityAPI = (id: string, data: Partial<IActivity>) => {
   return http.patch<IActivity>(`/api/activities/${id}`, data)
+}
+
+export const recordActivityVisitAPI = (id: string) => {
+  return http.post<{ success: boolean }>(`/api/activities/${id}/visit`)
 }

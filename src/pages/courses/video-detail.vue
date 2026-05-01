@@ -20,6 +20,12 @@
           所属课程: <text class="text-blue-500 active:opacity-70" @click="navigateToCollection">{{ collectionTitle }}</text>
         </view>
 
+        <!-- View Count -->
+        <view class="mb-4 flex items-center text-sm text-gray-400">
+          <text class="i-carbon-view mr-1" />
+          <text>{{ video.viewCount || 0 }} 次观看</text>
+        </view>
+
         <!-- Navigation Buttons -->
         <view class="flex justify-between gap-4">
           <view
@@ -53,6 +59,7 @@
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
+import { recordVideoViewAPI } from '@/service/collections'
 import { useCoursesStore } from '@/store/courses'
 // import { useSettingsStore } from '@/store/settings'
 import { setPageShareConfig } from '@/utils/share'
@@ -108,6 +115,8 @@ onLoad(async (options) => {
       if (video.value?.title) {
         uni.setNavigationBarTitle({ title: video.value.title })
       }
+
+      recordVideoViewAPI(videoId.value).catch(() => {})
 
       setPageShareConfig({
         onShareAppMessage: () => ({

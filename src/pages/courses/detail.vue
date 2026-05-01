@@ -55,6 +55,10 @@
             </view>
             <view class="flex justify-between text-xs text-gray-400">
               <text>{{ formatSize(item.size) }}</text>
+              <text class="flex items-center">
+                <text class="i-carbon-view mr-0.5" />
+                {{ item.viewCount || 0 }}
+              </text>
               <text>{{ formatDate(item.createdAt) }}</text>
             </view>
           </view>

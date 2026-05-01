@@ -12,6 +12,7 @@ import {
   getActivityDetailAPI,
   getActivityMembersAPI,
   joinActivityAPI,
+  recordActivityVisitAPI,
   removeMemberAPI,
   updateMemberNicknameAPI,
   updateMemberRoleAPI,
@@ -92,6 +93,7 @@ async function loadData() {
   try {
     const res = await getActivityDetailAPI(activityId.value, true)
     activity.value = res
+    recordActivityVisitAPI(activityId.value).catch(() => {})
     // 从活动详情中初始化成员列表
     members.value = res.members || []
     currentUserMember.value = res.members.find(m => m.userId === userStore.userInfo?.userId) || null
@@ -428,6 +430,13 @@ async function submitNicknameUpdate() {
           <view class="i-carbon-location mt-1 text-lg text-[#a33327]" />
           <view class="text-sm text-gray-600">
             {{ formatLocation(activity.location) }}
+          </view>
+        </view>
+
+        <view class="mt-3 flex items-center space-x-3">
+          <view class="i-carbon-view mt-1 text-lg text-[#a33327]" />
+          <view class="text-sm text-gray-600">
+            {{ activity.visitCount || 0 }} 次访问
           </view>
         </view>
       </view>
