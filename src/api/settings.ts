@@ -3,7 +3,7 @@ import { http } from '@/http/http'
 export interface ISetting {
   id: number
   key: string
-  value: string
+  value: any
   createdAt: string
   updatedAt: string
 }

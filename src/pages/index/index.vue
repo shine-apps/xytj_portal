@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { BannerItem } from '@/store/settings'
 import { computed } from 'vue'
 import { useToast } from 'wot-design-uni'
 import { useSettingsStore } from '@/store/settings'
@@ -63,6 +64,10 @@ const formattedPhoneNumber = computed(() => {
   return settingsStore.phoneNumber.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
 })
 
+const activeBanners = computed<BannerItem[]>(() => {
+  return settingsStore.banners.filter(banner => banner.isActive)
+})
+
 const courses = [
   {
     title: '青少年武术基础班',
@@ -105,40 +110,53 @@ function makePhoneCall() {
 
 onLoad(() => {
   console.log('翔云文武小程序首页加载完成')
+  settingsStore.fetchSettings()
 })
 </script>
 
 <template>
   <view class="min-h-screen bg-[#f7f7f7] font-serif" style="font-family: 'KaiTi', 'STKaiti', 'serif'">
+    <view class="flex items-center justify-center gap-2 bg-white py-2" :style="{ paddingTop: 'var(--status-bar-height)' }">
+      <image src="/static/logo.png" class="h-8 w-8" mode="aspectFit" />
+      <text class="text-lg text-[#1a1a1a] font-bold tracking-widest">翔云文武</text>
+    </view>
+
     <!-- 顶部横幅 -->
-    <view class="relative h-50">
+    <view v-if="activeBanners.length > 0" class="relative">
+      <wd-swiper
+        :list="activeBanners"
+        autoplay
+        value-key="value"
+        image-mode="aspectFit"
+        :autoplay-video="false"
+        stop-autoplay-when-video-play
+        :indicator="{ type: 'fraction' }"
+        :video-loop="false"
+        muted
+        height="200"
+      />
+    </view>
+    <view v-else class="relative h-50">
       <image
         src="https://xytj-1303556457.cos.ap-shanghai.myqcloud.com/publics/banners/xytj_banner2.png"
         class="absolute inset-0 h-full w-full brightness-90 sepia-50 filter"
         mode="aspectFill"
       />
       <view class="absolute inset-0 bg-black/30" />
-
-      <!-- 装饰纹理 -->
       <view
         class="pointer-events-none absolute inset-0 opacity-10"
         :style="{ backgroundImage: `url('${RICE_PAPER_IMAGE}')` }"
       />
-
       <view class="relative z-10 h-full flex flex-col items-center justify-center pt-2">
         <view class="flex flex-col items-center border-y-2 border-white/80">
           <text class="mb-4 text-4xl text-white font-bold tracking-[0.5em] shadow-sm">翔云文武</text>
           <text class="text-xl text-white/90 font-light tracking-widest">传统武术 · 太极养生</text>
         </view>
-
-        <!-- Left Couplet -->
         <view class="absolute left-4 flex flex-col items-center space-y-3">
           <view class="w-8 flex flex-col items-center border rounded-sm p2 shadow-lg">
             <text class="text-xl text-white font-bold leading-8 font-serif" style="writing-mode: vertical-rl">养性修德</text>
           </view>
         </view>
-
-        <!-- Right Couplet -->
         <view class="absolute right-4 flex flex-col items-center space-y-3">
           <view class="px- w-8 flex flex-col items-center border rounded-sm p2 shadow-lg">
             <text class="text-xl text-white font-bold leading-8 font-serif" style="writing-mode: vertical-rl">习武学文</text>

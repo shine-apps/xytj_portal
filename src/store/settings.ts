@@ -3,6 +3,13 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { getSettings } from '@/api/settings'
 
+export interface BannerItem {
+  value: string
+  poster?: string
+  type: 'image' | 'video'
+  isActive: boolean
+}
+
 export const useSettingsStore = defineStore(
   'settings',
   () => {
@@ -12,11 +19,26 @@ export const useSettingsStore = defineStore(
     const CACHE_DURATION = 5 * 60 * 1000
 
     const settingsMap = computed(() => {
-      const map: Record<string, string> = {}
+      const map: Record<string, any> = {}
       for (const setting of settings.value) {
         map[setting.key] = setting.value
       }
       return map
+    })
+
+    const banners = computed<BannerItem[]>(() => {
+      const bannersValue = settingsMap.value.banners
+      if (!bannersValue)
+        return []
+      try {
+        if (typeof bannersValue === 'string') {
+          return JSON.parse(bannersValue) as BannerItem[]
+        }
+        return Array.isArray(bannersValue) ? bannersValue : []
+      }
+      catch {
+        return []
+      }
     })
 
     const showVideo = computed(() => {
@@ -61,6 +83,7 @@ export const useSettingsStore = defineStore(
       isLoaded,
       lastFetchTime,
       settingsMap,
+      banners,
       showVideo,
       phoneNumber,
       fetchSettings,
