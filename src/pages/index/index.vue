@@ -109,8 +109,8 @@ function makePhoneCall() {
 }
 
 onLoad(() => {
-  console.log('翔云文武小程序首页加载完成')
-  settingsStore.fetchSettings()
+  // console.log('翔云文武小程序首页加载完成')
+  // settingsStore.fetchSettings()
 })
 </script>
 
@@ -125,6 +125,7 @@ onLoad(() => {
     <view v-if="activeBanners.length > 0" class="relative">
       <wd-swiper
         :list="activeBanners"
+        :interval="3000"
         autoplay
         value-key="value"
         image-mode="aspectFit"

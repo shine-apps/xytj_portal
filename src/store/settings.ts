@@ -42,7 +42,7 @@ export const useSettingsStore = defineStore(
     })
 
     const showVideo = computed(() => {
-      return settingsMap.value.showVideo === 'true'
+      return settingsMap.value.showVideo
     })
 
     const phoneNumber = computed(() => {

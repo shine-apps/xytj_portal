@@ -1,9 +1,24 @@
 <template>
-  <!-- 根据配置决定是否显示登录页面 -->
+  <view class="min-h-screen bg-white px-6 pt-20">
+    <view class="mb-10 flex flex-col items-center">
+      <image src="/static/logo.png" class="mb-4 h-20 w-20" mode="aspectFit" />
+      <text class="text-2xl text-[#1a1a1a] font-bold tracking-widest">翔云文武</text>
+    </view>
 
-  <view v-if="showLoginPage" class="login-page min-h-screen bg-white p-6">
-    <view class="mb-8 mt-10 text-center text-3xl text-gray-800 font-bold">
-      欢迎登录
+    <view v-if="isMpWeixin" class="mb-8">
+      <button
+        class="w-full rounded-lg bg-[#07c160] py-3 text-white font-medium shadow-md transition active:bg-[#06ad56]"
+        open-type="getPhoneNumber"
+        @getphonenumber="handleWechatPhoneLogin"
+      >
+        手机号快捷登录
+      </button>
+    </view>
+
+    <view v-if="isMpWeixin" class="mb-6 flex items-center">
+      <view class="h-px flex-1 bg-gray-200" />
+      <text class="px-4 text-sm text-gray-400">其他登录方式</text>
+      <view class="h-px flex-1 bg-gray-200" />
     </view>
 
     <wd-tabs v-model="currentTab" class="mb-6">
@@ -38,23 +53,12 @@
     </view>
 
     <view class="mt-6 flex justify-between px-2 text-sm text-gray-500">
-      <navigator url="/pages/register/register" hover-class="none" class="text-primary">
+      <!-- <navigator url="/pages/register/register" hover-class="none" class="text-primary">
         注册账号
-      </navigator>
+      </navigator> -->
       <navigator url="#" hover-class="none">
         忘记密码?
       </navigator>
-    </view>
-  </view>
-  <view v-else class="h-screen flex items-center justify-center">
-    <view class="text-center">
-      <button
-        class="rounded-lg bg-green-500 px-6 py-3 text-white shadow-md transition active:bg-green-600"
-        open-type="getPhoneNumber"
-        @getphonenumber="handleWechatPhoneLogin"
-      >
-        手机号快捷登录
-      </button>
     </view>
   </view>
 </template>
@@ -62,7 +66,6 @@
 <script lang="ts" setup>
 import { isMpWeixin } from '@uni-helper/uni-env'
 import { sendPhoneOtp } from '@/api/better-auth'
-import { LOGIN_PAGE_ENABLE_IN_MP } from '@/router/config'
 import { useUserStore } from '@/store/user'
 
 definePage({
@@ -87,12 +90,6 @@ const otpForm = reactive({
 })
 
 const userStore = useUserStore()
-
-// 计算是否显示登录页面
-const showLoginPage = computed(() => {
-  // 如果不是微信小程序，或者配置允许在小程序中使用登录页，则显示
-  return !isMpWeixin || LOGIN_PAGE_ENABLE_IN_MP
-})
 
 const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+$/.test(email)
 const validatePhone = (phone: string) => /^1[3-9]\d{9}$/.test(phone)

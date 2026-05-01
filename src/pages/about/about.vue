@@ -88,7 +88,7 @@ const courses = [
       </text>
 
       <!-- 联系方式 -->
-      <view class="space-y-3">
+      <!-- <view class="space-y-3">
         <view class="flex items-center">
           <text class="mr-3 text-orange-500">📞</text>
           <text class="text-gray-700">咨询热线：{{ companyInfo.phone }}</text>
@@ -101,7 +101,7 @@ const courses = [
           <text class="mr-3 text-orange-500">📧</text>
           <text class="text-gray-700">邮箱：{{ companyInfo.email }}</text>
         </view>
-      </view>
+      </view> -->
     </view>
 
     <!-- 核心特色 -->
@@ -143,14 +143,14 @@ const courses = [
     </view>
 
     <!-- 立即咨询按钮 -->
-    <view class="mx-4 mb-8 mt-8">
+    <!-- <view class="mx-4 mb-8 mt-8">
       <button
         class="w-full rounded-lg bg-orange-500 py-4 text-lg text-white font-semibold shadow-lg"
         @click="makePhoneCall"
       >
         📞 立即咨询
       </button>
-    </view>
+    </view> -->
 
     <!-- 底部导航到课程 -->
     <view class="mx-4 mb-8 text-center">
