@@ -116,13 +116,13 @@ function goToHome() {
           <text class="text-sm text-gray-600 leading-relaxed">{{ article.summary }}</text>
         </view>
 
-        <view class="mb-6 flex items-center gap-2">
+        <!-- <view class="mb-6 flex items-center gap-2">
           <view class="h-5 w-1 rounded-full bg-primary" />
           <text class="text-lg text-gray-800 font-bold tracking-wider">正文内容</text>
-        </view>
+        </view> -->
 
         <view class="text-[15px] text-gray-600 leading-8 tracking-wide">
-          <rich-text v-if="article.content" :nodes="article.content" />
+          <rich-text v-if="article.content" :nodes="article.content" :selectable="true" space="nbsp" />
           <text v-else class="text-gray-400 italic">暂无内容</text>
         </view>
 
