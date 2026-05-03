@@ -49,6 +49,13 @@ const baseFeatures = [
     url: '/pages/coach/index',
     showKey: null,
   },
+  {
+    title: '文章资讯',
+    desc: '太极文化文章资讯',
+    icon: 'i-carbon-document',
+    url: '/pages/articles/list',
+    showKey: null,
+  },
 ]
 
 const features = computed(() => {
