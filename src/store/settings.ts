@@ -31,10 +31,13 @@ export const useSettingsStore = defineStore(
       if (!bannersValue)
         return []
       try {
-        if (typeof bannersValue === 'string') {
-          return JSON.parse(bannersValue) as BannerItem[]
-        }
-        return Array.isArray(bannersValue) ? bannersValue : []
+        const banners: BannerItem[] = Array.isArray(bannersValue) ? bannersValue : []
+        banners.forEach((item) => {
+          if (item.type === 'video' && !item.poster) {
+            item.poster = `${item.value}?ci-process=snapshot&time=1`
+          }
+        })
+        return banners
       }
       catch {
         return []
