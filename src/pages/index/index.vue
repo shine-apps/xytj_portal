@@ -200,6 +200,33 @@ onLoad(() => {
       </view>
     </view>
 
+    <!-- 热点链接 -->
+    <view v-if="settingsStore.hotLinks.length > 0" class="relative z-20 mx-4 mt-4">
+      <view class="mb-4 flex items-center">
+        <view class="mr-2 h-5 w-1 rounded-full bg-[#a33327]" />
+        <text class="text-xl text-[#1a1a1a] font-bold">热点推荐</text>
+      </view>
+      <view class="space-y-3">
+        <view
+          v-for="(link, index) in settingsStore.hotLinks"
+          :key="index"
+          class="flex items-center overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-md transition-all active:scale-98"
+          @click="navigateTo(link.url)"
+        >
+          <view class="mr-3 h-10 w-10 flex items-center justify-center border border-[#a33327]/30 rounded-full bg-[#a33327]/10">
+            <text
+              class="text-lg"
+              :class="link.type === 'course' ? 'i-carbon-video' : link.type === 'activity' ? 'i-carbon-calendar' : 'i-carbon-document'"
+            />
+          </view>
+          <view class="flex-1">
+            <text class="text-base text-[#1a1a1a] font-bold">{{ link.title }}</text>
+          </view>
+          <view class="i-carbon-chevron-right text-sm text-[#999]" />
+        </view>
+      </view>
+    </view>
+
     <!-- 功能入口 -->
     <view class="relative z-20 mx-4 mt-4">
       <view class="grid grid-cols-2 gap-4">

@@ -10,6 +10,13 @@ export interface BannerItem {
   isActive: boolean
 }
 
+export interface HotLinkItem {
+  url: string
+  type: 'course' | 'activity' | 'article'
+  title: string
+  isActive: boolean
+}
+
 export const useSettingsStore = defineStore(
   'settings',
   () => {
@@ -52,6 +59,19 @@ export const useSettingsStore = defineStore(
       return settingsMap.value.phoneNumber || '15706725301'
     })
 
+    const hotLinks = computed<HotLinkItem[]>(() => {
+      const hotLinksValue = settingsMap.value.hotLinks
+      if (!hotLinksValue)
+        return []
+      try {
+        const links: HotLinkItem[] = Array.isArray(hotLinksValue) ? hotLinksValue : []
+        return links.filter(link => link.isActive)
+      }
+      catch {
+        return []
+      }
+    })
+
     const isCacheExpired = () => {
       if (!lastFetchTime.value)
         return true
@@ -89,6 +109,7 @@ export const useSettingsStore = defineStore(
       banners,
       showVideo,
       phoneNumber,
+      hotLinks,
       fetchSettings,
       refreshSettings,
     }
