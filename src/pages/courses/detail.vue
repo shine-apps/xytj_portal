@@ -105,7 +105,7 @@ definePage({
     navigationBarTitleText: '课程详情',
   },
   // 课程详情页需要登录检查
-  excludeLoginPath: true,
+  excludeLoginPath: false,
 })
 
 // const settingsStore = useSettingsStore()

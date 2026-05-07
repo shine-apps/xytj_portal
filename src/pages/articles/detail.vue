@@ -11,7 +11,7 @@ definePage({
   style: {
     navigationBarTitleText: '文章详情',
   },
-  excludeLoginPath: true,
+  excludeLoginPath: false,
 })
 
 const article = ref<Article | null>(null)
@@ -27,6 +27,10 @@ onLoad(async (options) => {
       if (article.value && article.value.type === 'LINK' && article.value.linkUrl) {
         isLinkType.value = true
       }
+      // set title and share config
+      uni.setNavigationBarTitle({
+        title: article.value?.title || '文章详情',
+      })
 
       setPageShareConfig({
         onShareAppMessage: () => {
