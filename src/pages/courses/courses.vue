@@ -36,7 +36,7 @@ import { useSettingsStore } from '@/store/settings'
 
 definePage({
   style: {
-    navigationBarTitleText: '线上课程',
+    navigationBarTitleText: '视频课程',
   },
 })
 
