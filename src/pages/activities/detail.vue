@@ -19,7 +19,8 @@ import {
   updateMemberStatusAPI,
 } from '@/service/activity'
 import { useUserStore } from '@/store/user'
-import { formatDate, formatTime } from '@/utils/dateUtil'
+import { formatTime } from '@/utils/dateUtil'
+import { parseHtmlToRichTextNodes } from '@/utils/richText'
 import { setPageShareConfig } from '@/utils/share'
 
 const userStore = useUserStore()
@@ -28,6 +29,12 @@ const { closeOutside } = useQueue()
 const activityId = ref('')
 const activity = ref<IActivity | null>(null)
 const currentUserMember = ref<IActivityMember | null>(null)
+
+const contentRichTextNodes = computed(() => {
+  if (!activity.value?.content)
+    return []
+  return parseHtmlToRichTextNodes(activity.value.content)
+})
 
 // Loading states
 const loading = ref(false)
@@ -390,11 +397,14 @@ async function submitNicknameUpdate() {
         <!-- 活动标题和详情 -->
         <view class="absolute bottom-0 left-0 right-0 bg-black/40 p-4 backdrop-blur-sm">
           <text class="mb-2 block text-2xl text-white font-bold" selectable user-select>{{ activity.title }}</text>
-          <rich-text
-            :nodes="activity.summary"
+          <text
+            v-if="activity.summary"
             class="line-clamp-4 select-all text-sm text-white/90 leading-relaxed"
             selectable
-          />
+            user-select
+          >
+            {{ activity.summary }}
+          </text>
         </view>
         <!-- 管理菜单 -->
         <view v-if="isActivityAdmin" class="absolute right-4 top-4">
@@ -442,12 +452,14 @@ async function submitNicknameUpdate() {
       </view>
 
       <!-- Content -->
-      <!-- <view class="m-4 rounded-lg bg-white p-4 shadow-sm">
-        <view class="mb-3 border-b border-gray-100 pb-2 text-lg text-gray-900 font-bold">
-          活动介绍
-        </view>
-        <rich-text :nodes="activity.summary || activity.content || '暂无详情'" class="text-gray-700 leading-relaxed" />
-      </view> -->
+      <view v-if="activity.content" class="m-4 rounded-lg bg-white p-4 shadow-sm">
+        <!-- #ifdef MP-WEIXIN -->
+        <rich-text v-if="contentRichTextNodes.length > 0" :nodes="contentRichTextNodes" class="text-gray-700 leading-relaxed" />
+        <!-- #endif -->
+        <!-- #ifndef MP-WEIXIN -->
+        <rich-text :nodes="activity.content" class="text-gray-700 leading-relaxed" />
+        <!-- #endif -->
+      </view>
 
       <!-- Join Action Bar -->
       <view class="border-t border-gray-200 bg-white p-4">
