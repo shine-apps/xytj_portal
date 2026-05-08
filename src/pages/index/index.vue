@@ -177,14 +177,14 @@ onLoad(() => {
 
     <view class="relative z-10">
       <view class="bg-white px-6 py-4">
-        <text class="mb-6 block text-lg text-[#555] leading-relaxed">
+        <text class="mb-2 block text-lg text-[#555] leading-relaxed" selectable user-select>
           <text class="font-bold">嘉兴翔云教育科技有限公司</text>专注于传统武术教育，致力于青少年武术教学和中老年太极养生培训。我们秉承"习武学文，养性修德"的理念，传承中华武术文化，推广健康生活方式。
         </text>
         <view v-if="settingsStore.phoneNumber" class="space-y-3" @click="makePhoneCall">
           <view class="flex items-center">
             <text class="text-gray-700">咨询热线：</text>
-            <text class="i-carbon-phone mr-3 text-green-500" />
-            <text class="px-2 text-gray-500">{{ formattedPhoneNumber }}</text>
+            <text class="i-carbon-phone text-green-500" />
+            <text class="px-2 text-gray-500" selectable user-select>{{ formattedPhoneNumber }}</text>
           </view>
           <view class="flex items-center">
             <text class="text-gray-700">地址：</text>
