@@ -97,9 +97,9 @@ function goToHome() {
         <!-- 底部信息区 -->
         <view class="absolute bottom-0 w-full p-6 text-left text-white">
           <text class="text-3xl font-bold tracking-widest">{{ coach.name }}</text>
-          <view v-if="coach.title" class="mt-3">
-            <text class="inline-block rounded-full bg-white/20 px-4 py-1 text-sm backdrop-blur">
-              {{ coach.title }}
+          <view v-if="coach.title" class="mt-3 flex gap-2">
+            <text v-for="title in coach.title.split('|')" :key="title" class="inline-block rounded-full bg-white/20 px-4 py-1 text-sm backdrop-blur">
+              {{ title }}
             </text>
           </view>
         </view>

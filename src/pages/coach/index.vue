@@ -94,11 +94,13 @@ function goToHome() {
             <view class="mb-2 flex items-center justify-between">
               <text class="text-lg text-gray-800 font-bold">{{ item.name }}</text>
             </view>
-            <view
-              v-if="item.title"
-              class="mb-3 inline-block w-fit rounded bg-primary/10 px-2 py-1 text-xs text-white"
-            >
-              {{ item.title }}
+            <view v-if="item.title" class="mb-3 inline-flex gap-2">
+              <text
+                v-for="title in item.title.split('|')"
+                :key="title" class="w-fit rounded bg-primary/10 px-2 py-1 text-xs text-white"
+              >
+                {{ title }}
+              </text>
             </view>
 
             <!-- 介绍摘要 -->

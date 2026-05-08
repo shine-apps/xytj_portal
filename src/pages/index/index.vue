@@ -144,7 +144,7 @@ onLoad(() => {
         height="200"
       />
     </view>
-    <view v-else class="relative h-50">
+    <!-- <view v-else class="relative h-50">
       <image
         src="https://xytj-1303556457.cos.ap-shanghai.myqcloud.com/publics/banners/xytj_banner2.png"
         class="absolute inset-0 h-full w-full brightness-90 sepia-50 filter"
@@ -171,19 +171,13 @@ onLoad(() => {
           </view>
         </view>
       </view>
-    </view>
+    </view> -->
 
     <!-- 快速咨询 -->
-    <view class="relative mb-4 mt-0 overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-6 shadow-md">
-      <!-- 装饰 -->
-      <view class="pointer-events-none absolute right-0 top-0 h-32 w-32 opacity-5" />
 
-      <view class="relative z-10">
-        <view class="mb-4 flex items-center">
-          <view class="mr-2 h-5 w-1 rounded-full bg-[#a33327]" />
-          <text class="text-xl text-[#1a1a1a] font-bold">公司简介</text>
-        </view>
-        <text class="mb-6 block text-[#555] leading-relaxed">
+    <view class="relative z-10">
+      <view class="bg-white px-6 py-4">
+        <text class="mb-6 block text-lg text-[#555] leading-relaxed">
           <text class="font-bold">嘉兴翔云教育科技有限公司</text>专注于传统武术教育，致力于青少年武术教学和中老年太极养生培训。我们秉承"习武学文，养性修德"的理念，传承中华武术文化，推广健康生活方式。
         </text>
         <view v-if="settingsStore.phoneNumber" class="space-y-3" @click="makePhoneCall">
@@ -201,10 +195,10 @@ onLoad(() => {
     </view>
 
     <!-- 热点链接 -->
-    <view v-if="settingsStore.hotLinks.length > 0" class="relative z-20 mx-4 mt-4">
-      <view class="mb-2 flex items-center">
-        <view class="mr-2 h-4 w-1 rounded-full bg-[#a33327]" />
-        <text class="text-base text-[#1a1a1a] font-bold">热点推荐</text>
+    <view v-if="settingsStore.hotLinks.length > 0" class="relative z-20 mx-4 mt-6">
+      <view class="mb-4 flex items-center">
+        <view class="mr-2 h-5 w-1 rounded-full bg-[#a33327]" />
+        <text class="text-xl text-[#1a1a1a] font-bold">热点推荐</text>
       </view>
       <view class="space-y-2">
         <view
@@ -213,14 +207,14 @@ onLoad(() => {
           class="flex items-center overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] py-2 pl-2 pr-3 shadow-sm transition-all active:scale-98"
           @click="navigateTo(link.url)"
         >
-          <view class="mr-2 h-8 w-8 flex items-center justify-center border border-[#a33327]/30 rounded-full bg-[#a33327]/10">
+          <view class="mr-2 h-8 w-8 flex items-center justify-center border border-[#a33327]/30 rounded-full">
             <text
               class="text-sm"
               :class="link.type === 'course' ? 'i-carbon-video' : link.type === 'activity' ? 'i-carbon-calendar' : 'i-carbon-document'"
             />
           </view>
           <view class="flex-1">
-            <text class="text-sm text-[#1a1a1a] font-bold">{{ link.title }}</text>
+            <text class="text-base text-[#1a1a1a] font-bold">{{ link.title }}</text>
           </view>
           <view class="i-carbon-chevron-right text-sm text-[#999]" />
         </view>
@@ -228,7 +222,7 @@ onLoad(() => {
     </view>
 
     <!-- 功能入口 -->
-    <view class="relative z-20 mx-4 mt-4">
+    <view class="relative z-20 mx-4 mt-6">
       <view class="mb-4 flex items-center">
         <view class="mr-2 h-5 w-1 rounded-full bg-[#a33327]" />
         <text class="text-xl text-[#1a1a1a] font-bold">功能入口</text>
