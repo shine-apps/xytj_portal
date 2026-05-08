@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Coach } from '@/api/coach'
 import { onLoad } from '@dcloudio/uni-app'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { getCoachById } from '@/api/coach'
-import { parseHtmlToRichTextNodes } from '@/utils/richText'
+import CustomRichText from '@/components/CustomRichText.vue'
 import { setPageShareConfig } from '@/utils/share'
 
 definePage({
@@ -16,12 +16,6 @@ definePage({
 
 const coach = ref<Coach | null>(null)
 const loading = ref(true)
-
-const richTextNodes = computed(() => {
-  if (!coach.value?.description)
-    return []
-  return parseHtmlToRichTextNodes(coach.value.description)
-})
 
 onLoad(async (options) => {
   if (options && options.id) {
@@ -122,15 +116,7 @@ function goToHome() {
         </view>
 
         <view class="text-[15px] text-gray-600 leading-8 tracking-wide">
-          <!-- 富文本展示 -->
-          <!-- #ifdef MP-WEIXIN -->
-          <rich-text v-if="richTextNodes.length > 0" :nodes="richTextNodes" />
-          <text v-else class="text-gray-400 italic">暂无介绍内容</text>
-          <!-- #endif -->
-          <!-- #ifndef MP-WEIXIN -->
-          <rich-text v-if="coach.description" :nodes="coach.description" />
-          <text v-else class="text-gray-400 italic">暂无介绍内容</text>
-          <!-- #endif -->
+          <CustomRichText :content="coach.description || ''" class-name="text-gray-700" />
         </view>
 
         <!-- 底部导航链接 -->

@@ -3,6 +3,7 @@ import type { ITeacherInvitation } from '@/service/teacher-invitation'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
+import CustomRichText from '@/components/CustomRichText.vue'
 import {
   getTeacherInvitationDetailAPI,
   reviewTeacherInvitationAPI,
@@ -242,7 +243,7 @@ async function submitReview() {
         <view class="mb-3 border-b border-gray-100 pb-2 text-lg text-gray-900 font-bold">
           详细说明
         </view>
-        <rich-text :nodes="invitation.description" class="text-gray-700 leading-relaxed" />
+        <CustomRichText :content="invitation.description" class-name="text-gray-700 leading-relaxed" />
       </view>
 
       <!-- 审核状态展示 -->

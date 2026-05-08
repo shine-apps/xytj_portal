@@ -4,7 +4,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 import { getArticleById } from '@/api/article'
-import { parseHtmlToRichTextNodes } from '@/utils/richText'
+import CustomRichText from '@/components/CustomRichText.vue'
 import { setPageShareConfig } from '@/utils/share'
 
 definePage({
@@ -18,12 +18,6 @@ definePage({
 const article = ref<Article | null>(null)
 const loading = ref(true)
 const isLinkType = ref(false)
-
-const richTextNodes = computed(() => {
-  if (!article.value?.content)
-    return []
-  return parseHtmlToRichTextNodes(article.value.content)
-})
 
 onLoad(async (options) => {
   if (options && options.id) {
@@ -131,14 +125,7 @@ function goToHome() {
           </view>
 
           <view class="text-[15px] text-gray-600 leading-8 tracking-wide">
-            <!-- #ifdef MP-WEIXIN -->
-            <rich-text v-if="richTextNodes.length > 0" :nodes="richTextNodes" :selectable="true" space="nbsp" />
-            <text v-else-if="!article.content" class="text-gray-400 italic">暂无内容</text>
-            <!-- #endif -->
-            <!-- #ifndef MP-WEIXIN -->
-            <rich-text v-if="article.content" :nodes="article.content" :selectable="true" space="nbsp" />
-            <text v-else class="text-gray-400 italic">暂无内容</text>
-            <!-- #endif -->
+            <CustomRichText :content="article.content || ''" :selectable="true" space="nbsp" class-name="text-gray-700" />
           </view>
 
           <view class="mb-4 mt-12 flex justify-center gap-4">

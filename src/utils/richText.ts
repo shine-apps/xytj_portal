@@ -179,10 +179,17 @@ export function parseHtmlToRichTextNodes(html: string): RichTextNodes {
           continue
         }
 
+        const attrs = token.attrs || {}
+
+        if (tagName === 'a') {
+          const existingStyle = attrs.style || ''
+          attrs.style = `color: #1890ff; text-decoration: underline;${existingStyle ? `; ${existingStyle}` : ''}`
+        }
+
         const node: RichTextNode & { children: RichTextNode[] } = {
           name: tagName,
           type: 'node',
-          attrs: token.attrs || {},
+          attrs,
           children: [],
         }
 
@@ -286,7 +293,7 @@ function decodeHTMLEntities(text: string): string {
 }
 
 export function handleRichTextLinkTap(e: any) {
-  const { href } = e.detail?.attrs || {}
+  const href = e.target?.href
 
   if (!href) {
     return null

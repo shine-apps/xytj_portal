@@ -8,6 +8,7 @@ import ActivityMembersPanel from '@/components/ActivityMembersPanel.vue'
 import CheckInMembers from '@/components/CheckInMembers.vue'
 import CheckInQRCode from '@/components/CheckInQRCode.vue'
 import CheckInStatus from '@/components/CheckInStatus.vue'
+import CustomRichText from '@/components/CustomRichText.vue'
 import {
   getActivityDetailAPI,
   getActivityMembersAPI,
@@ -20,7 +21,6 @@ import {
 } from '@/service/activity'
 import { useUserStore } from '@/store/user'
 import { formatTime } from '@/utils/dateUtil'
-import { parseHtmlToRichTextNodes } from '@/utils/richText'
 import { setPageShareConfig } from '@/utils/share'
 
 const userStore = useUserStore()
@@ -29,12 +29,6 @@ const { closeOutside } = useQueue()
 const activityId = ref('')
 const activity = ref<IActivity | null>(null)
 const currentUserMember = ref<IActivityMember | null>(null)
-
-const contentRichTextNodes = computed(() => {
-  if (!activity.value?.content)
-    return []
-  return parseHtmlToRichTextNodes(activity.value.content)
-})
 
 // Loading states
 const loading = ref(false)
@@ -453,12 +447,7 @@ async function submitNicknameUpdate() {
 
       <!-- Content -->
       <view v-if="activity.content" class="m-4 rounded-lg bg-white p-4 shadow-sm">
-        <!-- #ifdef MP-WEIXIN -->
-        <rich-text v-if="contentRichTextNodes.length > 0" :nodes="contentRichTextNodes" class="text-gray-700 leading-relaxed" />
-        <!-- #endif -->
-        <!-- #ifndef MP-WEIXIN -->
-        <rich-text :nodes="activity.content" class="text-gray-700 leading-relaxed" />
-        <!-- #endif -->
+        <CustomRichText :content="activity.content" class-name="text-gray-700 leading-relaxed" />
       </view>
 
       <!-- Join Action Bar -->
