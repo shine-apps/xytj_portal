@@ -1,6 +1,5 @@
 import type { CustomTabBarItem, CustomTabBarItemBadge } from './types'
 import { computed, reactive } from 'vue'
-import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 
 import {
@@ -33,16 +32,7 @@ const userRoles = computed(() => {
 
 const tabbarList = computed(() => {
   const roles = userRoles.value
-  const settingsStore = useSettingsStore()
-  const showVideo = settingsStore.showVideo
-
-  const list = baseTabbarList.filter((item) => {
-    const path = item.pagePath as string
-    if (path === '/pages/courses/courses' && !showVideo) {
-      return false
-    }
-    return true
-  })
+  const list = baseTabbarList
 
   if (roles.length === 0) {
     return list.filter(item => !item.roles || item.roles.length === 0)

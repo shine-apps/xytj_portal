@@ -73,15 +73,6 @@ export const customTabbarList: CustomTabBarItem[] = [
   //   roles: ['admin'],
   // },
   {
-    pagePath: 'pages/courses/courses',
-    text: '视频课程',
-    // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
-    // 2）配置到 unocss.config.ts 的 safelist 中
-    iconType: 'unocss',
-    icon: 'i-carbon-course',
-    // badge: 10,
-  },
-  {
     pagePath: 'pages/activities/activities',
     text: '线下活动',
     // 1）在fg-tabbar.vue页面上引入一下并注释掉（见tabbar/index.vue代码第2行）
