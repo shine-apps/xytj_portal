@@ -499,16 +499,16 @@ async function submitNicknameUpdate() {
         <wd-tabs v-model="activeTab" auto-line-width>
           <wd-tab title="相册" name="album" lazy>
             <ActivityAlbum
-              v-if="userStore.hasValidLogin && activeTab === 'album'"
+              v-if="activityId"
               :activity-id="activityId"
               :is-activity-admin="isActivityAdmin"
             />
-            <view v-else class="min-h-50 flex flex-col items-center justify-center">
+            <!-- <view v-else class="min-h-50 flex flex-col items-center justify-center">
               <text>请先登录才能查看相册。</text>
               <wd-button type="primary" @click="toLoginPage">
                 去登录
               </wd-button>
-            </view>
+            </view> -->
           </wd-tab>
 
           <wd-tab title="签到记录" name="history" lazy>
