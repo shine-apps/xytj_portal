@@ -324,7 +324,7 @@ onMounted(() => {
       <!-- 头部刷新栏 -->
       <view class="flex items-center justify-between border-b border-gray-100 bg-white px-8 py-3">
         <text class="text-sm text-gray-500">
-          共 {{ albums.length }} 条记录
+          当前加载 {{ albums.length }} 条记录
         </text>
         <wd-button
           type="icon"
