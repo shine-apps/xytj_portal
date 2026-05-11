@@ -162,6 +162,13 @@ const joinStatus = computed(() => {
   return myMemberInfo.value.status
 })
 
+// 活动是否已结束
+const isActivityEnded = computed(() => {
+  if (!activity.value?.endTime)
+    return false
+  return new Date(activity.value.endTime).getTime() < Date.now()
+})
+
 // 跳转到编辑页
 function navigateToEdit() {
   uni.navigateTo({
@@ -337,7 +344,7 @@ async function handleRemoveMember(userId: string) {
 }
 
 // 处理角色选择
-async function handleRoleSelect(userId: string, role: 'ADMIN' | 'ASSISTANT' | 'GENERAL') {
+async function handleRoleSelect(userId: string, role: 'ADMIN' | 'GENERAL') {
   try {
     await updateMemberRoleAPI(activityId.value, userId, role)
     uni.showToast({ title: '角色已更新', icon: 'success' })
@@ -451,7 +458,7 @@ async function submitNicknameUpdate() {
       </view>
 
       <!-- Join Action Bar -->
-      <view class="border-t border-gray-200 bg-white p-4">
+      <view v-if="!isActivityEnded" class="border-t border-gray-200 bg-white p-4">
         <button
           v-if="joinStatus === 'NOT_JOINED'"
           class="w-full rounded-full bg-[#a33327] py-2 text-white font-bold shadow-lg transition-transform active:scale-95"

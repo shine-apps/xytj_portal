@@ -19,12 +19,11 @@ const emit = defineEmits<{
   (e: 'approve', memberId: string, userId: string): void
   (e: 'reject', memberId: string, userId: string): void
   (e: 'remove-member', userId: string): void
-  (e: 'role-select', userId: string, role: 'ADMIN' | 'ASSISTANT' | 'GENERAL'): void
+  (e: 'role-select', userId: string, role: 'ADMIN' | 'GENERAL'): void
 }>()
 
 const roleActions = ref([
   { name: '普通成员', value: 'GENERAL' },
-  { name: '助教', value: 'ASSISTANT' },
   { name: '管理员', value: 'ADMIN' },
 ])
 
@@ -57,7 +56,7 @@ function openRoleActionSheet(userId: string) {
 function handleRoleSelect({ item }: { item: { name: string, value: string } }) {
   if (!selectedMemberId.value)
     return
-  emit('role-select', selectedMemberId.value, item.value as 'ADMIN' | 'ASSISTANT' | 'GENERAL')
+  emit('role-select', selectedMemberId.value, item.value as 'ADMIN' | 'GENERAL')
   selectedMemberId.value = ''
 }
 </script>

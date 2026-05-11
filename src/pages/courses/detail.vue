@@ -75,6 +75,8 @@
       v-model="showVideoPlayer"
       custom-style="box-shadow: none; padding: 0;"
       :close-on-click-modal="true"
+      closable
+      hide-when-close
       @close="onPopupClose"
     >
       <view class="w-[90vw] overflow-hidden rounded-lg bg-black">

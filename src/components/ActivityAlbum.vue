@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import type { IActivityAlbum } from '@/service/album'
 import { computed, ref } from 'vue'
-import useUpload from '@/hooks/useUpload'
+import useZPaging from 'z-paging/components/z-paging/js/hooks/useZPaging.js'
 import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI, updateAlbumDescriptionAPI } from '@/service/album'
 import { useUserStore } from '@/store/user'
+import { uploadToCos } from '@/utils/cos'
 import { formatTime } from '@/utils/dateUtil'
+import VideoPlayer from './VideoPlayer.vue'
+
+interface IPendingUpload {
+  id: string
+  tempFilePath: string
+  previewUrl: string
+  type: 'IMAGE' | 'VIDEO'
+  size: number
+  status: 'pending' | 'uploading' | 'success' | 'failed'
+  progress: number
+  error?: string
+}
 
 const props = defineProps<{
   activityId: string
@@ -13,95 +26,38 @@ const props = defineProps<{
 
 const userStore = useUserStore()
 
+const paging = ref<any>(null)
 const albums = ref<IActivityAlbum[]>([])
-const loading = ref(false)
-const refreshing = ref(false)
+const pendingUploads = ref<IPendingUpload[]>([])
 const showActionSheet = ref(false)
-const currentPage = ref(1)
-const pageSize = 10
-const hasMore = ref(true)
 
 // 视频播放器状态
 const showVideoPlayer = ref(false)
 const currentVideoUrl = ref('')
 
-// 图片上传 hook
-const imageUpload = useUpload({
-  fileType: 'image',
-  maxSize: 10 * 1024 * 1024, // 10MB
-  success: (res) => {
-    // 弹出对话框让用户输入描述
-    showDescriptionDialog('IMAGE', res.url, res.size)
-  },
-  error: (err) => {
-    console.error('图片上传失败', err)
-    // 用户可能取消上传，不显示错误提示
-    if (err)
-      uni.showToast({ title: '上传失败', icon: 'none' })
-  },
-})
+// 类似mixins，如果是页面滚动务必要写这一行，并传入当前ref绑定的paging，注意此处是paging，而非paging.value
+useZPaging(paging)
 
-// 视频上传 hook
-const videoUpload = useUpload({
-  fileType: 'video',
-  maxSize: 100 * 1024 * 1024, // 100MB
-  success: (res) => {
-    // 弹出对话框让用户输入描述
-    showDescriptionDialog('VIDEO', res.url, res.size)
-  },
-  error: (err) => {
-    console.error('视频上传失败', err)
-    // 用户可能取消上传，不显示错误提示
-    if (err)
-      uni.showToast({ title: '上传失败', icon: 'none' })
-  },
-})
-
-// 加载数据
-async function loadData(page: number = 1, isRefresh: boolean = false) {
-  if (!props.activityId)
+// 加载数据 (z-paging query callback)
+async function queryList(pageNo: number, pageSize: number) {
+  if (!props.activityId) {
+    paging.value?.complete([])
     return
-
-  if (isRefresh) {
-    refreshing.value = true
-  }
-  else {
-    loading.value = true
   }
 
   try {
-    const res = await getActivityAlbumsAPI(props.activityId, { page, limit: pageSize })
-
-    if (isRefresh || page === 1) {
-      albums.value = res
-    }
-    else {
-      albums.value = [...albums.value, ...res]
-    }
-
-    hasMore.value = res.length === pageSize
-    currentPage.value = page
+    const res = await getActivityAlbumsAPI(props.activityId, { page: pageNo, limit: pageSize })
+    paging.value?.complete(res)
   }
   catch (e) {
     console.error('加载相册失败', e)
-    uni.showToast({ title: '加载失败', icon: 'none' })
-  }
-  finally {
-    loading.value = false
-    refreshing.value = false
+    paging.value?.complete([])
   }
 }
 
 // 刷新数据
-async function onRefresh() {
-  await loadData(1, true)
-}
-
-// 加载更多
-async function loadMore() {
-  if (!hasMore.value || loading.value)
-    return
-  await loadData(currentPage.value + 1)
+function onRefresh() {
+  paging.value?.reload()
 }
 
 // 显示操作菜单
@@ -109,86 +65,102 @@ function showUploadOptions() {
   showActionSheet.value = true
 }
 
-watch(() => imageUpload.loading, (value) => {
-  if (value) {
-    uni.showLoading({
-      title: '图片上传中',
-      mask: true,
-    })
-  }
-  else {
-    uni.hideLoading()
-  }
-})
-
-watch(() => videoUpload.loading, (value) => {
-  if (value) {
-    uni.showLoading({
-      title: '视频上传中',
-      mask: true,
-    })
-  }
-  else {
-    uni.hideLoading()
-  }
-})
-
-// 选择图片
-function chooseImage() {
-  imageUpload.run()
+// 选择图片或视频
+function chooseMedia() {
   showActionSheet.value = false
-}
-
-// 选择视频
-function chooseVideo() {
-  videoUpload.run()
-  showActionSheet.value = false
-}
-
-// 显示描述输入对话框
-function showDescriptionDialog(type: 'IMAGE' | 'VIDEO', url: string, size: number) {
-  uni.showModal({
-    title: '添加描述',
-    content: '',
-    editable: true,
-    placeholderText: '请输入图片描述（可选）',
-    cancelText: '直接上传',
-    confirmText: '确定',
+  uni.chooseMedia({
+    count: 9,
+    mediaType: ['image', 'video'],
+    sourceType: ['album', 'camera'],
+    maxDuration: 60,
     success: (res) => {
-      if (res.confirm) {
-        // 用户点击确定，使用输入的描述
-        createAlbumRecord(type, url, size, res.content)
+      for (const file of res.tempFiles) {
+        const isVideo = file.fileType === 'video'
+        const size = file.size
+        const tempFilePath = file.tempFilePath
+
+        const pendingItem: IPendingUpload = {
+          id: tempFilePath,
+          tempFilePath,
+          previewUrl: tempFilePath,
+          type: isVideo ? 'VIDEO' : 'IMAGE',
+          size,
+          status: 'pending',
+          progress: 0,
+        }
+        pendingUploads.value.push(pendingItem)
+        uploadAndCreateAlbum(pendingItem.id)
       }
-      else {
-        // 用户点击取消，不传递描述
-        createAlbumRecord(type, url, size)
-      }
+    },
+    fail: (err) => {
+      console.error('选择媒体失败', err)
     },
   })
 }
 
-// 创建相册记录
-async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: number, description?: string) {
-  if (!props.activityId)
+// 上传文件并创建相册记录
+async function uploadAndCreateAlbum(pendingId: string) {
+  const pendingItem = pendingUploads.value.find(p => p.id === pendingId)
+  if (!pendingItem)
     return
+
+  pendingItem.status = 'uploading'
+  pendingItem.progress = 50
+
+  try {
+    const { url } = await uploadToCos(pendingItem.tempFilePath)
+    pendingItem.progress = 80
+    const album = await createAlbumRecord(pendingItem.type, url, pendingItem.size)
+    if (album) {
+      pendingItem.status = 'success'
+      pendingItem.progress = 100
+      pendingUploads.value = pendingUploads.value.filter(p => p.id !== pendingId)
+      albums.value = [album, ...albums.value]
+      uni.showToast({ title: '上传成功', icon: 'success' })
+    }
+    else {
+      throw new Error('创建记录失败')
+    }
+  }
+  catch (e) {
+    console.error('上传失败', e)
+    pendingItem.status = 'failed'
+    pendingItem.error = '上传失败'
+    uni.showToast({ title: '上传失败', icon: 'none' })
+  }
+}
+
+// 重试上传
+function retryUpload(pendingId: string) {
+  const pendingItem = pendingUploads.value.find(p => p.id === pendingId)
+  if (pendingItem) {
+    pendingItem.status = 'pending'
+    pendingItem.progress = 0
+    pendingItem.error = undefined
+    uploadAndCreateAlbum(pendingId)
+  }
+}
+
+// 创建相册记录
+async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: number, description?: string): Promise<IActivityAlbum | null> {
+  if (!props.activityId)
+    return null
 
   let coverUrl = ''
   if (type === 'IMAGE') {
-    coverUrl = `${url}?imageMogr2/thumbnail/200x`
+    coverUrl = `${url}?imageMogr2/thumbnail/512x`
   }
   else if (type === 'VIDEO') {
     coverUrl = `${url}?ci-process=snapshot&time=1`
   }
   try {
-    await createAlbumAPI(props.activityId, { type, url, size, description, coverUrl })
-
-    uni.showToast({ title: '上传成功', icon: 'success' })
-    // 刷新列表
-    onRefresh()
+    const album = await createAlbumAPI(props.activityId, { type, url, size, description, coverUrl })
+    return album
   }
   catch (e) {
     console.error('创建记录失败', e)
     uni.showToast({ title: '上传失败', icon: 'none' })
+    return null
   }
 }
 
@@ -264,13 +236,11 @@ async function deleteAlbum(album: IActivityAlbum) {
 
 // 判断是否可以删除
 function canDelete(album: IActivityAlbum): boolean {
-  // 管理员可以删除
   if (props.isActivityAdmin)
     return true
   const userId = userStore.userInfo?.userId
   if (!userId)
     return false
-  // 上传者本人可以删除
   if (album.userId === userId)
     return true
   return false
@@ -289,33 +259,43 @@ const actionList = computed(() => {
   // #ifdef MP-WEIXIN
   return [
     { name: '从微信消息中选择' },
-    { name: '从相册选择' },
-    { name: '选择视频' },
+    { name: '选择照片/视频' },
   ]
   // #endif
 })
+
+const hasPendingUploads = computed(() => pendingUploads.value.some(p => p.status === 'uploading' || p.status === 'pending'))
 
 function onActionSelect({ item }: { item: { name: string } }) {
   if (item.name === '从微信消息中选择') {
     chooseFromMessage()
   }
-  else if (item.name === '从相册选择') {
-    chooseImage()
-  }
-  else if (item.name === '选择视频') {
-    chooseVideo()
+  else if (item.name === '选择照片/视频') {
+    chooseMedia()
   }
 }
 
 function chooseFromMessage() {
   // #ifdef MP-WEIXIN
   wx.chooseMessageFile({
-    count: 1,
-    type: 'image',
+    count: 20,
+    type: 'all',
+    exts: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov'],
     success: (res) => {
-      const file = res.tempFiles[0]
       showActionSheet.value = false
-      imageUpload.upload(file.path, file.size)
+      for (const file of res.tempFiles) {
+        const pendingItem: IPendingUpload = {
+          id: file.path,
+          tempFilePath: file.path,
+          previewUrl: file.path,
+          type: 'IMAGE',
+          size: file.size,
+          status: 'pending',
+          progress: 0,
+        }
+        pendingUploads.value.push(pendingItem)
+        uploadAndCreateAlbum(pendingItem.id)
+      }
     },
     fail: (err) => {
       console.error('从消息选择图片失败', err)
@@ -328,43 +308,117 @@ function chooseFromMessage() {
 // 初始化加载数据
 onMounted(() => {
   console.log('ActivityAlbum mounted')
-  if (userStore.hasValidLogin)
-    loadData(1)
 })
 </script>
 
 <template>
   <view class="h-full min-h-400px flex flex-col">
-    <!-- 头部刷新栏 -->
-    <view class="flex items-center justify-between border-b border-gray-100 bg-white px-8 py-3">
-      <text class="text-sm text-gray-500">
-        共 {{ albums.length }} 条记录
-      </text>
-      <wd-button
-        type="icon"
-        size="small"
-        :loading="refreshing"
-        @click="onRefresh"
-      >
-        <text class="i-carbon-renew text-lg" />
-      </wd-button>
-    </view>
-
     <!-- 相册列表 -->
-    <scroll-view
-      scroll-y
-      class="flex-1 overflow-y-auto pb-20"
-      @scrolltolower="loadMore"
+    <z-paging
+      ref="paging"
+      v-model="albums"
+      use-page-scroll
+      refresher-enabled
+      @query="queryList"
     >
+      <!-- 头部刷新栏 -->
+      <view class="flex items-center justify-between border-b border-gray-100 bg-white px-8 py-3">
+        <text class="text-sm text-gray-500">
+          共 {{ albums.length }} 条记录
+        </text>
+        <wd-button
+          type="icon"
+          size="small"
+          @click="onRefresh"
+        >
+          <text class="i-carbon-renew text-lg" />
+        </wd-button>
+      </view>
+
       <!-- 空状态 -->
-      <view v-if="albums.length === 0 && !loading" class="flex flex-col items-center gap-3 py-15">
+      <view v-if="albums.length === 0 && pendingUploads.length === 0" class="flex flex-col items-center gap-3 py-15">
         <text class="i-carbon-camera text-4xl text-gray-300" />
         <text class="text-sm text-gray-500">暂无照片或视频</text>
         <text class="text-xs text-gray-400">点击底部按钮上传</text>
       </view>
 
-      <!-- 列表内容 -->
-      <view v-else class="flex flex-col">
+      <!-- 待上传项列表 -->
+      <view v-if="pendingUploads.length > 0" class="flex flex-col">
+        <view
+          v-for="pending in pendingUploads"
+          :key="pending.id"
+          class="rounded-xl bg-white px-8 py-2 shadow-sm"
+        >
+          <view class="mb-2.5 flex items-center gap-2.5">
+            <view class="h-9 w-9 flex items-center justify-center rounded-full bg-gray-100">
+              <text class="text-sm text-gray-500 font-medium">
+                {{ userStore.userInfo?.nickname?.charAt(0) || 'U' }}
+              </text>
+            </view>
+            <view class="flex flex-1 flex-col gap-0.5">
+              <text class="text-sm text-gray-800 font-medium">{{ userStore.userInfo?.nickname || '我' }}</text>
+              <text class="text-xs text-gray-400">上传中...</text>
+            </view>
+          </view>
+
+          <!-- 媒体预览 -->
+          <view class="relative overflow-hidden rounded-lg bg-gray-100">
+            <!-- 图片 -->
+            <image
+              v-if="pending.type === 'IMAGE'"
+              :src="pending.previewUrl"
+              class="block w-full"
+              mode="widthFix"
+              lazy-load
+            />
+            <!-- 视频 -->
+            <view v-else-if="pending.type === 'VIDEO'" class="relative">
+              <image
+                :src="pending.previewUrl"
+                class="block w-full"
+                mode="widthFix"
+                lazy-load
+              />
+              <view class="absolute inset-0 flex items-center justify-center bg-black/30">
+                <view class="h-15 w-15 flex items-center justify-center rounded-full bg-white/90">
+                  <text class="i-carbon-play-filled-alt text-2xl text-gray-800" />
+                </view>
+              </view>
+            </view>
+
+            <!-- 上传中: 显示进度条 -->
+            <view v-if="pending.status === 'uploading'" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+              <wd-loading size="24px" color="white" />
+              <wd-progress :percentage="pending.progress" :show-text="true" />
+            </view>
+
+            <!-- 上传失败: 显示重试按钮 -->
+            <view v-if="pending.status === 'failed'" class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+              <text class="text-sm text-white">{{ pending.error || '上传失败' }}</text>
+              <wd-button size="small" type="warning" @click="retryUpload(pending.id)">
+                重试
+              </wd-button>
+            </view>
+
+            <!-- 上传成功: 显示对勾 -->
+            <view v-if="pending.status === 'success'" class="absolute inset-0 flex items-center justify-center bg-black/30">
+              <view class="h-15 w-15 flex items-center justify-center rounded-full bg-green-500/80">
+                <text class="i-carbon-checkmark-filled text-2xl text-white" />
+              </view>
+            </view>
+          </view>
+
+          <!-- 文件信息 -->
+          <view class="mt-2.5 flex justify-between border-t border-gray-100 pt-2.5">
+            <text class="text-xs text-gray-500">{{ pending.type === 'IMAGE' ? '照片' : '视频' }}</text>
+            <text v-if="pending.size > 0" class="text-xs text-gray-400">{{ formatSize(pending.size) }}</text>
+          </view>
+          <wd-divider dashed />
+        </view>
+      </view>
+
+      <!-- 已上传列表内容 -->
+      <view v-if="albums.length > 0" class="flex flex-col">
         <view
           v-for="(album, index) in albums"
           :key="album.id"
@@ -401,7 +455,7 @@ onMounted(() => {
             <!-- 图片 -->
             <image
               v-if="album.type === 'IMAGE'"
-              :src="album.coverUrl || `${album.url}?imageMogr2/thumbnail/700x`"
+              :src="album.coverUrl || `${album.url}?imageMogr2/thumbnail/512x`"
               class="block w-full"
               mode="widthFix"
               lazy-load
@@ -432,24 +486,8 @@ onMounted(() => {
           </view>
           <wd-divider dashed />
         </view>
-
-        <!-- 加载更多 -->
-        <view class="flex items-center justify-center py-5">
-          <wd-button
-            v-if="hasMore && !loading"
-            type="text"
-            size="small"
-            @click="loadMore"
-          >
-            查看更多
-          </wd-button>
-          <wd-loading v-if="loading" size="20px" />
-          <text v-if="!hasMore && albums.length > 0" class="text-xs text-gray-400">
-            没有更多了
-          </text>
-        </view>
       </view>
-    </scroll-view>
+    </z-paging>
 
     <!-- 上传按钮 -->
     <view
@@ -458,11 +496,11 @@ onMounted(() => {
     >
       <button
         class="h-11 w-full flex items-center justify-center gap-1.5 rounded-full border-none bg-#a33327 text-base text-white font-medium active:opacity-80 disabled:opacity-60"
-        :disabled="imageUpload.loading.value || videoUpload.loading.value"
+        :disabled="hasPendingUploads"
         @click="showUploadOptions"
       >
         <text class="i-carbon-add text-lg" />
-        <text>{{ imageUpload.loading.value || videoUpload.loading.value ? '上传中...' : '上传照片/视频' }}</text>
+        <text>{{ hasPendingUploads ? '上传中...' : '上传照片/视频' }}</text>
       </button>
     </view>
 
@@ -477,24 +515,18 @@ onMounted(() => {
     <!-- 视频播放器弹窗 -->
     <wd-popup
       v-model="showVideoPlayer"
-      position="center"
-      :z-index="200"
       :close-on-click-modal="true"
+      custom-style="box-shadow: none; padding: 0;"
       closable
-      round
       hide-when-close
-      custom-style="background: #000;"
       @after-leave="closeVideoPlayer"
     >
-      <view class="relative w-85vw">
-        <video
+      <view class="w-[90vw] overflow-hidden rounded-lg bg-black">
+        <VideoPlayer
           v-if="currentVideoUrl"
           :src="currentVideoUrl"
-          class="w-full rounded-lg"
-          style="max-height: 70vh;"
-          controls
-          autoplay
-          object-fit="contain"
+          video-id="albumVideoPlayer"
+          @close="closeVideoPlayer"
         />
       </view>
     </wd-popup>
