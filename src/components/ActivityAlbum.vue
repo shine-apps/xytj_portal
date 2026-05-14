@@ -280,7 +280,7 @@ function chooseFromMessage() {
   wx.chooseMessageFile({
     count: 20,
     type: 'all',
-    exts: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov'],
+    extension: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov'],
     success: (res) => {
       showActionSheet.value = false
       for (const file of res.tempFiles) {
@@ -288,7 +288,7 @@ function chooseFromMessage() {
           id: file.path,
           tempFilePath: file.path,
           previewUrl: file.path,
-          type: 'IMAGE',
+          type: file.type === 'image' ? 'IMAGE' : 'VIDEO',
           size: file.size,
           status: 'pending',
           progress: 0,
