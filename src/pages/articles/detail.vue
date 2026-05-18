@@ -2,7 +2,7 @@
 import type { Article } from '@/api/article'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { getArticleById } from '@/api/article'
 import CustomRichText from '@/components/CustomRichText.vue'
 import { setPageShareConfig } from '@/utils/share'

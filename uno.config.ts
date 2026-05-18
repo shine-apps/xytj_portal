@@ -82,7 +82,7 @@ export default defineConfig({
     'i-carbon-course',
     'i-carbon-book',
     'i-carbon-calendar',
-    'i-carbon-star',
+    'i-carbon-accessibility-alt',
     'i-carbon-phone',
     'i-carbon-location',
     'i-carbon-education',

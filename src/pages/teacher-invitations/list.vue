@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { ITeacherInvitation } from '@/service/teacher-invitation'
 import { onLoad } from '@dcloudio/uni-app'
-import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { listMyInvitationsAPI } from '@/service/teacher-invitation'
 import { useUserStore } from '@/store/user'

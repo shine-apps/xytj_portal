@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { IActivity, IActivityMember } from '@/service/activity'
 import { onLoad } from '@dcloudio/uni-app'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useQueue } from 'wot-design-uni'
 import ActivityAlbum from '@/components/ActivityAlbum.vue'
 import ActivityMembersPanel from '@/components/ActivityMembersPanel.vue'

@@ -4,7 +4,6 @@ import { computed } from 'vue'
 import { useToast } from 'wot-design-uni'
 import { useSettingsStore } from '@/store/settings'
 import { isPageTabbar } from '@/tabbar/store'
-import { RICE_PAPER_IMAGE } from '@/utils/constants'
 
 defineOptions({
   name: 'Home',
@@ -54,6 +53,13 @@ const baseFeatures = [
     desc: '太极文化文章资讯',
     icon: 'i-carbon-document',
     url: '/pages/articles/list',
+    showKey: null,
+  },
+  {
+    title: '练功场',
+    desc: '分享练功动态',
+    icon: 'i-carbon-accessibility-alt',
+    url: '/pages/training-ground/index',
     showKey: null,
   },
 ]

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onLoad, onResize, onUnload } from '@dcloudio/uni-app'
-import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from 'vue'
+import { getCurrentInstance, onMounted, onUnmounted, ref } from 'vue'
 
 definePage({
   style: {

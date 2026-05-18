@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// i-carbon-code, i-carbon-course
+// i-carbon-code, i-carbon-course, i-carbon-star
 import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
 import { tabbarList, tabbarStore } from './store'
 import TabbarItem from './TabbarItem.vue'

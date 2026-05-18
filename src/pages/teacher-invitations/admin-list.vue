@@ -2,7 +2,7 @@
 import type { ITeacherInvitation } from '@/service/teacher-invitation'
 import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import {
   getPendingInvitationsCountAPI,
   listAllInvitationsAPI,

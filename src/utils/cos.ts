@@ -1,15 +1,19 @@
+import { isH5 } from '@uni-helper/uni-env'
+
 // #ifndef MP-WEIXIN
 import COS from 'cos-js-sdk-v5'
 // #endif
-
 // #ifdef MP-WEIXIN
 // eslint-disable-next-line ts/no-redeclare
 import COS from 'cos-wx-sdk-v5'
 // #endif
-
 import { getEnvBaseUrl } from '@/utils/index'
 
-const COS_AUTH_URL = `${getEnvBaseUrl()}/api/upload/cos-auth`
+let COS_AUTH_URL = `${getEnvBaseUrl()}/api/upload/cos-auth`
+if (isH5 && JSON.parse(import.meta.env.VITE_APP_PROXY_ENABLE)) {
+  // 自动拼接代理前缀
+  COS_AUTH_URL = `/api/upload/cos-auth`
+}
 
 interface CosAuthData {
   credentials: {

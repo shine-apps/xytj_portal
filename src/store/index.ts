@@ -19,3 +19,4 @@ export * from './courses'
 export * from './settings'
 // 模块统一导出
 export * from './user'
+export * from './userList'
