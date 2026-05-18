@@ -1,50 +1,45 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { handleRichTextLinkTap, parseHtmlToRichTextNodes } from '@/utils/richText'
+import mpHtml from 'mp-html/dist/uni-app/components/mp-html/mp-html'
 
 interface Props {
   content: string
   selectable?: boolean
-  space?: 'nbsp' | 'ensp' | 'emsp'
   className?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   selectable: true,
-  space: 'nbsp',
   className: '',
 })
 
-const richTextNodes = computed(() => {
-  if (!props.content || props.content.trim() === '<p></p>')
-    return []
-  return parseHtmlToRichTextNodes(props.content)
-})
+function handleLinkTap(e: any) {
+  const href = e.detail?.href || e.href
+  // eslint-disable-next-line unicorn/prefer-dom-node-text-content
+  const title = e.detail?.title || e.title || e.detail?.innerText || e.innerText || ''
 
-const hasNodes = computed(() => richTextNodes.value.length > 0)
+  if (!href)
+    return
+
+  if (href.startsWith('http://') || href.startsWith('https://')) {
+    const encodedUrl = encodeURIComponent(href)
+    const encodedTitle = encodeURIComponent(title)
+    uni.navigateTo({
+      url: `/pages/webview/webview?url=${encodedUrl}&title=${encodedTitle}`,
+    })
+  }
+}
 </script>
 
 <template>
-  <!-- #ifdef MP-WEIXIN -->
-  <rich-text
-    v-if="hasNodes"
-    :nodes="richTextNodes"
-    :selectable="selectable"
-    :user-select="selectable"
-    :space="space"
-    :class="className"
-    @tap="handleRichTextLinkTap"
-  />
-  <text v-else class="text-gray-400 italic">暂无内容</text>
-  <!-- #endif -->
-  <!-- #ifndef MP-WEIXIN -->
-  <rich-text
+  <mp-html
     v-if="content"
-    :nodes="content"
+    :content="content"
     :selectable="selectable"
-    :space="space"
+    :preview-img="true"
+    :copy-link="true"
+    :set-title="false"
     :class="className"
+    @linktap="handleLinkTap"
   />
   <text v-else class="text-gray-400 italic">暂无内容</text>
-  <!-- #endif -->
 </template>

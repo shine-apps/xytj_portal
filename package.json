@@ -127,6 +127,7 @@
     "cos-js-sdk-v5": "^1.10.1",
     "cos-wx-sdk-v5": "^1.8.0",
     "dayjs": "1.11.10",
+    "mp-html": "^2.5.2",
     "pinia": "2.0.36",
     "pinia-plugin-persistedstate": "3.2.1",
     "vue": "^3.4.21",

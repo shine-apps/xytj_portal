@@ -200,5 +200,11 @@ export default defineConfig(({ command, mode }) => {
       // 开发环境不用压缩
       minify: mode === 'development' ? false : 'esbuild',
     },
+    optimizeDeps: {
+      include: [
+        'mp-html',
+        'mp-html/dist/uni-app/components/mp-html/mp-html',
+      ],
+    },
   })
 })

@@ -10,7 +10,7 @@ import { getRelativeTime } from '@/utils/dateUtil'
 
 definePage({
   style: {
-    navigationBarTitleText: '详情',
+    navigationBarTitleText: '日常练功分享',
   },
 })
 
@@ -105,6 +105,12 @@ function playVideo() {
     return
   uni.navigateTo({
     url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(post.value.url)}&poster=${encodeURIComponent(getVideoCoverUrl(post.value.url))}&title=${encodeURIComponent(post.value.description || '')}`,
+  })
+}
+
+function goToTrainingGround() {
+  uni.switchTab({
+    url: '/pages/training-ground/index',
   })
 }
 
@@ -228,7 +234,14 @@ function isLoggedIn(): boolean {
         </view>
       </view>
 
-      <view class="mb-2 bg-white px-4 py-3">
+      <view class="mb-2 bg-white px-3 py-3">
+        <view class="mb-3 flex items-center justify-between">
+          <view class="flex items-center" @click="goToTrainingGround">
+            <text class="i-carbon-arrow-left text-lg text-gray-600" />
+            <text class="ml-1 text-sm text-gray-600">练功场</text>
+          </view>
+        </view>
+
         <view class="flex items-center justify-between">
           <view class="flex items-center">
             <wd-img
