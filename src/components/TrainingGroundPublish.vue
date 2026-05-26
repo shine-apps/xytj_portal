@@ -27,6 +27,8 @@ const description = ref('')
 const isUploading = ref(false)
 const uploadProgress = ref(0)
 const isSubmitting = ref(false)
+const snapshotLoading = ref(true)
+const snapshotError = ref(false)
 // 上传到 COS
 let progressTimer: ReturnType<typeof setInterval> | null = null
 watch(() => props.visible, (newVal) => {
@@ -62,6 +64,18 @@ function resetForm() {
   isUploading.value = false
   uploadProgress.value = 0
   isSubmitting.value = false
+  snapshotLoading.value = true
+  snapshotError.value = false
+}
+
+function onSnapshotLoad() {
+  snapshotLoading.value = false
+  snapshotError.value = false
+}
+
+function onSnapshotError() {
+  snapshotLoading.value = false
+  snapshotError.value = true
 }
 
 // 切换媒体类型
@@ -103,7 +117,7 @@ async function chooseMedia() {
         count: 1,
         mediaType: ['video'],
         sourceType,
-        maxDuration: 60,
+        maxDuration: 600,
       })
       videoPath = res.tempFiles[0].tempFilePath
       videoSize = res.tempFiles[0].size
@@ -112,16 +126,16 @@ async function chooseMedia() {
       // #ifndef MP-WEIXIN
       const videoRes = await uni.chooseVideo({
         sourceType,
-        maxDuration: 60,
+        maxDuration: 600,
         compressed: true,
       })
       videoPath = videoRes.tempFilePath
       videoSize = videoRes.size
       // #endif
 
-      // 100MB = 100 * 1024 * 1024
-      if (videoSize && videoSize > 100 * 1024 * 1024) {
-        uni.showToast({ title: '视频大小不能超过100MB', icon: 'none' })
+      // 300MB = 300 * 1024 * 1024
+      if (videoSize && videoSize > 300 * 1024 * 1024) {
+        uni.showToast({ title: '视频大小不能超过300MB', icon: 'none' })
         return
       }
       selectedFileTempPath.value = videoPath
@@ -169,6 +183,8 @@ async function startUpload() {
     uploadProgress.value = 100
     uploadedUrl.value = result.url
     uploadedKey.value = result.key
+    snapshotLoading.value = true
+    snapshotError.value = false
     currentStep.value = 2
   }
   catch (e) {
@@ -261,7 +277,7 @@ async function handleSubmit() {
               支持 JPG、PNG 格式，大小不超过 10MB
             </template>
             <template v-else>
-              支持 MP4 格式，大小不超过 100MB，时长不超过 60 秒
+              支持 MP4 格式，大小不超过 300MB，时长不超过 10 分钟
             </template>
           </view>
 
@@ -309,12 +325,26 @@ async function handleSubmit() {
                 class="h-auto w-full"
               />
             </view>
-            <view v-else class="relative w-full overflow-hidden rounded-lg">
+            <view v-else class="relative w-full overflow-hidden rounded-lg bg-gray-800" style="min-height: 200px">
               <image
                 :src="`${uploadedUrl}?ci-process=snapshot&time=1&format=jpg&width=400`"
-                mode="aspectFit"
-                class="h-auto w-full"
+                mode="widthFix"
+                class="w-full"
+                @load="onSnapshotLoad"
+                @error="onSnapshotError"
               />
+              <view
+                v-if="snapshotLoading"
+                class="absolute inset-0 flex items-center justify-center bg-gray-800"
+              >
+                <wd-loading />
+              </view>
+              <view
+                v-if="snapshotError"
+                class="absolute inset-0 flex items-center justify-center bg-gray-800"
+              >
+                <text class="text-sm text-gray-400">视频预览</text>
+              </view>
               <view class="pointer-events-none absolute inset-0 flex items-center justify-center">
                 <view class="h-12 w-12 flex items-center justify-center rounded-full bg-black/50">
                   <view
