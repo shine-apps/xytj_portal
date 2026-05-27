@@ -20,6 +20,17 @@
           所属课程: <text class="text-blue-500 active:opacity-70" @click="navigateToCollection">{{ collectionTitle }}</text>
         </view>
 
+        <!-- Publish to Training Ground (Admin Only) -->
+        <view v-if="userStore.isAdmin" class="mb-4">
+          <view
+            class="flex items-center justify-center gap-2 rounded-lg bg-blue-500 py-2 text-sm text-white active:bg-blue-600"
+            @click="publishToTrainingGround"
+          >
+            <text class="i-carbon-rocket" />
+            <text>发布到练功场</text>
+          </view>
+        </view>
+
         <!-- View Count -->
         <view class="mb-4 flex items-center text-sm text-gray-400">
           <text class="i-carbon-view mr-1" />
@@ -58,10 +69,11 @@
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
+import { createTrainingGroundPost } from '@/api/training-ground'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { recordVideoViewAPI } from '@/service/collections'
 import { useCoursesStore } from '@/store/courses'
-// import { useSettingsStore } from '@/store/settings'
+import { useUserStore } from '@/store/user'
 import { setPageShareConfig } from '@/utils/share'
 
 definePage({
@@ -73,6 +85,7 @@ definePage({
 
 // const settingsStore = useSettingsStore()
 const coursesStore = useCoursesStore()
+const userStore = useUserStore()
 const videoId = ref('')
 const collectionId = ref('')
 
@@ -201,6 +214,44 @@ function navigateToNextVideo() {
 
   videoId.value = nextVideo.id
   uni.setNavigationBarTitle({ title: nextVideo.title })
+}
+
+async function publishToTrainingGround() {
+  if (!userStore.hasValidLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+
+  if (!video.value)
+    return
+
+  uni.showModal({
+    title: '发布到练功场',
+    editable: true,
+    placeholderText: '请输入发布描述（选填）',
+    content: '',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await createTrainingGroundPost({
+            type: 'VIDEO',
+            url: video.value.url,
+            description: res.content || undefined,
+            source: {
+              url: `/pages/courses/video-detail?id=${videoId.value}&collectionId=${collectionId.value}`,
+              title: video.value.title || '视频详情',
+              type: 'video',
+            },
+          })
+          uni.showToast({ title: '发布成功', icon: 'success' })
+        }
+        catch (e) {
+          console.error('发布失败', e)
+          uni.showToast({ title: '发布失败', icon: 'none' })
+        }
+      }
+    },
+  })
 }
 </script>
 

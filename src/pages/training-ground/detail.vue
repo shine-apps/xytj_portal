@@ -200,6 +200,14 @@ function canDeleteComment(comment: CommentType): boolean {
 function isLoggedIn(): boolean {
   return userStore.hasValidLogin
 }
+
+function handleSourceClick() {
+  const source = post.value?.source
+  if (!source)
+    return
+  const url = source.url.startsWith('/') ? source.url : `/${source.url}`
+  uni.navigateTo({ url })
+}
 </script>
 
 <template>
@@ -283,6 +291,18 @@ function isLoggedIn(): boolean {
         <text class="text-sm text-gray-800 leading-relaxed">
           {{ post.description }}
         </text>
+      </view>
+
+      <view
+        v-if="post.source"
+        class="mb-2 flex items-center gap-2 bg-white px-4 py-3"
+        @click="handleSourceClick"
+      >
+        <text
+          :class="post.source.type === 'activity' ? 'i-carbon-location' : 'i-carbon-play'"
+        />
+        <text class="text-sm text-blue-500 underline">来自：{{ post.source.title }}</text>
+        <text class="i-carbon-chevron-right ml-auto text-gray-400" />
       </view>
 
       <view class="mb-2 flex items-center gap-6 bg-white px-4 py-3">

@@ -4,6 +4,12 @@ import { http } from '@/http/http'
 
 export type TrainingGroundMediaType = 'IMAGE' | 'VIDEO'
 
+export interface TrainingGroundPostSource {
+  url: string
+  title: string
+  type: 'activity' | 'video'
+}
+
 export interface TrainingGroundPost {
   id: string
   userId: string
@@ -11,6 +17,7 @@ export interface TrainingGroundPost {
   url: string
   description: string | null
   score: number
+  source: TrainingGroundPostSource | null
   createdAt: string
   updatedAt: string
   user: {
@@ -75,6 +82,7 @@ export function createTrainingGroundPost(data: {
   type: TrainingGroundMediaType
   url: string
   description?: string
+  source?: TrainingGroundPostSource
 }) {
   return http.post<TrainingGroundPost>('/api/training-ground', data)
 }

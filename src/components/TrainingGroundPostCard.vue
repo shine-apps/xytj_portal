@@ -70,6 +70,14 @@ function handleVideoPreview() {
     url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(props.post.url)}&poster=${encodeURIComponent(getVideoCoverUrl(props.post.url))}&title=${encodeURIComponent(props.post.description || '')}`,
   })
 }
+
+function handleSourceClick() {
+  const source = props.post.source
+  if (!source)
+    return
+  const url = source.url.startsWith('/') ? source.url : `/${source.url}`
+  uni.navigateTo({ url })
+}
 </script>
 
 <template>
@@ -113,6 +121,18 @@ function handleVideoPreview() {
       >
         {{ post.description }}
       </text>
+    </view>
+
+    <!-- 来源信息 -->
+    <view
+      v-if="post.source"
+      class="mx-4 mt-2 flex items-center gap-1 text-xs text-gray-400"
+      @click.stop="handleSourceClick"
+    >
+      <text
+        :class="post.source.type === 'activity' ? 'i-carbon-location' : 'i-carbon-play'"
+      />
+      <text>来自：{{ post.source.title }}</text>
     </view>
 
     <!-- 底部信息栏 -->

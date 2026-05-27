@@ -2,6 +2,7 @@
 import type { IActivityAlbum } from '@/service/album'
 import { computed, ref } from 'vue'
 import useZPaging from 'z-paging/components/z-paging/js/hooks/useZPaging.js'
+import { createTrainingGroundPost } from '@/api/training-ground'
 import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI, updateAlbumDescriptionAPI } from '@/service/album'
 import { useUserStore } from '@/store/user'
 import { uploadToCos } from '@/utils/cos'
@@ -21,6 +22,7 @@ interface IPendingUpload {
 
 const props = defineProps<{
   activityId: string
+  activityTitle?: string
   isActivityAdmin: boolean
 }>()
 
@@ -234,6 +236,41 @@ async function deleteAlbum(album: IActivityAlbum) {
   })
 }
 
+// 发布到练功场
+async function publishToTrainingGround(album: IActivityAlbum) {
+  if (!userStore.hasValidLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+  uni.showModal({
+    title: '发布到练功场',
+    editable: true,
+    placeholderText: '请输入发布描述（选填）',
+    content: album.description || '',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await createTrainingGroundPost({
+            type: album.type,
+            url: album.url,
+            description: res.content || undefined,
+            source: {
+              url: `/pages/activities/detail?id=${props.activityId}`,
+              title: props.activityTitle || '活动相册',
+              type: 'activity',
+            },
+          })
+          uni.showToast({ title: '发布成功', icon: 'success' })
+        }
+        catch (e) {
+          console.error('发布失败', e)
+          uni.showToast({ title: '发布失败', icon: 'none' })
+        }
+      }
+    },
+  })
+}
+
 // 判断是否可以删除
 function canDelete(album: IActivityAlbum): boolean {
   if (props.isActivityAdmin)
@@ -441,6 +478,9 @@ onMounted(() => {
               </wd-button>
               <wd-button type="icon" size="small" @click="deleteAlbum(album)">
                 <text class="i-carbon-trash-can text-gray-400" />
+              </wd-button>
+              <wd-button type="icon" size="small" @click="publishToTrainingGround(album)">
+                <text class="i-carbon-rocket text-gray-400" />
               </wd-button>
             </view>
           </view>

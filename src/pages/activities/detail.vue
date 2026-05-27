@@ -501,6 +501,7 @@ async function submitNicknameUpdate() {
             <ActivityAlbum
               v-if="activityId"
               :activity-id="activityId"
+              :activity-title="activity?.title"
               :is-activity-admin="isActivityAdmin"
             />
             <!-- <view v-else class="min-h-50 flex flex-col items-center justify-center">
