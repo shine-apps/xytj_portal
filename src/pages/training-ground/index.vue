@@ -28,15 +28,19 @@ const preselectedMediaType = ref<TrainingGroundMediaType>('IMAGE')
 async function queryList(pageNo: number, pageSize: number) {
   try {
     await settingsStore.fetchSettings()
+    if (!settingsStore.showVideo) {
+      uni.switchTab({
+        url: '/pages/index/index',
+      })
+      return
+    }
+
     const res = await getTrainingGroundPosts({
       page: pageNo,
       limit: pageSize,
     })
 
-    const filteredPosts = settingsStore.showVideo
-      ? res.posts
-      : res.posts.filter(p => p.type !== 'VIDEO')
-
+    const filteredPosts = res.posts
     paging.value?.complete(filteredPosts)
     posts.value = pageNo === 1
       ? filteredPosts

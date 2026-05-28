@@ -4,6 +4,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getTrainingGroundPosts, toggleLike } from '@/api/training-ground'
 import TrainingGroundPostCard from '@/components/TrainingGroundPostCard.vue'
+import { useSettingsStore } from '@/store'
 import { useUserStore } from '@/store/user'
 import { useUserListStore } from '@/store/userList'
 
@@ -15,6 +16,7 @@ definePage({
 
 const userStore = useUserStore()
 const userListStore = useUserListStore()
+const settingsStore = useSettingsStore()
 
 const paging = ref<any>(null)
 const posts = ref<TrainingGroundPost[]>([])
@@ -30,6 +32,14 @@ onLoad((options) => {
 // 分页加载
 async function queryList(pageNo: number, pageSize: number) {
   try {
+    await settingsStore.fetchSettings()
+    if (!settingsStore.showVideo) {
+      uni.switchTab({
+        url: '/pages/index/index',
+      })
+      return
+    }
+
     const res = await getTrainingGroundPosts({
       page: pageNo,
       limit: pageSize,
@@ -40,7 +50,7 @@ async function queryList(pageNo: number, pageSize: number) {
       ? res.posts
       : [...posts.value, ...res.posts]
 
-    const userIds = [...new Set(res.posts.map(p => p.userId))]
+    const userIds = Array.from(new Set(res.posts.map(p => p.userId)))
     if (userIds.length > 0) {
       await userListStore.fetchUserList(userIds)
     }

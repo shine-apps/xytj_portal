@@ -60,7 +60,7 @@ const baseFeatures = [
     desc: '分享练功动态',
     icon: 'i-carbon-accessibility-alt',
     url: '/pages/training-ground/index',
-    showKey: null,
+    showKey: 'showVideo' as const,
   },
 ]
 
