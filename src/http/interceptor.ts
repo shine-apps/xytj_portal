@@ -56,19 +56,6 @@ const httpInterceptor = {
       options.header.Authorization = `Bearer ${tokenInfo.token}`
     }
 
-    // 4. 添加 Better Auth Session Cookie (如果存在)
-    // const sessionCookieValue = uni.getStorageSync('better-auth.session_token')
-    // if (sessionCookieValue) {
-    //   const existingCookie = options.header.Cookie || options.header.cookie || ''
-    //   // sessionCookieValue 已经是 key=value 格式
-    //   if (existingCookie) {
-    //     options.header.Cookie = `${existingCookie}; ${sessionCookieValue}`
-    //   }
-    //   else {
-    //     options.header.Cookie = sessionCookieValue
-    //   }
-    // }
-
     return options
   },
 }
