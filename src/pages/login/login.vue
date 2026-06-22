@@ -27,7 +27,14 @@
     </wd-tabs>
 
     <view v-if="currentTab === 'otp'" class="pt-4 space-y-4">
-      <wd-input v-model="otpForm.phoneNumber" placeholder="请输入手机号" type="number" clearable prefix-icon="mobile" />
+      <wd-input v-model="otpForm.phoneNumber" placeholder="请输入手机号" type="number" clearable>
+        <template #prefix>
+          <view class="mr-2 flex items-center border-r border-gray-200 pr-2 active:opacity-60" @click.stop="openCountryPicker">
+            <text class="text-base text-[#1a1a1a]">+{{ otpForm.countryCode }}</text>
+            <wd-icon name="arrow-down" size="14px" custom-class="ml-1 text-gray-400" />
+          </view>
+        </template>
+      </wd-input>
       <wd-input v-model="otpForm.otp" placeholder="请输入验证码" type="number" clearable prefix-icon="secured">
         <template #suffix>
           <wd-button type="primary" size="small" :disabled="countdown > 0" text @click="handleSendOtp">
@@ -60,6 +67,14 @@
         忘记密码?
       </navigator>
     </view>
+
+    <wd-picker
+      v-model="countryCodeSelected"
+      v-model:visible="showCountryPicker"
+      :columns="countryCodeColumns"
+      title="选择国家/地区"
+      @confirm="onCountryCodeConfirm"
+    />
   </view>
 </template>
 
@@ -85,14 +100,59 @@ const passwordForm = reactive({
 })
 
 const otpForm = reactive({
+  countryCode: '86',
   phoneNumber: '',
   otp: '',
 })
 
+// 国家/地区区号选项
+const countryCodeColumns = ref<{ label: string, value: string }[]>([
+  { label: '中国大陆 +86', value: '86' },
+  { label: '中国香港 +852', value: '852' },
+  { label: '中国澳门 +853', value: '853' },
+  { label: '中国台湾 +886', value: '886' },
+  { label: '美国/加拿大 +1', value: '1' },
+  { label: '新加坡 +65', value: '65' },
+  { label: '日本 +81', value: '81' },
+  { label: '韩国 +82', value: '82' },
+  { label: '英国 +44', value: '44' },
+  { label: '澳大利亚 +61', value: '61' },
+  { label: '法国 +33', value: '33' },
+  { label: '德国 +49', value: '49' },
+  { label: '印度 +91', value: '91' },
+  { label: '马来西亚 +60', value: '60' },
+  { label: '泰国 +66', value: '66' },
+])
+
+const showCountryPicker = ref(false)
+const countryCodeSelected = ref<string[]>(['86'])
+
+function openCountryPicker() {
+  countryCodeSelected.value = [otpForm.countryCode]
+  showCountryPicker.value = true
+}
+
+function onCountryCodeConfirm({ selectedItems }: { selectedItems: { value: string }[] }) {
+  const value = selectedItems?.[0]?.value
+  if (value)
+    otpForm.countryCode = value
+}
+
+function getFullPhoneNumber() {
+  return `+${otpForm.countryCode}${otpForm.phoneNumber}`
+}
+
 const userStore = useUserStore()
 
 const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+$/.test(email)
-const validatePhone = (phone: string) => /^1[3-9]\d{9}$/.test(phone)
+// 中国大陆手机号严格校验；其他国家/地区仅做 4~15 位数字校验
+function validatePhone(phone: string, code = '86') {
+  if (!phone)
+    return false
+  if (code === '86')
+    return /^1[3-9]\d{9}$/.test(phone)
+  return /^\d{4,15}$/.test(phone)
+}
 
 onUnmounted(() => {
   if (timer)
@@ -166,13 +226,13 @@ async function handleWechatPhoneLogin(e: any) {
   }
 }
 async function handleSendOtp() {
-  if (!validatePhone(otpForm.phoneNumber)) {
+  if (!validatePhone(otpForm.phoneNumber, otpForm.countryCode)) {
     uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
     return
   }
 
   try {
-    await sendPhoneOtp({ phoneNumber: otpForm.phoneNumber })
+    await sendPhoneOtp({ phoneNumber: getFullPhoneNumber() })
     uni.showToast({ title: '验证码已发送', icon: 'none' })
     countdown.value = 60
     timer = setInterval(() => {
@@ -187,13 +247,13 @@ async function handleSendOtp() {
   }
 }
 async function handleOtpLogin() {
-  if (!validatePhone(otpForm.phoneNumber) || !otpForm.otp) {
+  if (!validatePhone(otpForm.phoneNumber, otpForm.countryCode) || !otpForm.otp) {
     uni.showToast({ title: '请输入手机号和验证码', icon: 'none' })
     return
   }
   loading.value = true
   try {
-    await userStore.loginBySendOtp(otpForm.phoneNumber, otpForm.otp)
+    await userStore.loginBySendOtp(getFullPhoneNumber(), otpForm.otp)
     uni.showToast({ title: '登录成功', icon: 'success' })
     setTimeout(() => {
       const pages = getCurrentPages()
