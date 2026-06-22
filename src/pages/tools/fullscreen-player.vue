@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { onLoad, onResize, onUnload } from '@dcloudio/uni-app'
-import { getCurrentInstance, onMounted, onUnmounted, ref } from 'vue'
+import { computed, getCurrentInstance, onMounted, onUnmounted, ref, watch } from 'vue'
+
+// 全局事件名：与 VideoPlayer 保持一致
+const REQ_PLAYLIST_EVENT = 'video-fullscreen-req-playlist'
+const PLAYLIST_DATA_EVENT = 'video-fullscreen-playlist-data'
+
+// 通用播放列表项结构（与 VideoPlayer 中的保持一致）
+interface PlaylistItem {
+  id: string
+  src: string
+  poster?: string
+  title?: string
+}
 
 definePage({
   style: {
@@ -14,6 +26,10 @@ definePage({
 const videoSrc = ref('')
 const poster = ref('')
 const title = ref('')
+
+// 可选的播放列表（由调用方通过全局事件传入）
+const playlist = ref<PlaylistItem[]>([])
+const hasPlaylist = computed(() => playlist.value.length > 0)
 
 // 视频状态
 const isPlaying = ref(false)
@@ -44,6 +60,9 @@ let hideControlsTimer: ReturnType<typeof setTimeout> | null = null
 let videoContext: UniApp.VideoContext | null = null
 let componentInstance: any = null
 
+// 用于强制重建 video 元素的 key（切换 playlist 中下一首时递增）
+const videoKey = ref(0)
+
 // 监听窗口大小变化以适配横竖屏
 onResize((res) => {
   isLandscape.value = res.size.windowWidth > res.size.windowHeight
@@ -61,6 +80,16 @@ onLoad((options) => {
   // 初始化屏幕方向判断
   const systemInfo = uni.getSystemInfoSync()
   isLandscape.value = systemInfo.windowWidth > systemInfo.windowHeight
+
+  // 通过全局事件向 VideoPlayer 请求播放列表（保持通用：未传时不影响功能）
+  uni.$on(PLAYLIST_DATA_EVENT, (data: { playlist: PlaylistItem[], currentId: string }) => {
+    if (data && Array.isArray(data.playlist)) {
+      playlist.value = data.playlist
+      console.log('fullscreen-player received playlist:', playlist.value.length)
+    }
+  })
+  // 主动请求播放列表
+  uni.$emit(REQ_PLAYLIST_EVENT)
 })
 
 // 页面卸载时清理
@@ -68,11 +97,18 @@ onUnload(() => {
   if (hideControlsTimer) {
     clearTimeout(hideControlsTimer)
   }
+  // 清理全局事件监听
+  uni.$off(PLAYLIST_DATA_EVENT)
 })
 
 onMounted(() => {
   componentInstance = getCurrentInstance()?.proxy
-  videoContext = uni.createVideoContext('fullscreenVideo', componentInstance)
+  videoContext = uni.createVideoContext(`fullscreenVideo_${videoKey.value}`, componentInstance)
+})
+
+// 切换视频后（videoKey 变化时），重新创建 videoContext
+watch(videoKey, () => {
+  videoContext = uni.createVideoContext(`fullscreenVideo_${videoKey.value}`, componentInstance)
 })
 
 onUnmounted(() => {
@@ -128,9 +164,7 @@ function setPlaybackRate(rate: number) {
 
 // 退出全屏
 function exitFullscreen() {
-  videoContext?.pause()
-  // 返回上一页
-  uni.navigateBack()
+  safeExitFullscreen()
 }
 
 // 播放事件
@@ -145,16 +179,74 @@ function onPause() {
   resetHideControlsTimer()
 }
 
+// 视频可播放事件（切换 src 后触发），主动开始播放
+function onCanPlay() {
+  if (isPlaying.value) {
+    videoContext?.play()
+  }
+}
+
+// 在播放列表中切换到指定索引的视频
+function switchToIndex(idx: number): boolean {
+  const item = playlist.value[idx]
+  if (!item) {
+    return false
+  }
+  // 通过 :key 强制重建 video 元素，确保 src 变化后立即加载并自动播放
+  videoKey.value++
+  videoSrc.value = item.src
+  poster.value = item.poster || ''
+  title.value = item.title || ''
+  isPlaying.value = true
+  return true
+}
+
+// 在播放列表中查找当前视频的索引（按 src 匹配）
+function findCurrentIndex(): number {
+  if (!hasPlaylist.value) {
+    return -1
+  }
+  return playlist.value.findIndex(item => item.src === videoSrc.value)
+}
+
+// 安全退出全屏：栈不足时回退到重置状态而非报错
+function safeExitFullscreen() {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    videoContext?.pause()
+    uni.navigateBack()
+  }
+  else {
+    // 无上级页面，重置到结束状态
+    currentTime.value = 0
+    progress.value = 0
+    isPlaying.value = false
+    resetHideControlsTimer()
+    showControls.value = true
+  }
+}
+
 // 视频播放结束事件
 function onEnded() {
-  // 重置播放进度为0
+  // 如果有播放列表，尝试自动播放下一个
+  if (hasPlaylist.value) {
+    const currentIndex = findCurrentIndex()
+    if (currentIndex >= 0 && currentIndex < playlist.value.length - 1) {
+      // 有下一个，切到下一个并自动播放
+      if (switchToIndex(currentIndex + 1)) {
+        return
+      }
+    }
+    // 没有下一个，退出全屏
+    safeExitFullscreen()
+    return
+  }
+
+  // 没有播放列表，保持原行为：重置进度、显示控制条
   currentTime.value = 0
   progress.value = 0
-  // 设置播放状态为暂停
   isPlaying.value = false
-  // 重置控制按钮显示状态
   resetHideControlsTimer()
-  // 确保控制按钮显示
   showControls.value = true
 }
 
@@ -219,7 +311,8 @@ function resetHideControlsTimer() {
   >
     <!-- 视频元素 -->
     <video
-      id="fullscreenVideo"
+      :id="`fullscreenVideo_${videoKey}`"
+      :key="videoKey"
       :src="videoSrc"
       :poster="poster"
       autoplay
@@ -236,6 +329,7 @@ function resetHideControlsTimer() {
       @play="onPlay"
       @pause="onPause"
       @loadedmetadata="onLoadedMetaData"
+      @canplay="onCanPlay"
       @timeupdate="onTimeUpdate"
       @ended="onEnded"
     />

@@ -1,18 +1,29 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, onMounted, onUnmounted, ref } from 'vue'
 
+// 通用播放列表项结构
+export interface PlaylistItem {
+  id: string
+  src: string
+  poster?: string
+  title?: string
+}
+
 interface Props {
   src: string
   poster?: string
   videoId?: string
   containerWidth?: number // 单位是rpx
   title?: string
+  // 可选的播放列表，传入后全屏模式下会自动播放下一个
+  playlist?: PlaylistItem[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   videoId: 'videoPlayer',
   containerWidth: 0,
   title: '',
+  playlist: () => [],
 })
 
 const emit = defineEmits<{
@@ -155,12 +166,25 @@ function close() {
   emit('close')
 }
 
+// 全局事件名：全屏页请求 playlist / 返回 playlist 数据
+const REQ_PLAYLIST_EVENT = 'video-fullscreen-req-playlist'
+const PLAYLIST_DATA_EVENT = 'video-fullscreen-playlist-data'
+
 function openFullscreen() {
   // 暂停当前视频
   videoContext?.pause()
+  // 注册一次性监听器：响应后自动移除，避免重复注册累积
+  const handler = () => {
+    uni.$emit(PLAYLIST_DATA_EVENT, {
+      playlist: props.playlist || [],
+      currentId: props.videoId,
+    })
+    uni.$off(REQ_PLAYLIST_EVENT, handler)
+  }
+  uni.$on(REQ_PLAYLIST_EVENT, handler)
   // 导航到全屏播放页面
   uni.navigateTo({
-    url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(props.src)}&poster=${encodeURIComponent(props.poster || '')}&title=${encodeURIComponent('')}`,
+    url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(props.src)}&poster=${encodeURIComponent(props.poster || '')}&title=${encodeURIComponent(props.title || '')}`,
   })
   resetHideControlsTimer()
 }
@@ -194,6 +218,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearTimeout(hideControlsTimer)
+  // 清理全局事件监听
+  uni.$off(REQ_PLAYLIST_EVENT)
+  uni.$off(PLAYLIST_DATA_EVENT)
 })
 </script>
 

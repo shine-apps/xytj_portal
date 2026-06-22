@@ -5,7 +5,9 @@
       <VideoPlayer
         :src="video.url"
         :poster="video.coverUrl || ''"
+        :title="video.title"
         :container-width="750"
+        :video-id="videoId"
         @close="handleClose"
       />
 

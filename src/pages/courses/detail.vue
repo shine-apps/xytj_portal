@@ -86,7 +86,8 @@
           :src="currentVideo.url"
           :poster="currentVideo.coverUrl"
           :title="currentVideo.title"
-          video-id="courseVideo"
+          :playlist="playlist"
+          :video-id="currentVideo.id"
           @close="onPopupClose"
           @ended="onVideoEnded"
         />
@@ -99,7 +100,7 @@
 import type { IVideo } from '@/service/collections'
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { useCoursesStore } from '@/store/courses'
 // import { useSettingsStore } from '@/store/settings'
@@ -120,6 +121,16 @@ const collectionId = ref('')
 const videoList = ref<IVideo[]>([])
 const showVideoPlayer = ref(false)
 const currentVideo = ref<IVideo | null>(null)
+
+// 构造视频播放列表（供全屏播放时自动播放下一首使用）
+const playlist = computed(() => {
+  return videoList.value.map(v => ({
+    id: v.id,
+    src: v.url,
+    poster: v.coverUrl,
+    title: v.title,
+  }))
+})
 
 onLoad(async (options) => {
   // await settingsStore.fetchSettings()
