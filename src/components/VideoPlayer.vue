@@ -6,15 +6,18 @@ interface Props {
   poster?: string
   videoId?: string
   containerWidth?: number // 单位是rpx
+  title?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   videoId: 'videoPlayer',
   containerWidth: 0,
+  title: '',
 })
 
 const emit = defineEmits<{
   close: []
+  ended: []
 }>()
 
 const isMirrored = ref(false)
@@ -97,6 +100,10 @@ function onEnded() {
   resetHideControlsTimer()
   // 确保控制按钮显示
   showControls.value = true
+  // 非循环模式下通知父组件视频已结束
+  if (!isLoop.value) {
+    emit('ended')
+  }
 }
 
 // 时间更新事件
@@ -214,6 +221,15 @@ onUnmounted(() => {
       @timeupdate="onTimeUpdate"
       @ended="onEnded"
     />
+
+    <!-- 标题 -->
+    <view
+      v-if="title"
+      class="pointer-events-auto absolute left-0 right-0 top-0 from-black/80 to-transparent bg-gradient-to-b px-[15px] py-[10px] transition-opacity duration-300"
+      :class="showControls ? 'opacity-100' : 'opacity-0'"
+    >
+      <text class="text-sm text-white">{{ title }}</text>
+    </view>
 
     <!-- 自定义播放/暂停按钮 -->
     <view

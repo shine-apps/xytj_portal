@@ -82,10 +82,13 @@
       <view class="w-[90vw] overflow-hidden rounded-lg bg-black">
         <VideoPlayer
           v-if="showVideoPlayer && currentVideo"
+          :key="currentVideo.id"
           :src="currentVideo.url"
           :poster="currentVideo.coverUrl"
+          :title="currentVideo.title"
           video-id="courseVideo"
           @close="onPopupClose"
+          @ended="onVideoEnded"
         />
       </view>
     </wd-popup>
@@ -180,6 +183,14 @@ function onVideoClick(video: IVideo) {
 
 function onPopupClose() {
   showVideoPlayer.value = false
+}
+
+function onVideoEnded() {
+  const currentIndex = videoList.value.findIndex(v => v.id === currentVideo.value?.id)
+  const nextVideo = videoList.value[currentIndex + 1]
+  if (nextVideo) {
+    currentVideo.value = nextVideo
+  }
 }
 
 function navigateToVideoDetail(video: IVideo) {
