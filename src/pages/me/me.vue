@@ -105,7 +105,7 @@ function handleLogout() {
 }
 
 function openAdminWebview() {
-  const adminUrl = 'https://xytj.shinehe.cn/'
+  const adminUrl = import.meta.env.VITE_SERVER_BASEURL
   uni.navigateTo({
     url: `/pages/webview/webview?url=${encodeURIComponent(adminUrl)}&title=${encodeURIComponent('管理后台')}`,
   })
