@@ -1,98 +1,182 @@
-<p align="center">
-  <a href="https://github.com/unibest-tech/unibest">
-    <img width="160" src="./src/static/logo.svg">
-  </a>
-</p>
+## 项目简介
 
-<h1 align="center">
-  <a href="https://github.com/unibest-tech/unibest" target="_blank">unibest - 最好的 uniapp 开发框架</a>
-</h1>
+**翔云太极（XiangYun TaiJi）** 是一款面向太极拳爱好者与教学者的跨端应用，专注于 **太极拳教学、活动管理、视频课程** 等场景。
 
-<div align="center">
-旧仓库 codercup 进不去了，star 也拿不回来，这里也展示一下那个地址的 star.
+- 端形态：H5、微信小程序（基于 [UniApp](https://uniapp.dcloud.net.cn/) 跨端框架）
+- 视觉风格：**中国传统文化的水墨画风格**
+- 后端服务：[`xytj_backend`](../xytj_backend)（Nuxt 4 + Prisma + PostgreSQL）
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/codercup/unibest?style=flat&logo=github)](https://github.com/codercup/unibest)
-[![GitHub forks](https://img.shields.io/github/forks/codercup/unibest?style=flat&logo=github)](https://github.com/codercup/unibest)
+> 前端门户与后端 API 解耦，前端通过封装好的 HTTP 请求与后端通信。
 
-</div>
+## 技术栈
 
-<div align="center">
+| 类别     | 选型                                                              |
+| -------- | ----------------------------------------------------------------- |
+| 跨端框架 | [UniApp](https://uniapp.dcloud.net.cn/)（Vue 3 + Vite 5）         |
+| 语言     | TypeScript 5.x                                                    |
+| 状态管理 | [Pinia](https://pinia.vuejs.org/) + `pinia-plugin-persistedstate` |
+| UI 组件  | [Wot UI](https://wot-ui.cn/)（`wot-design-uni`）                  |
+| 分页组件 | [z-paging](https://z-paging.zxlee.cn/)                            |
+| 样式方案 | [UnoCSS](https://unocss.dev/)（原子化 CSS）+ Sass                 |
+| 网络请求 | [Alova](https://alova.js.org/) + `@alova/adapter-uniapp`          |
+| 富文本   | `mp-html`                                                         |
+| 对象存储 | `cos-js-sdk-v5` / `cos-wx-sdk-v5`（腾讯云 COS）                   |
+| 日期处理 | [Day.js](https://day.js.org/)                                     |
+| 代码规范 | ESLint + Prettier + Husky + Commitlint                            |
+| 单元测试 | Vitest + `@vue/test-utils` + `happy-dom`                          |
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/feige996/unibest?style=flat&logo=github)](https://github.com/feige996/unibest)
-[![GitHub forks](https://img.shields.io/github/forks/feige996/unibest?style=flat&logo=github)](https://github.com/feige996/unibest)
-[![star](https://gitee.com/feige996/unibest/badge/star.svg?theme=dark)](https://gitee.com/feige996/unibest/stargazers)
-[![fork](https://gitee.com/feige996/unibest/badge/fork.svg?theme=dark)](https://gitee.com/feige996/unibest/members)
-![node version](https://img.shields.io/badge/node-%3E%3D18-green)
-![pnpm version](https://img.shields.io/badge/pnpm-%3E%3D7.30-green)
-![GitHub package.json version (subfolder of monorepo)](https://img.shields.io/github/package-json/v/feige996/unibest)
-![GitHub License](https://img.shields.io/github/license/feige996/unibest)
+## 项目结构
 
-</div>
+```text
+xytj_portal/
+├── src/
+│   ├── pages/                # 页面（约定式路由）
+│   │   ├── index/            # 首页
+│   │   ├── activities/       # 活动
+│   │   ├── articles/         # 文章
+│   │   ├── coach/            # 教练
+│   │   ├── courses/          # 课程
+│   │   ├── training-ground/  # 训练场
+│   │   ├── tools/            # 工具
+│   │   ├── teacher-invitations/ # 教师邀请
+│   │   ├── webview/          # 内嵌网页
+│   │   ├── login/            # 登录
+│   │   ├── register/         # 注册
+│   │   ├── profile/          # 个人资料
+│   │   ├── me/               # 我的
+│   │   └── about/            # 关于
+│   ├── components/           # 全局组件
+│   ├── layouts/              # 布局
+│   ├── api/                  # API 接口
+│   ├── http/                 # HTTP 请求封装
+│   ├── store/                # Pinia 状态
+│   ├── tabbar/               # 底部导航
+│   ├── static/               # 静态资源（图片、图标、tabbar）
+│   ├── utils/                # 工具函数
+│   └── App.ku.vue            # 全局根组件
+├── scripts/                  # 脚本（IP 更新、初始化基础文件等）
+├── pages.config.ts           # 页面路由配置
+├── manifest.config.ts        # 应用清单配置
+├── vite.config.ts            # Vite 构建配置
+├── uno.config.ts             # UnoCSS 配置
+└── package.json
+```
 
-`unibest` —— 最好的 `uniapp` 开发模板，由 `uniapp` + `Vue3` + `Ts` + `Vite5` + `UnoCss` + `wot-ui` + `z-paging` 构成，使用了最新的前端技术栈，无需依靠 `HBuilderX`，通过命令行方式运行 `web`、`小程序` 和 `App`（编辑器推荐 `VSCode`，可选 `webstorm`）。
+## 快速开始
 
-`unibest` 内置了 `约定式路由`、`layout布局`、`请求封装`、`请求拦截`、`登录拦截`、`UnoCSS`、`i18n多语言` 等基础功能，提供了 `代码提示`、`自动格式化`、`统一配置`、`代码片段` 等辅助功能，让你编写 `uniapp` 拥有 `best` 体验 （ `unibest 的由来`）。
+### 环境要求
 
-![](https://raw.githubusercontent.com/andreasbm/readme/master/screenshots/lines/rainbow.png)
+- Node.js `>= 20`
+- pnpm `>= 9`（推荐 `10.x`）
+- Vue Official `>= 2.1.10`
+- TypeScript `>= 5.0`
 
-<p align="center">
-  <a href="https://unibest.tech/" target="_blank">📖 文档地址(new)</a>
-  <span style="margin:0 10px;">|</span>
-  <a href="https://unibest-tech.github.io/hello-unibest" target="_blank">📱 DEMO 地址</a>
-</p>
+### 安装与运行
 
----
+```bash
+# 安装依赖
+pnpm install
 
-注意旧的地址 [codercup](https://github.com/codercup/unibest) 我进不去了，使用新的 [feige996](https://github.com/feige996/unibest)。PR和 issue 也请使用新地址，否则无法合并。
+# 微信小程序开发
+pnpm dev:mp-weixin
 
-## 平台兼容性
+# H5 开发（默认 http://localhost:9000）
+pnpm dev:h5
+```
 
-| H5  | IOS | 安卓 | 微信小程序 | 字节小程序 | 快手小程序 | 支付宝小程序 | 钉钉小程序 | 百度小程序 |
-| --- | --- | ---- | ---------- | ---------- | ---------- | ------------ | ---------- | ---------- |
-| √   | √   | √    | √          | √          | √          | √            | √          | √          |
+> 默认未启用 i18n 与登录策略；如需开启，可在 `pages.config.ts` 与 `src/api/` 目录中扩展。
 
-注意每种 `UI框架` 支持的平台有所不同，详情请看各 `UI框架` 的官网，也可以看 `unibest` 文档。
+## 开发命令
 
-## ⚙️ 环境
+| 命令                          | 说明                                   |
+| ----------------------------- | -------------------------------------- |
+| `pnpm dev:mp-weixin`          | 启动微信小程序开发（推荐）             |
+| `pnpm dev:mp`                 | 启动微信小程序（同上别名）             |
+| `pnpm dev:h5`                 | 启动 H5 开发                           |
+| `pnpm dev:app`                | 启动 APP 开发                          |
+| `pnpm dev`                    | 默认平台（可在 `package.json` 中调整） |
+| `pnpm build:mp-weixin`        | 构建微信小程序                         |
+| `pnpm build:h5`               | 构建 H5（产物在 `dist/build/h5`）      |
+| `pnpm build:app`              | 构建 APP                               |
+| `pnpm type-check`             | TypeScript 类型检查                    |
+| `pnpm lint` / `pnpm lint:fix` | ESLint 检查 / 自动修复                 |
+| `pnpm test`                   | 运行单元测试（Vitest）                 |
+| `pnpm openapi`                | 从 OpenAPI 规范生成前端请求与类型      |
 
-- node>=18
-- pnpm>=7.30
-- Vue Official>=2.1.10
-- TypeScript>=5.0
+## 编码规范
 
-## 新版分支 
-- main == base
-- base --> base-i18n
-- base-login --> base-login-i18n
+### Vue 组件
 
-## &#x1F4C2; 快速开始
+- 使用 Composition API + `<script setup lang="ts">`
+- 标签顺序：`<script setup>` → `<template>` → `<style scoped>`（按需）
+- **优先使用 UnoCSS 原子化类名**，减少自定义 CSS
+- 页面配置通过 `definePage` 宏声明，顺序在 `<script setup>` 最顶部
 
-执行 `pnpm create unibest` 创建项目
-执行 `pnpm i` 安装依赖
-执行 `pnpm dev` 运行 `H5`
-执行 `pnpm dev:mp` 运行 `微信小程序`
+```vue
+<script setup lang="ts">
+definePage({
+  name: "example",
+  style: { navigationBarTitleText: "示例" },
+});
 
-## 📦 运行（支持热更新）
+const onTap = () => uni.showToast({ title: "Hello" });
+</script>
 
-- web平台： `pnpm dev:h5`, 然后打开 [http://localhost:9000/](http://localhost:9000/)。
-- weixin平台：`pnpm dev:mp` 然后打开微信开发者工具，导入本地文件夹，选择本项目的`dist/dev/mp-weixin` 文件。
-- APP平台：`pnpm dev:app`, 然后打开 `HBuilderX`，导入刚刚生成的`dist/dev/app` 文件夹，选择运行到模拟器(开发时优先使用)，或者运行的安卓/ios基座。(如果是 `安卓` 和 `鸿蒙` 平台，则不用这个方式，可以把整个unibest项目导入到hbx，通过hbx的菜单来运行到对应的平台。)
+<template>
+  <view class="p-4 bg-white">
+    <button class="btn-primary" @click="onTap">点击</button>
+  </view>
+</template>
+```
 
-## 🔗 发布
+### TypeScript
 
-- web平台： `pnpm build:h5`，打包后的文件在 `dist/build/h5`，可以放到web服务器，如nginx运行。如果最终不是放在根目录，可以在 `manifest.config.ts` 文件的 `h5.router.base` 属性进行修改。
-- weixin平台：`pnpm build:mp`, 打包后的文件在 `dist/build/mp-weixin`，然后通过微信开发者工具导入，并点击右上角的“上传”按钮进行上传。
-- APP平台：`pnpm build:app`, 然后打开 `HBuilderX`，导入刚刚生成的`dist/build/app` 文件夹，选择发行 - APP云打包。(如果是 `安卓` 和 `鸿蒙` 平台，则不用这个方式，可以把整个unibest项目导入到hbx，通过hbx的菜单来发行到对应的平台。)
+- 严格使用 TypeScript，避免 `any`
+- API 响应数据需定义 `interface`；联合类型使用 `type`
+- 导入类型使用 `import type`
 
-## 📄 License
+### 平台适配
 
-[MIT](https://opensource.org/license/mit/)
+通过 uni-app **条件编译** 处理多端差异：
 
-Copyright (c) 2025 菲鸽
+```vue
+<!-- #ifdef H5 -->
+<view>H5 特有内容</view>
+<!-- #endif -->
 
-## 捐赠
+<!-- #ifdef MP-WEIXIN -->
+<view>微信小程序特有内容</view>
+<!-- #endif -->
+```
 
-<p align='center'>
-<img alt="special sponsor appwrite" src="https://oss.laf.run/ukw0y1-site/pay/wepay.png" height="330" style="display:inline-block; height:330px;">
-<img alt="special sponsor appwrite" src="https://oss.laf.run/ukw0y1-site/pay/alipay.jpg" height="330" style="display:inline-block; height:330px; margin-left:10px;">
-</p>
+### 路由与页面
+
+- 页面放在 `src/pages/`，文件名即路由
+- 局部组件放在对应页面的 `/components/` 子目录
+- 全局组件放在 `src/components/`
+
+## 平台兼容
+
+| H5  | 微信小程序 | 安卓 | iOS |
+| --- | ---------- | ---- | --- |
+| √   | √          | √    | √   |
+
+> H5 与微信小程序为当前主维护平台；APP 通过 `pnpm dev:app` 调试，必要时配合 HBuilderX 运行。
+
+## 设计风格
+
+整体采用 **中国传统文化的水墨画风格**：
+
+- 色调：以墨黑、宣纸白、淡青、赭石为主
+- 元素：留白、印章、行书标题、毛笔笔触装饰
+- 交互：克制、留白多、转场舒缓
+
+## 相关项目
+
+- 后端服务：[`xytj_backend`](../xytj_backend)（Nuxt 4 + Prisma）
+- 顶层文档：[`AGENTS.md`](../AGENTS.md)
+- 前端项目规则：[`xytj_portal/.trae/rules/project_rules.md`](./.trae/rules/project_rules.md)
+
+## 许可证
+
+[MIT](./LICENSE) © 翔云太极
