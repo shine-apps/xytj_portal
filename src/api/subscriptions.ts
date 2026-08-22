@@ -1,0 +1,101 @@
+import { http } from '@/http/http'
+
+// 订阅状态(用于课程详情页)
+export interface ISubscriptionStatus {
+  isPaid: boolean
+  // 单位:分
+  price: number
+  durationDays: number
+  hasActiveSubscription: boolean
+  expiresAt: string | null
+  remainingDays: number
+  subscription: { id: string, status: string, expiresAt: string } | null
+}
+
+// 单视频访问权限
+export type AccessReason
+  = | 'public'
+    | 'not_paid'
+    | 'not_subscribed'
+    | 'subscription_expired'
+    | 'active_subscription'
+
+export interface IVideoAccess {
+  allowed: boolean
+  reason: AccessReason
+  collectionId?: string
+  collectionTitle?: string
+  collectionPrice?: number
+}
+
+// 微信支付参数
+export interface IWxPayParams {
+  timeStamp: string
+  nonceStr: string
+  package: string
+  signType: 'MD5' | 'HMAC-SHA256' | 'RSA'
+  paySign: string
+}
+
+// 订阅订单响应
+export interface ISubscribeOrderResponse {
+  alreadySubscribed?: boolean
+  subscription?: { id: string, expiresAt: string }
+  orderId?: string
+  payParams?: IWxPayParams
+  mocked?: boolean
+}
+
+// 我的订阅列表
+export interface IMySubscription {
+  id: string
+  status: string
+  startedAt: string
+  expiresAt: string
+  remainingDays: number
+  isActive: boolean
+  collection: { id: string, title: string, coverUrl: string | null, durationDays: number }
+}
+
+/**
+ * 获取课程订阅状态
+ * @param collectionId 课程(视频合集)ID
+ */
+export function getSubscriptionStatusAPI(collectionId: string) {
+  return http.Get<ISubscriptionStatus>(`/api/collections/${collectionId}/subscription-status`)
+}
+
+/**
+ * 发起订阅(创建订单 + 调起微信支付)
+ * @param collectionId 课程(视频合集)ID
+ * @param code 小程序端 uni.login 获取的 code(可选,用于后端换取 openid 完成 JSAPI 下单)
+ */
+export function subscribeCollectionAPI(collectionId: string, code?: string) {
+  return http.Post<ISubscribeOrderResponse>(`/api/collections/${collectionId}/subscribe`, { code })
+}
+
+/**
+ * 单视频访问权限检查
+ * @param videoId 视频ID
+ */
+export function getVideoAccessAPI(videoId: string) {
+  return http.Get<IVideoAccess>(`/api/videos/${videoId}/access`)
+}
+
+/**
+ * 获取我的订阅列表
+ */
+export function getMySubscriptionsAPI() {
+  return http.Get<IMySubscription[]>('/api/my/subscriptions')
+}
+
+/**
+ * 仅 mock 模式：模拟支付成功后主动完成订单以激活订阅
+ * @param orderId 订单ID
+ */
+export function mockCompleteOrderAPI(orderId: string) {
+  return http.Post<{ success: boolean, alreadyPaid?: boolean, expiresAt?: string }>(
+    `/api/orders/${orderId}/mock-complete`,
+    {},
+  )
+}

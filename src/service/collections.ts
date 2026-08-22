@@ -8,6 +8,13 @@ export interface ICollection {
   userId: string
   createdAt: string
   updatedAt: string
+  // 订阅相关字段(后端透出,可空)
+  /** 是否为付费课程 */
+  isPaid?: boolean
+  /** 订阅价格(单位:分) */
+  price?: number
+  /** 订阅有效天数 */
+  durationDays?: number
   _count?: {
     videos: number
   }
@@ -24,6 +31,11 @@ export interface IVideo {
   userId: string
   createdAt: string
   viewCount?: number
+  // 订阅相关字段(后端透出,可空)
+  /** 是否公开试看 */
+  isPublic?: boolean
+  /** 当前用户是否可访问(true 表示可观看, false 表示被订阅保护) */
+  isAccessible?: boolean
 }
 
 export interface ICollectionDetail extends ICollection {
