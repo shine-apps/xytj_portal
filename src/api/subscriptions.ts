@@ -40,6 +40,8 @@ export interface IWxPayParams {
 // 订阅订单响应
 export interface ISubscribeOrderResponse {
   alreadySubscribed?: boolean
+  // 免费课程（价格为 0）订阅：后端直接激活，无 payParams
+  free?: boolean
   subscription?: { id: string, expiresAt: string }
   orderId?: string
   payParams?: IWxPayParams

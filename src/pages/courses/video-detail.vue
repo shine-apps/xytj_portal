@@ -143,10 +143,10 @@
 </template>
 
 <script setup lang="ts">
-import { mockCompleteOrderAPI } from '@/api/subscriptions'
 import type { AccessReason, ISubscriptionStatus } from '@/api/subscriptions'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
+import { mockCompleteOrderAPI } from '@/api/subscriptions'
 import { createTrainingGroundPost } from '@/api/training-ground'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { recordVideoViewAPI } from '@/service/collections'
@@ -391,6 +391,17 @@ async function onSubscribeClick() {
         accessAllowed.value = access.allowed
         uni.showToast({ title: '订阅成功', icon: 'success' })
       }
+    }
+    else if (res.free) {
+      // 免费课程：后端已直接激活订阅，无需支付
+      subscriptionStore.invalidate(collectionId.value)
+      await subscriptionStore.fetchStatus(collectionId.value, true)
+      await coursesStore.fetchCourseDetail(collectionId.value)
+      // 重新拉取当前视频的访问权限
+      const access = await subscriptionStore.fetchAccess(videoId.value, true)
+      accessReason.value = access.reason
+      accessAllowed.value = access.allowed
+      uni.showToast({ title: '订阅成功', icon: 'success' })
     }
   }
   catch (e: any) {

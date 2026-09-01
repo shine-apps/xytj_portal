@@ -13,9 +13,16 @@
             <view class="flex-1 text-xl font-bold">
               {{ coursesStore.currentCourse.title }}
             </view>
-            <!-- 付费徽章 -->
+            <!-- 订阅状态徽章 -->
             <view
-              v-if="isPaid"
+              v-if="isPaid && hasActiveSubscription"
+              class="flex-shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700 font-medium"
+            >
+              <text class="i-carbon-checkmark mr-0.5" />
+              已订阅
+            </view>
+            <view
+              v-else-if="isPaid"
               class="flex-shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700 font-medium"
             >
               <text class="i-carbon-currency mr-0.5" />
@@ -70,9 +77,9 @@
             >
               <text class="i-carbon-locked text-2xl text-white" />
             </view>
-            <!-- 试看标签 -->
+            <!-- 试看标签(未订阅时才显示;已订阅后全部视频可看,无"试看"概念) -->
             <view
-              v-if="isPaid && item.isPublic"
+              v-if="isPaid && item.isPublic && !hasActiveSubscription"
               class="absolute right-0 top-0 rounded-bl-md bg-green-500 px-1.5 py-0.5 text-[10px] text-white font-medium"
             >
               试看
@@ -137,9 +144,9 @@
     >
       <view class="flex items-center justify-between gap-3 px-4 py-3">
         <!-- 价格 + 状态文字 -->
-        <view class="flex-1 min-w-0">
+        <view class="min-w-0 flex-1">
           <template v-if="hasActiveSubscription">
-            <view class="flex items-center text-sm font-medium text-green-600">
+            <view class="flex items-center text-sm text-green-600 font-medium">
               <text class="i-carbon-checkmark-filled mr-1" />
               已订阅
               <text v-if="remainingDays > 0" class="ml-1 text-gray-500">
@@ -151,7 +158,7 @@
             </view>
           </template>
           <template v-else-if="userStore.hasValidLogin">
-            <view class="text-base font-bold text-gray-900">
+            <view class="text-base text-gray-900 font-bold">
               订阅此课程
             </view>
             <view class="text-xs text-gray-500">
@@ -168,7 +175,7 @@
         <!-- 操作按钮 -->
         <view
           v-if="!hasActiveSubscription"
-          class="flex-shrink-0 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow"
+          class="flex-shrink-0 rounded-full px-5 py-2.5 text-sm text-white font-bold shadow"
           :class="userStore.hasValidLogin ? 'bg-amber-500 active:bg-amber-600' : 'bg-blue-500 active:bg-blue-600'"
           :style="{ opacity: subscribing ? 0.7 : 1 }"
           @click="onSubscribeClick"
@@ -184,11 +191,11 @@
 
 <script setup lang="ts">
 import type { ISubscriptionStatus } from '@/api/subscriptions'
-import { mockCompleteOrderAPI } from '@/api/subscriptions'
 import type { IVideo } from '@/service/collections'
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
+import { mockCompleteOrderAPI } from '@/api/subscriptions'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { useCoursesStore } from '@/store/courses'
 import { useSubscriptionStore } from '@/store/subscription'
@@ -451,6 +458,13 @@ async function onSubscribeClick() {
         await coursesStore.fetchCourseDetail(collectionId.value)
         uni.showToast({ title: '订阅成功', icon: 'success' })
       }
+    }
+    else if (res.free) {
+      // 免费课程：后端已直接激活订阅，无需支付
+      subscriptionStore.invalidate(collectionId.value)
+      await subscriptionStore.fetchStatus(collectionId.value, true)
+      await coursesStore.fetchCourseDetail(collectionId.value)
+      uni.showToast({ title: '订阅成功', icon: 'success' })
     }
     else {
       uni.showToast({ title: '订阅失败', icon: 'none' })
