@@ -416,6 +416,15 @@ function goToMySubscriptions() {
 }
 
 /**
+ * 订阅状态变更后刷新:强制重新拉取课程详情(绕过缓存),
+ * 并同步更新 videoList,让锁图标立即消失
+ */
+async function refreshAfterSubscribe() {
+  const detail = await coursesStore.fetchCourseDetail(collectionId.value, true)
+  videoList.value = detail.videos || []
+}
+
+/**
  * 订阅按钮点击入口
  */
 async function onSubscribeClick() {
@@ -439,7 +448,7 @@ async function onSubscribeClick() {
       uni.showToast({ title: '已是订阅用户', icon: 'success' })
       subscriptionStore.invalidate(collectionId.value)
       await subscriptionStore.fetchStatus(collectionId.value, true)
-      await coursesStore.fetchCourseDetail(collectionId.value)
+      await refreshAfterSubscribe()
       return
     }
 
@@ -455,7 +464,7 @@ async function onSubscribeClick() {
         subscriptionStore.invalidate(collectionId.value)
         await subscriptionStore.fetchStatus(collectionId.value, true)
         // 重新加载课程详情,让 isAccessible 字段刷新
-        await coursesStore.fetchCourseDetail(collectionId.value)
+        await refreshAfterSubscribe()
         uni.showToast({ title: '订阅成功', icon: 'success' })
       }
     }
@@ -463,7 +472,7 @@ async function onSubscribeClick() {
       // 免费课程：后端已直接激活订阅，无需支付
       subscriptionStore.invalidate(collectionId.value)
       await subscriptionStore.fetchStatus(collectionId.value, true)
-      await coursesStore.fetchCourseDetail(collectionId.value)
+      await refreshAfterSubscribe()
       uni.showToast({ title: '订阅成功', icon: 'success' })
     }
     else {

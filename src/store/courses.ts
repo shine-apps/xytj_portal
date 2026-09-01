@@ -49,16 +49,16 @@ export const useCoursesStore = defineStore(
       }
     }
 
-    const fetchCourseDetail = async (courseId: string) => {
+    const fetchCourseDetail = async (courseId: string, force = false) => {
       // 清理过期缓存
       cleanupCache()
 
-      // 检查缓存
+      // 检查缓存(force=true 时跳过缓存,用于订阅状态变更后强制刷新 isAccessible)
       const cachedItem = courseCache.value[courseId]
       const now = Date.now()
 
       // 如果缓存存在且未过期，直接返回缓存数据
-      if (cachedItem && cachedItem.expiry > now) {
+      if (!force && cachedItem && cachedItem.expiry > now) {
         currentCourse.value = cachedItem.data
         return cachedItem.data
       }
