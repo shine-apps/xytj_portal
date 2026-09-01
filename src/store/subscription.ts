@@ -4,15 +4,15 @@ import type {
   ISubscriptionStatus,
   IVideoAccess,
 } from '@/api/subscriptions'
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { getWxCode } from '@/api/login'
 import {
   getMySubscriptionsAPI,
   getSubscriptionStatusAPI,
   getVideoAccessAPI,
   subscribeCollectionAPI,
 } from '@/api/subscriptions'
-import { getWxCode } from '@/api/login'
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
 
 export const useSubscriptionStore = defineStore(
   'subscription',
@@ -70,10 +70,7 @@ export const useSubscriptionStore = defineStore(
       res = await subscribeCollectionAPI(collectionId)
       // #endif
 
-      // 不管成功失败,都强制刷新状态
-      if (res.alreadySubscribed) {
-        await fetchStatus(collectionId, true)
-      }
+      // 订阅状态刷新由调用方(页面)统一处理,避免重复请求
       return res
     }
 

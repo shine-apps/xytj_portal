@@ -325,6 +325,29 @@ function navigateToCollection() {
   })
 }
 
+/**
+ * 切换视频后重新鉴权
+ * 新视频可能受订阅保护(如从试看视频切到受保护视频),必须重新校验
+ */
+async function recheckAccess(targetVideoId: string) {
+  // 鉴权期间隐藏播放器,防止受保护视频在等待响应时被播放
+  loading.value = true
+  try {
+    const access = await subscriptionStore.fetchAccess(targetVideoId, true)
+    accessReason.value = access.reason
+    accessAllowed.value = access.allowed
+  }
+  catch (e) {
+    // 鉴权失败:保守拒绝
+    console.warn('Fetch video access failed', e)
+    accessAllowed.value = false
+    accessReason.value = 'not_subscribed'
+  }
+  finally {
+    loading.value = false
+  }
+}
+
 function navigateToPreviousVideo() {
   if (!accessAllowed.value)
     return
@@ -334,6 +357,8 @@ function navigateToPreviousVideo() {
 
   videoId.value = previousVideo.id
   uni.setNavigationBarTitle({ title: previousVideo.title })
+  // 重新鉴权:上一个视频可能受订阅保护
+  recheckAccess(previousVideo.id)
 }
 
 function navigateToNextVideo() {
@@ -345,6 +370,8 @@ function navigateToNextVideo() {
 
   videoId.value = nextVideo.id
   uni.setNavigationBarTitle({ title: nextVideo.title })
+  // 重新鉴权:下一个视频可能受订阅保护
+  recheckAccess(nextVideo.id)
 }
 
 function onLoginClick() {

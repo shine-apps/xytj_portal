@@ -146,15 +146,8 @@
         <!-- 价格 + 状态文字 -->
         <view class="min-w-0 flex-1">
           <template v-if="hasActiveSubscription">
-            <view class="flex items-center text-sm text-green-600 font-medium">
-              <text class="i-carbon-checkmark-filled mr-1" />
-              已订阅
-              <text v-if="remainingDays > 0" class="ml-1 text-gray-500">
-                剩余 {{ remainingDays }} 天
-              </text>
-            </view>
             <view class="mt-1 text-xs text-blue-500 active:opacity-70" @click="goToMySubscriptions">
-              查看我的订阅 →
+              查看我的所有订阅 →
             </view>
           </template>
           <template v-else-if="userStore.hasValidLogin">
@@ -220,6 +213,8 @@ const videoList = ref<IVideo[]>([])
 const showVideoPlayer = ref(false)
 const currentVideo = ref<IVideo | null>(null)
 const subscribing = ref(false)
+// reload 由 refreshAfterSubscribe 触发时跳过 queryList 内的订阅状态拉取(调用方刚拉取过)
+let skipStatusFetch = false
 
 // 订阅状态(从 store 中读取)
 const subscriptionStatus = computed<ISubscriptionStatus | null>(() => {
@@ -292,6 +287,9 @@ const playlist = computed(() => {
 function canClickVideo(video: IVideo): boolean {
   if (!isPaid.value)
     return true
+  // 已订阅用户全部可看(优先于列表数据,防止课程缓存中的 isAccessible 过期)
+  if (hasActiveSubscription.value)
+    return true
   // 付费课程: 信任后端返回的 isAccessible 字段
   if (video.isAccessible === true)
     return true
@@ -342,8 +340,9 @@ async function queryList(pageNo: number, pageSize: number) {
       }),
     })
 
-    // 加载完成后,如果是付费课程则拉取订阅状态
-    if (res.isPaid && userStore.hasValidLogin) {
+    // 付费课程:拉取订阅状态(未登录时后端返回无订阅+课程付费信息;401 则忽略)
+    // refreshAfterSubscribe 触发的 reload 会跳过(调用方刚拉取过,避免重复请求)
+    if (res.isPaid && !skipStatusFetch) {
       try {
         await subscriptionStore.fetchStatus(collectionId.value, true)
       }
@@ -351,16 +350,7 @@ async function queryList(pageNo: number, pageSize: number) {
         console.warn('Fetch subscription status failed', e)
       }
     }
-    else if (res.isPaid) {
-      // 未登录:也尝试获取状态(后端会返回无订阅 + 课程付费信息)
-      try {
-        await subscriptionStore.fetchStatus(collectionId.value, true)
-      }
-      catch (e) {
-        // 未登录时可能 401,忽略
-        console.warn('Fetch subscription status failed', e)
-      }
-    }
+    skipStatusFetch = false
 
     paging.value.complete(res.videos || [])
   }
@@ -417,11 +407,33 @@ function goToMySubscriptions() {
 
 /**
  * 订阅状态变更后刷新:强制重新拉取课程详情(绕过缓存),
- * 并同步更新 videoList,让锁图标立即消失
+ * 再通过 z-paging reload 同步列表与内部分页状态(reload 会命中刚写入的缓存)
  */
 async function refreshAfterSubscribe() {
-  const detail = await coursesStore.fetchCourseDetail(collectionId.value, true)
-  videoList.value = detail.videos || []
+  await coursesStore.fetchCourseDetail(collectionId.value, true)
+  // 标记本次 reload 跳过 queryList 内的 fetchStatus(调用方刚拉取过)
+  skipStatusFetch = true
+  paging.value?.reload()
+}
+
+/**
+ * 轮询等待订阅激活(真实微信支付回调为异步)
+ * 最多查询 3 次,间隔 1.5s;若回调迟迟未到则提前返回,由用户手动刷新
+ */
+async function waitForSubscriptionActive(): Promise<void> {
+  const MAX_RETRIES = 3
+  const INTERVAL = 1500
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      const status = await subscriptionStore.fetchStatus(collectionId.value, true)
+      if (status.hasActiveSubscription)
+        return
+    }
+    catch {
+      // 单次查询失败(网络/401)不中断流程,继续重试
+    }
+    await new Promise(resolve => setTimeout(resolve, INTERVAL))
+  }
 }
 
 /**
@@ -460,12 +472,19 @@ async function onSubscribeClick() {
         if (res.mocked && res.orderId) {
           await mockCompleteOrderAPI(res.orderId)
         }
-        // 支付成功:清除缓存 + 重新拉取状态 + 刷新视频列表
+        // 支付成功:清除缓存 + 等待订阅激活 + 重新拉取状态 + 刷新视频列表
         subscriptionStore.invalidate(collectionId.value)
+        // 真实支付回调是异步的,后端可能尚未激活订阅,轮询等待
+        if (!res.mocked) {
+          await waitForSubscriptionActive()
+        }
         await subscriptionStore.fetchStatus(collectionId.value, true)
         // 重新加载课程详情,让 isAccessible 字段刷新
         await refreshAfterSubscribe()
-        uni.showToast({ title: '订阅成功', icon: 'success' })
+        uni.showToast({
+          title: hasActiveSubscription.value ? '订阅成功' : '支付成功,订阅生效中',
+          icon: hasActiveSubscription.value ? 'success' : 'none',
+        })
       }
     }
     else if (res.free) {
