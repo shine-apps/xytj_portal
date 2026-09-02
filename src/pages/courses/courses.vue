@@ -1,5 +1,5 @@
 <template>
-  <view v-if="settingsStore.showVideo" class="h-full">
+  <view v-if="isReady && settingsStore.showVideo" class="h-full">
     <z-paging ref="paging" v-model="dataList" @query="queryList">
       <view class="p-4">
         <view
@@ -24,13 +24,17 @@
       </view>
     </z-paging>
   </view>
+  <!-- settings 未就绪时的 loading 占位（无本地缓存的首次启动） -->
+  <view v-else-if="!isReady" class="h-screen flex items-center justify-center bg-[#f7f7f7]">
+    <wd-loading color="#a33327" />
+  </view>
 </template>
 
 <script setup lang="ts">
 import type { ICollection } from '@/service/collections'
-import { onLoad } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import useSettingsReady from '@/hooks/useSettingsReady'
 import { getCollectionsAPI } from '@/service/collections'
 import { useSettingsStore } from '@/store/settings'
 
@@ -41,13 +45,19 @@ definePage({
 })
 
 const settingsStore = useSettingsStore()
+// 等 settings 就绪（有缓存立即渲染，无缓存等待拉取完成）后再渲染页面
+const { isReady } = useSettingsReady()
 
-onLoad(async () => {
-  await settingsStore.fetchSettings()
-  if (!settingsStore.showVideo) {
-    uni.switchTab({ url: '/pages/index/index' })
-  }
-})
+// settings 就绪后若未开放视频功能则重定向回首页
+watch(
+  () => isReady.value && !settingsStore.showVideo,
+  (shouldRedirect) => {
+    if (shouldRedirect) {
+      uni.switchTab({ url: '/pages/index/index' })
+    }
+  },
+  { immediate: true },
+)
 
 const paging = ref<any>(null)
 const dataList = ref<ICollection[]>([])

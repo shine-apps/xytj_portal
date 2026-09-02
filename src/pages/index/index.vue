@@ -2,6 +2,7 @@
 import type { BannerItem } from '@/store/settings'
 import { computed } from 'vue'
 import { useToast } from 'wot-design-uni'
+import useSettingsReady from '@/hooks/useSettingsReady'
 import { useSettingsStore } from '@/store/settings'
 import { isPageTabbar } from '@/tabbar/store'
 
@@ -18,6 +19,8 @@ definePage({
 
 const toast = useToast()
 const settingsStore = useSettingsStore()
+// 等 settings 就绪（有缓存立即渲染，无缓存等待拉取完成）后再渲染页面
+const { isReady } = useSettingsReady()
 
 const baseFeatures = [
   {
@@ -120,15 +123,10 @@ function makePhoneCall() {
     phoneNumber: settingsStore.phoneNumber,
   })
 }
-
-onLoad(() => {
-  // console.log('翔云文武小程序首页加载完成')
-  // settingsStore.fetchSettings()
-})
 </script>
 
 <template>
-  <view class="min-h-screen bg-[#f7f7f7] font-serif" style="font-family: 'KaiTi', 'STKaiti', 'serif'">
+  <view v-if="isReady" class="min-h-screen bg-[#f7f7f7] font-serif" style="font-family: 'KaiTi', 'STKaiti', 'serif'">
     <view class="flex items-center justify-center gap-2 bg-white py-2" :style="{ paddingTop: 'var(--status-bar-height)' }">
       <image src="/static/logo.png" class="h-8 w-8" mode="aspectFit" />
       <text class="text-lg text-[#1a1a1a] font-bold tracking-widest">翔云文武</text>
@@ -296,5 +294,9 @@ onLoad(() => {
     <view class="flex justify-center pb-8 opacity-30">
       <text class="text-xs text-[#888] tracking-[0.5em]">—— 弘扬中华传统文化 ——</text>
     </view>
+  </view>
+  <!-- settings 未就绪时的 loading 占位（无本地缓存的首次启动） -->
+  <view v-else class="h-screen flex items-center justify-center bg-[#f7f7f7]">
+    <wd-loading color="#a33327" />
   </view>
 </template>
