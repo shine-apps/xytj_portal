@@ -1,9 +1,13 @@
 <script lang="ts" setup>
 import type { BannerItem } from '@/store/settings'
-import { computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import dayjs from 'dayjs'
+import { computed, ref } from 'vue'
 import { useToast } from 'wot-design-uni'
 import useSettingsReady from '@/hooks/useSettingsReady'
+import { getMonthlyCheckInsAPI } from '@/service/practice'
 import { useSettingsStore } from '@/store/settings'
+import { useUserStore } from '@/store/user'
 import { isPageTabbar } from '@/tabbar/store'
 
 defineOptions({
@@ -65,6 +69,13 @@ const baseFeatures = [
     url: '/pages/training-ground/index',
     showKey: 'showVideo' as const,
   },
+  {
+    title: '练拳打卡',
+    desc: '每日练拳记录',
+    icon: 'i-carbon-fire',
+    url: '/pages/practice/index',
+    showKey: null,
+  },
 ]
 
 const features = computed(() => {
@@ -117,6 +128,25 @@ function navigateTo(url: string) {
     uni.navigateTo({ url })
   }
 }
+
+// 练拳打卡：登录用户展示「今日已打卡」小勾状态
+const userStore = useUserStore()
+const practiceDoneToday = ref(false)
+
+onShow(async () => {
+  if (!userStore.hasValidLogin) {
+    practiceDoneToday.value = false
+    return
+  }
+  try {
+    const res = await getMonthlyCheckInsAPI()
+    const today = dayjs().format('YYYY-MM-DD')
+    practiceDoneToday.value = res.checkIns.some(c => c.checkInDate.slice(0, 10) === today)
+  }
+  catch (e) {
+    practiceDoneToday.value = false
+  }
+})
 
 function makePhoneCall() {
   uni.makePhoneCall({
@@ -238,6 +268,14 @@ function makePhoneCall() {
           class="group relative overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-5 shadow-md"
           @click="navigateTo(item.url)"
         >
+          <!-- 今日已打卡小勾状态 -->
+          <view
+            v-if="item.url === '/pages/practice/index' && practiceDoneToday"
+            class="absolute right-2 top-2 z-20 flex items-center gap-0.5 rounded-full bg-green-50 px-1.5 py-0.5"
+          >
+            <text class="i-carbon-checkmark-filled text-2xs text-green-500" />
+            <text class="text-2xs text-green-600">今日已打卡</text>
+          </view>
           <!-- 水墨装饰背景 -->
           <view class="absolute h-24 w-24 rounded-full bg-stone-100 opacity-50 transition-transform duration-500 -bottom-4 -right-4 group-hover:scale-110" />
 

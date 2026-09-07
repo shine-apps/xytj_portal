@@ -299,7 +299,7 @@ function handleSourceClick() {
         @click="handleSourceClick"
       >
         <text
-          :class="post.source.type === 'activity' ? 'i-carbon-location' : 'i-carbon-play'"
+          :class="post.source.type === 'activity' ? 'i-carbon-location' : post.source.type === 'practice-checkin' ? 'i-carbon-checkmark-outline' : 'i-carbon-play'"
         />
         <text class="text-sm text-blue-500 underline">来自：{{ post.source.title }}</text>
         <text class="i-carbon-chevron-right ml-auto text-gray-400" />

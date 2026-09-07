@@ -2,6 +2,7 @@
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { navigateToInterceptor } from '@/router/interceptor'
 import { useSettingsStore, useUserStore } from '@/store'
+import { initOfflineSyncListener } from '@/utils/practice-offline'
 
 onLaunch(async (options) => {
   console.log('App.vue onLaunch', options)
@@ -11,6 +12,8 @@ onLaunch(async (options) => {
   if (hasValidLogin) {
     fetchUserInfo()
   }
+  // 练拳打卡：注册离线队列同步监听（网络恢复时自动同步离线打卡）
+  initOfflineSyncListener()
 })
 onShow((options) => {
   console.log('App.vue onShow', options)

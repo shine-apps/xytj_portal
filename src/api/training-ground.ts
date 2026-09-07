@@ -7,7 +7,9 @@ export type TrainingGroundMediaType = 'IMAGE' | 'VIDEO'
 export interface TrainingGroundPostSource {
   url: string
   title: string
-  type: 'activity' | 'video'
+  type: 'activity' | 'course' | 'practice-checkin'
+  /** type 为 practice-checkin 时关联的打卡记录 ID */
+  checkInId?: string
 }
 
 export interface TrainingGroundPost {

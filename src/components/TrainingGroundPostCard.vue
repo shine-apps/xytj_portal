@@ -130,7 +130,7 @@ function handleSourceClick() {
       @click.stop="handleSourceClick"
     >
       <text
-        :class="post.source.type === 'activity' ? 'i-carbon-location' : 'i-carbon-play'"
+        :class="post.source.type === 'activity' ? 'i-carbon-location' : post.source.type === 'practice-checkin' ? 'i-carbon-checkmark-outline' : 'i-carbon-play'"
       />
       <text>来自：{{ post.source.title }}</text>
     </view>

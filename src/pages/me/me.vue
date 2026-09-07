@@ -24,6 +24,7 @@
       <wd-cell-group>
         <wd-cell v-if="isLoggedIn" title="个人信息" is-link to="/pages/profile/profile" border />
         <wd-cell v-if="isLoggedIn" title="我的订阅" is-link to="/pages/my/subscriptions" border />
+        <wd-cell v-if="isLoggedIn" title="练拳打卡" icon="clock" is-link to="/pages/practice/index" border />
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
         <wd-cell v-if="isLoggedIn" title="我的上课邀请" is-link to="/pages/teacher-invitations/list" border />

@@ -514,7 +514,7 @@ async function publishToTrainingGround() {
             source: {
               url: `/pages/courses/video-detail?id=${videoId.value}&collectionId=${collectionId.value}`,
               title: video.value!.title || '视频详情',
-              type: 'video',
+              type: 'course',
             },
           })
           uni.showToast({ title: '发布成功', icon: 'success' })
