@@ -221,3 +221,31 @@ export async function uploadToCos(
     throw error
   }
 }
+
+/**
+ * 构建 COS 视频封面 URL（使用 CI snapshot 截帧）
+ * 自动处理 URL 上已有的 query string，正确选择 ? 或 & 作为分隔符
+ *
+ * @param url COS 视频文件的完整 URL
+ * @param options.time 截帧时间点（秒），默认 1
+ * @param options.width 封面宽度（px），默认 400
+ * @param options.format 图片格式，默认 'jpg'
+ * @param options.simplified 是否只生成基础截帧参数（仅 ci-process+time，不带 width/format），默认 false
+ */
+export function buildVideoCoverUrl(
+  url: string,
+  options: { time?: number, width?: number, format?: string, simplified?: boolean } = {},
+): string {
+  if (!url)
+    return url
+  const { time = 1, width = 400, format = 'jpg', simplified = false } = options
+  const separator = url.includes('?') ? '&' : '?'
+  const params = [`ci-process=snapshot`, `time=${time}`]
+  if (!simplified) {
+    if (format)
+      params.push(`format=${format}`)
+    if (width)
+      params.push(`width=${width}`)
+  }
+  return `${url}${separator}${params.join('&')}`
+}

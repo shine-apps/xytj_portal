@@ -6,6 +6,7 @@ import { deleteComment, deleteTrainingGroundPost, getComments, getTrainingGround
 import TrainingGroundComment from '@/components/TrainingGroundComment.vue'
 import { useUserStore } from '@/store/user'
 import { useUserListStore } from '@/store/userList'
+import { buildVideoCoverUrl } from '@/utils/cos'
 import { getRelativeTime } from '@/utils/dateUtil'
 
 definePage({
@@ -95,16 +96,11 @@ async function fetchComments() {
   }
 }
 
-function getVideoCoverUrl(url: string): string {
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}ci-process=snapshot&time=1&format=jpg&width=400`
-}
-
 function playVideo() {
   if (!post.value)
     return
   uni.navigateTo({
-    url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(post.value.url)}&poster=${encodeURIComponent(getVideoCoverUrl(post.value.url))}&title=${encodeURIComponent(post.value.description || '')}`,
+    url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(post.value.url)}&poster=${encodeURIComponent(buildVideoCoverUrl(post.value.url))}&title=${encodeURIComponent(post.value.description || '')}`,
   })
 }
 
@@ -230,7 +226,7 @@ function handleSourceClick() {
 
         <view v-else-if="post.type === 'VIDEO'" class="relative w-full text-center" @click="playVideo">
           <wd-img
-            :src="getVideoCoverUrl(post.url)"
+            :src="buildVideoCoverUrl(post.url)"
             mode="widthFix"
             class="w-80%"
           />

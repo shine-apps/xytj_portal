@@ -2,6 +2,7 @@
 import type { TrainingGroundPost } from '@/api/training-ground'
 import { computed } from 'vue'
 import { useUserListStore } from '@/store/userList'
+import { buildVideoCoverUrl } from '@/utils/cos'
 import { getRelativeTime } from '@/utils/dateUtil'
 
 const props = withDefaults(
@@ -34,11 +35,6 @@ const userImage = computed(() => {
   return cachedUser.value?.image
 })
 
-function getVideoCoverUrl(url: string): string {
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}ci-process=snapshot&time=1&format=jpg&width=400`
-}
-
 function getCompressedImageUrl(url: string, maxWidth: number = 700): string {
   if (!url)
     return url
@@ -67,7 +63,7 @@ function handleImagePreview() {
 
 function handleVideoPreview() {
   uni.navigateTo({
-    url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(props.post.url)}&poster=${encodeURIComponent(getVideoCoverUrl(props.post.url))}&title=${encodeURIComponent(props.post.description || '')}`,
+    url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(props.post.url)}&poster=${encodeURIComponent(buildVideoCoverUrl(props.post.url))}&title=${encodeURIComponent(props.post.description || '')}`,
   })
 }
 
@@ -97,7 +93,7 @@ function handleSourceClick() {
     <!-- 视频帖子：封面 + 播放图标 -->
     <view v-else-if="post.type === 'VIDEO'" class="relative w-full bg-gray-100 text-center" @click.stop="handleVideoPreview">
       <wd-img
-        :src="getVideoCoverUrl(post.url)"
+        :src="buildVideoCoverUrl(post.url)"
         mode="heightFix"
         class="h-60"
       />

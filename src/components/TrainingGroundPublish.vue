@@ -2,7 +2,7 @@
 import type { TrainingGroundMediaType } from '@/api/training-ground'
 import { ref, watch } from 'vue'
 import { createTrainingGroundPost } from '@/api/training-ground'
-import { uploadToCos } from '@/utils/cos'
+import { buildVideoCoverUrl, uploadToCos } from '@/utils/cos'
 
 const props = defineProps<{
   visible: boolean
@@ -327,7 +327,7 @@ async function handleSubmit() {
             </view>
             <view v-else class="relative w-full overflow-hidden rounded-lg bg-gray-800" style="min-height: 200px">
               <image
-                :src="`${uploadedUrl}?ci-process=snapshot&time=1&format=jpg&width=400`"
+                :src="buildVideoCoverUrl(uploadedUrl)"
                 mode="widthFix"
                 class="w-full"
                 @load="onSnapshotLoad"

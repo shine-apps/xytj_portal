@@ -5,7 +5,7 @@ import useZPaging from 'z-paging/components/z-paging/js/hooks/useZPaging.js'
 import { createTrainingGroundPost } from '@/api/training-ground'
 import { createAlbumAPI, deleteAlbumAPI, getActivityAlbumsAPI, updateAlbumDescriptionAPI } from '@/service/album'
 import { useUserStore } from '@/store/user'
-import { uploadToCos } from '@/utils/cos'
+import { buildVideoCoverUrl, uploadToCos } from '@/utils/cos'
 import { formatTime } from '@/utils/dateUtil'
 import VideoPlayer from './VideoPlayer.vue'
 
@@ -153,7 +153,7 @@ async function createAlbumRecord(type: 'IMAGE' | 'VIDEO', url: string, size: num
     coverUrl = `${url}?imageMogr2/thumbnail/512x`
   }
   else if (type === 'VIDEO') {
-    coverUrl = `${url}?ci-process=snapshot&time=1`
+    coverUrl = buildVideoCoverUrl(url, { simplified: true })
   }
   try {
     const album = await createAlbumAPI(props.activityId, { type, url, size, description, coverUrl })
@@ -503,7 +503,7 @@ onMounted(() => {
             <!-- 视频 -->
             <view v-else-if="album.type === 'VIDEO'" class="relative">
               <image
-                :src="album.coverUrl || `${album.url}?ci-process=snapshot&time=1`"
+                :src="album.coverUrl || buildVideoCoverUrl(album.url, { simplified: true })"
                 class="block w-full"
                 mode="widthFix"
                 lazy-load

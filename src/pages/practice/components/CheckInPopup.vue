@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { CheckInPayload, CheckInResponse, PracticeCheckIn, PracticeLocation, PracticeMediaType, PracticeTypeItem } from '@/service/practice'
+import type { MediaItem } from '@/components/MediaUploader.vue'
+import type { CheckInPayload, CheckInResponse, PracticeCheckIn, PracticeLocation, PracticeTypeItem } from '@/service/practice'
 import dayjs from 'dayjs'
 import { computed, onMounted, ref, watch } from 'vue'
+import MediaUploader from '@/components/MediaUploader.vue'
 import { getPracticeTypesAPI, submitCheckInAPI } from '@/service/practice'
 import { useSettingsStore } from '@/store/settings'
 import { uploadToCos } from '@/utils/cos'
@@ -26,18 +28,6 @@ const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120]
 /** 上次选择的记忆键 */
 const LAST_TYPE_KEY = 'practice_last_type'
 const LAST_DURATION_KEY = 'practice_last_duration'
-/** 单文件大小上限 20MB */
-const MAX_FILE_SIZE = 20 * 1024 * 1024
-
-/** 媒体条目：本地待上传（localPath）或已上传（remoteUrl，编辑时回填） */
-interface MediaItem {
-  type: PracticeMediaType
-  localPath?: string
-  remoteUrl?: string
-  size?: number
-  mimeType?: string
-  uploading?: boolean
-}
 
 const practiceType = ref<string[]>([])
 const typeOptions = ref<PracticeTypeItem[]>([])
@@ -143,157 +133,6 @@ function chooseDuration(d: number) {
   durationMinutes.value = d
 }
 
-// ==================== 媒体 ====================
-
-function videoCount() {
-  return mediaItems.value.filter(m => m.type === 'VIDEO').length
-}
-
-function addMedia() {
-  uni.showActionSheet({
-    itemList: ['选择图片（最多9张）', '选择视频（最多1个）'],
-    success: ({ tapIndex }) => {
-      if (tapIndex === 0) {
-        chooseImages()
-      }
-      else if (tapIndex === 1) {
-        chooseVideo()
-      }
-    },
-  })
-}
-
-/**
- * 前端格式校验：优先 MIME（H5 可从 File 对象拿到），
- * 否则按扩展名判断（小程序/App 的临时路径自带扩展名）；两者都无法识别时不拦截
- */
-function isAllowedMedia(mime: string, path: string, name: string, kind: 'image' | 'video'): boolean {
-  if (mime) {
-    const m = mime.toLowerCase()
-    return kind === 'image' ? ['image/jpeg', 'image/png'].includes(m) : m === 'video/mp4'
-  }
-  const ref = `${name} ${path}`.toLowerCase()
-  const match = ref.match(/\.([a-z0-9]+)(?:[?#\s]|$)/)
-  if (!match) {
-    return true
-  }
-  const ext = match[1]
-  const allowed = kind === 'image' ? ['jpg', 'jpeg', 'png'] : ['mp4']
-  return allowed.includes(ext)
-}
-
-async function chooseImages() {
-  // 媒体总数上限 9（与后端一致），视频另限 1 个
-  const remaining = 9 - mediaItems.value.length
-  if (remaining <= 0) {
-    toast('媒体最多 9 个')
-    return
-  }
-  try {
-    const res = await uni.chooseImage({
-      count: remaining,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-    })
-    for (let i = 0; i < res.tempFilePaths.length; i++) {
-      const path = res.tempFilePaths[i]
-      // H5 端 tempFiles 里带有原生 File 对象，用于 MIME 校验
-      const raw = (res.tempFiles?.[i] as any)?.file as File | undefined
-      const mime = raw?.type || ''
-      const name = raw?.name || ''
-      if (!isAllowedMedia(mime, path, name, 'image')) {
-        toast('图片仅支持 JPG / PNG 格式')
-        continue
-      }
-      let size = Number(res.tempFiles?.[i]?.size) || 0
-      if (!size) {
-        try {
-          size = (await uni.getFileInfo({ filePath: path })).size ?? 0
-        }
-        catch {
-          size = 0
-        }
-      }
-      if (size > MAX_FILE_SIZE) {
-        toast('单个文件不能超过 20MB')
-        continue
-      }
-      mediaItems.value.push({ type: 'IMAGE', localPath: path, size, mimeType: mime || undefined })
-    }
-  }
-  catch (e: any) {
-    handleChooseError(e)
-  }
-}
-
-async function chooseVideo() {
-  if (videoCount() > 0) {
-    toast('视频最多 1 个')
-    return
-  }
-  try {
-    const res = await uni.chooseVideo({
-      sourceType: ['album', 'camera'],
-      maxDuration: 600,
-      compressed: true,
-    })
-    const path = res.tempFilePath
-    const raw = (res as any).file as File | undefined
-    const mime = raw?.type || ''
-    const name = (res as any).name || ''
-    if (!isAllowedMedia(mime, path, name, 'video')) {
-      toast('视频仅支持 MP4 格式')
-      return
-    }
-    const size = Number(res.size) || 0
-    if (size > MAX_FILE_SIZE) {
-      toast('单个文件不能超过 20MB')
-      return
-    }
-    mediaItems.value.push({ type: 'VIDEO', localPath: path, size, mimeType: mime || undefined })
-  }
-  catch (e: any) {
-    handleChooseError(e)
-  }
-}
-
-function handleChooseError(e: any) {
-  if (e?.errMsg && !e.errMsg.includes('cancel')) {
-    console.error('选择文件失败', e)
-    toast('选择文件失败')
-  }
-}
-
-function removeMedia(index: number) {
-  mediaItems.value.splice(index, 1)
-}
-
-function videoCover(url: string) {
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}ci-process=snapshot&time=1&format=jpg&width=400`
-}
-
-function previewMedia(item: MediaItem) {
-  if (item.uploading) {
-    return
-  }
-  if (item.type === 'IMAGE') {
-    const urls = mediaItems.value
-      .filter(m => m.type === 'IMAGE')
-      .map(m => m.remoteUrl || m.localPath || '')
-      .filter(Boolean)
-    const current = item.remoteUrl || item.localPath || ''
-    if (urls.length && current) {
-      uni.previewImage({ urls, current })
-    }
-  }
-  else if (item.remoteUrl) {
-    uni.navigateTo({
-      url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(item.remoteUrl)}&poster=${encodeURIComponent(videoCover(item.remoteUrl))}`,
-    })
-  }
-}
-
 // ==================== 位置 ====================
 
 /**
@@ -384,6 +223,7 @@ async function handleSubmit() {
     for (let i = 0; i < locals.length; i++) {
       const item = locals[i]
       uploadHint.value = `正在上传媒体 ${i + 1}/${locals.length}…`
+      item.uploading = true
       try {
         const result = await uploadToCos(item.localPath!)
         item.remoteUrl = result.url
@@ -392,6 +232,9 @@ async function handleSubmit() {
         console.error('媒体上传失败', e)
         toast('媒体上传失败，请重试')
         return
+      }
+      finally {
+        item.uploading = false
       }
     }
     uploadHint.value = ''
@@ -500,59 +343,7 @@ async function handleSubmit() {
 
         <!-- 媒体 -->
         <view v-if="settingsStore.showVideo" class="mb-5">
-          <text class="mb-2 block text-sm text-[#555] font-medium">照片/视频（选填）</text>
-          <text class="mb-2 block text-2xs text-[#999]">图片≤9张、视频≤1个，支持 JPG/PNG/MP4，单个不超过 20MB</text>
-          <view class="grid grid-cols-3 gap-2">
-            <view
-              v-for="(item, index) in mediaItems"
-              :key="index"
-              class="relative aspect-square overflow-hidden rounded-md bg-[#efece4]"
-              @click="previewMedia(item)"
-            >
-              <image
-                v-if="item.type === 'IMAGE'"
-                :src="item.remoteUrl || item.localPath"
-                mode="aspectFill"
-                class="h-full w-full"
-              />
-              <template v-else>
-                <image
-                  v-if="item.remoteUrl"
-                  :src="videoCover(item.remoteUrl)"
-                  mode="aspectFill"
-                  class="h-full w-full"
-                />
-                <view v-else class="h-full w-full flex items-center justify-center bg-[#3a3a3a]">
-                  <text class="i-carbon-video text-2xl text-white/80" />
-                </view>
-                <view v-if="item.remoteUrl" class="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <view class="h-8 w-8 flex items-center justify-center rounded-full bg-black/50">
-                    <text class="i-carbon-play-filled-alt text-sm text-white" />
-                  </view>
-                </view>
-              </template>
-              <!-- 上传中遮罩 -->
-              <view v-if="item.uploading" class="absolute inset-0 flex items-center justify-center bg-black/40">
-                <wd-loading color="#fff" />
-              </view>
-              <!-- 删除 -->
-              <view
-                class="absolute right-1 top-1 h-5 w-5 flex items-center justify-center rounded-full bg-black/50"
-                @click.stop="removeMedia(index)"
-              >
-                <text class="i-carbon-close text-2xs text-white" />
-              </view>
-            </view>
-            <!-- 添加按钮 -->
-            <view
-              v-if="mediaItems.length < 9"
-              class="aspect-square flex flex-col items-center justify-center border-2 border-[#e8e4dc] rounded-md border-dashed bg-[#faf8f3]"
-              @click="addMedia"
-            >
-              <text class="i-carbon-add text-2xl text-[#b8b3ab]" />
-              <text class="mt-1 text-2xs text-[#999]">添加</text>
-            </view>
-          </view>
+          <MediaUploader v-model="mediaItems" :disabled="submitting" />
         </view>
 
         <!-- 位置 -->

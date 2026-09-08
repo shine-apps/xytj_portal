@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 import { createTrainingGroundPost } from '@/api/training-ground'
 import { deleteCheckInAPI, practiceTypeLabel } from '@/service/practice'
+import { buildVideoCoverUrl } from '@/utils/cos'
 
 const props = defineProps<{
   visible: boolean
@@ -39,11 +40,6 @@ function close() {
   emit('update:visible', false)
 }
 
-function videoCover(url: string) {
-  const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}ci-process=snapshot&time=1&format=jpg&width=400`
-}
-
 function onMediaClick(media: PracticeCheckInMedia, index: number) {
   if (!props.checkIn) {
     return
@@ -54,7 +50,7 @@ function onMediaClick(media: PracticeCheckInMedia, index: number) {
   }
   else {
     uni.navigateTo({
-      url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(media.url)}&poster=${encodeURIComponent(videoCover(media.url))}`,
+      url: `/pages/tools/fullscreen-player?src=${encodeURIComponent(media.url)}&poster=${encodeURIComponent(buildVideoCoverUrl(media.url))}`,
     })
   }
 }
@@ -181,7 +177,7 @@ function handleEdit() {
                 class="h-full w-full"
               />
               <template v-else>
-                <image :src="videoCover(media.url)" mode="aspectFill" class="h-full w-full" />
+                <image :src="buildVideoCoverUrl(media.url)" mode="aspectFill" class="h-full w-full" />
                 <view class="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <view class="h-8 w-8 flex items-center justify-center rounded-full bg-black/50">
                     <text class="i-carbon-play-filled-alt text-sm text-white" />

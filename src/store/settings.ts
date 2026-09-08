@@ -2,6 +2,7 @@ import type { ISetting } from '@/api/settings'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { getSettings } from '@/api/settings'
+import { buildVideoCoverUrl } from '@/utils/cos'
 
 export interface BannerItem {
   value: string
@@ -45,7 +46,7 @@ export const useSettingsStore = defineStore(
         const banners: BannerItem[] = Array.isArray(bannersValue) ? bannersValue : []
         banners.forEach((item) => {
           if (item.type === 'video' && !item.poster) {
-            item.poster = `${item.value}?ci-process=snapshot&time=1`
+            item.poster = buildVideoCoverUrl(item.value, { simplified: true })
           }
         })
         return banners
