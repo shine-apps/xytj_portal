@@ -28,6 +28,13 @@ const { isReady } = useSettingsReady()
 
 const baseFeatures = [
   {
+    title: '练拳打卡',
+    desc: '每日练拳记录',
+    icon: 'i-carbon-fire',
+    url: '/pages/practice/index',
+    showKey: null,
+  },
+  {
     title: '线下活动',
     desc: '线下活动报名',
     icon: 'i-carbon-calendar',
@@ -68,13 +75,6 @@ const baseFeatures = [
     icon: 'i-carbon-accessibility-alt',
     url: '/pages/training-ground/index',
     showKey: 'showVideo' as const,
-  },
-  {
-    title: '练拳打卡',
-    desc: '每日练拳记录',
-    icon: 'i-carbon-fire',
-    url: '/pages/practice/index',
-    showKey: null,
   },
 ]
 

@@ -3,6 +3,7 @@ import type { CheckInPayload, CheckInResponse, PracticeCheckIn, PracticeLocation
 import dayjs from 'dayjs'
 import { computed, onMounted, ref, watch } from 'vue'
 import { getPracticeTypesAPI, submitCheckInAPI } from '@/service/practice'
+import { useSettingsStore } from '@/store/settings'
 import { uploadToCos } from '@/utils/cos'
 import { enqueueOfflineCheckIn } from '@/utils/practice-offline'
 
@@ -47,6 +48,7 @@ const mediaItems = ref<MediaItem[]>([])
 const location = ref<PracticeLocation | null>(null)
 const submitting = ref(false)
 const uploadHint = ref('')
+const settingsStore = useSettingsStore()
 
 const isEdit = computed(() => !!props.editData)
 
@@ -497,7 +499,7 @@ async function handleSubmit() {
         </view>
 
         <!-- 媒体 -->
-        <view class="mb-5">
+        <view v-if="settingsStore.showVideo" class="mb-5">
           <text class="mb-2 block text-sm text-[#555] font-medium">照片/视频（选填）</text>
           <text class="mb-2 block text-2xs text-[#999]">图片≤9张、视频≤1个，支持 JPG/PNG/MP4，单个不超过 20MB</text>
           <view class="grid grid-cols-3 gap-2">

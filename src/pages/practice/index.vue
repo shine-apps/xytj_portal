@@ -18,19 +18,27 @@ definePage({
   },
 })
 
+/**
+ * 将当前时间转为 Asia/Shanghai (UTC+8) 时区的 Date 对象
+ * 不使用 Intl.DateTimeFormat，兼容微信小程序真机等 Intl 不可用的环境
+ */
+function toShanghaiDate(): Date {
+  const now = new Date()
+  const tzOffsetMs = 8 * 60 * 60 * 1000
+  return new Date(now.getTime() + now.getTimezoneOffset() * 60 * 1000 + tzOffsetMs)
+}
+
 /** Asia/Shanghai 时区的今天日期 YYYY-MM-DD */
 function shanghaiToday(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai' }).format(new Date())
+  return toShanghaiDate().toISOString().slice(0, 10)
 }
 
 /** Asia/Shanghai 时区的当前时间 HH:mm（24小时制） */
 function shanghaiNowTime(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Shanghai',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date())
+  const d = toShanghaiDate()
+  const hh = String(d.getUTCHours()).padStart(2, '0')
+  const mm = String(d.getUTCMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
 }
 
 /** 提醒配置（与 ReminderPopup 共用的 storage 结构，键 practice_reminder） */
@@ -55,7 +63,6 @@ const ENTRIES = [
   { key: 'stats', title: '统计明细', icon: 'i-carbon-chart-bar' },
   { key: 'challenges', title: '打卡挑战', icon: 'i-carbon-trophy' },
   { key: 'reminder', title: '提醒设置', icon: 'i-carbon-alarm' },
-  { key: 'export', title: '导出数据', icon: 'i-carbon-download' },
 ]
 
 const userStore = useUserStore()
@@ -522,7 +529,7 @@ function offerCopyCsvContent() {
 
     <!-- 入口区 -->
     <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
-      <view class="grid grid-cols-4 gap-2">
+      <view class="grid grid-cols-3 gap-2">
         <view
           v-for="entry in ENTRIES"
           :key="entry.key"
@@ -532,7 +539,7 @@ function offerCopyCsvContent() {
           <view class="h-10 w-10 flex items-center justify-center border border-[#333]/20 rounded-full bg-white">
             <text :class="entry.icon" class="text-lg text-[#1a1a1a]" />
           </view>
-          <text class="text-2xs text-[#555]">{{ entry.title }}</text>
+          <text class="text-xs text-[#555]">{{ entry.title }}</text>
         </view>
       </view>
     </view>
