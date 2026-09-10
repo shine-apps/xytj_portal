@@ -56,14 +56,17 @@ export const useSubscriptionStore = defineStore(
 
       // #ifdef MP-WEIXIN
       // 小程序: 先 uni.login 取 code,后端换取 openid 完成微信支付 JSAPI 下单
+      // 注意: catch 只覆盖 getWxCode();下单接口本身失败(如 500)必须继续向外抛出,
+      // 否则会误触发"不带 code 重试",在真实支付模式下报出具有误导性的 openid 缺失错误。
+      let wxCode: string | undefined
       try {
-        const loginRes = await getWxCode()
-        res = await subscribeCollectionAPI(collectionId, loginRes.code)
+        wxCode = (await getWxCode()).code
       }
       catch {
         // 获取 code 失败时降级为不带 code 请求(仅影响真实支付,开发/mock 模式不受影响)
-        res = await subscribeCollectionAPI(collectionId)
+        console.warn('[subscription] uni.login failed, subscribe without wx code')
       }
+      res = await subscribeCollectionAPI(collectionId, wxCode)
       // #endif
 
       // #ifndef MP-WEIXIN
