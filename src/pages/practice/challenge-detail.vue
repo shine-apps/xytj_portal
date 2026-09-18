@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ChallengeDetail } from '@/service/practice'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import { useMessage } from 'wot-design-uni'
 import { getChallengeDetailAPI, joinChallengeAPI, leaveChallengeAPI } from '@/service/practice'
@@ -24,6 +24,7 @@ const actionLoading = ref(false)
 const challenge = computed(() => detail.value?.challenge ?? null)
 const isOngoing = computed(() => challenge.value?.status === 'ongoing')
 const isJoined = computed(() => challenge.value?.isJoined ?? false)
+const isGlobal = computed(() => challenge.value?.isGlobal === true)
 const myEntry = computed(() => {
   return detail.value?.leaderboard.find(entry => entry.userId === userStore.userInfo?.userId) ?? null
 })
@@ -34,6 +35,26 @@ onLoad((options) => {
     loadDetail()
   }
 })
+
+// 从打卡页等返回时刷新榜单（首次进入由 onLoad 加载，跳过避免重复请求）
+let isFirstShow = true
+onShow(() => {
+  if (isFirstShow) {
+    isFirstShow = false
+    return
+  }
+  if (challengeId.value) {
+    loadDetail()
+  }
+})
+
+/** 跳转今日打卡页（未登录时打卡页会引导登录） */
+function navigateToCheckIn() {
+  uni.navigateTo({
+    url: '/pages/practice/checkin',
+    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
+  })
+}
 
 async function loadDetail() {
   if (!challengeId.value)
@@ -144,7 +165,15 @@ async function handleLeave() {
         <view class="overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
           <view class="p-4">
             <view class="mb-2 flex items-start justify-between gap-2">
-              <text class="flex-1 text-xl text-[#1a1a1a] font-bold">{{ challenge.title }}</text>
+              <view class="flex flex-1 flex-wrap items-center gap-2">
+                <text class="text-xl text-[#1a1a1a] font-bold">{{ challenge.title }}</text>
+                <view
+                  v-if="isGlobal"
+                  class="rounded bg-[#9c6b3f]/10 px-1.5 py-0.5 text-2xs text-[#9c6b3f]"
+                >
+                  总打卡挑战
+                </view>
+              </view>
               <view
                 class="whitespace-nowrap rounded px-2 py-0.5 text-2xs"
                 :class="isOngoing ? 'bg-[#3d5a66]/10 text-[#3d5a66]' : 'bg-gray-200 text-[#888]'"
@@ -175,6 +204,23 @@ async function handleLeave() {
               </view>
             </view>
           </view>
+        </view>
+
+        <!-- 今日打卡入口 -->
+        <view
+          class="mt-4 flex items-center justify-between border border-[#a33327]/30 rounded-lg bg-[#fffdf9] px-4 py-3 shadow-sm active:opacity-70"
+          @click="navigateToCheckIn"
+        >
+          <view class="flex items-center gap-2.5">
+            <view class="h-8 w-8 flex items-center justify-center rounded-full bg-[#a33327]/10">
+              <text class="i-carbon-edit text-base text-[#a33327]" />
+            </view>
+            <view class="flex flex-col">
+              <text class="text-sm text-[#1a1a1a] font-bold">今日打卡</text>
+              <text class="text-2xs text-[#999]">记录今天的练拳功课，榜单实时更新</text>
+            </view>
+          </view>
+          <text class="i-carbon-chevron-right text-base text-[#b8a880]" />
         </view>
 
         <!-- 排行榜 -->
@@ -239,7 +285,7 @@ async function handleLeave() {
           天
         </view>
         <view
-          v-if="isOngoing"
+          v-if="isOngoing && !isGlobal"
           class="border border-[#a33327]/60 rounded-full px-4 py-1.5 text-sm text-[#a33327]"
           @click="handleLeave"
         >

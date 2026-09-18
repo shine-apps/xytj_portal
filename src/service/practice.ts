@@ -49,6 +49,8 @@ export interface CheckInPayload {
   medias?: PracticeMediaInput[]
   /** 补录日期（YYYY-MM-DD），可选，仅允许今天及最近 7 天，默认今天 */
   checkInDate?: string
+  /** 计入的挑战 ID 列表（仅本人已参加且日期在周期内的普通挑战；总打卡挑战后端自动追加） */
+  challengeIds?: string[]
 }
 
 /** 打卡媒体（响应） */
@@ -74,6 +76,8 @@ export interface PracticeCheckIn {
   createdAt: string
   updatedAt: string
   medias: PracticeCheckInMedia[]
+  /** 本打卡计入的挑战 ID 列表（含后端自动追加的总打卡挑战） */
+  challengeIds: string[]
 }
 
 /** 打卡提交响应 */
@@ -199,6 +203,8 @@ export interface PracticeChallenge {
   endDate: string
   participantCount: number
   isJoined: boolean
+  /** 是否为系统设置的总打卡挑战（全员隐式参加） */
+  isGlobal?: boolean
   creator: ChallengeCreator
 }
 
@@ -318,9 +324,14 @@ export function saveGoalAPI(data: SaveGoalPayload) {
 
 /**
  * 挑战列表（分页）
- * @param params 状态筛选与分页参数
+ * @param params 状态筛选、是否仅我已加入（joined，总挑战恒返回）与分页参数
  */
-export function getChallengesAPI(params?: { status?: ChallengeStatus, page?: number, pageSize?: number }) {
+export function getChallengesAPI(params?: {
+  status?: ChallengeStatus
+  joined?: boolean
+  page?: number
+  pageSize?: number
+}) {
   return http.get<ChallengesResponse>('/api/practice/challenges', params)
 }
 

@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { BadgeLevel, CheckInResponse, PracticeCheckIn, PracticeStats } from '@/service/practice'
+import type { PracticeCheckIn, PracticeStats } from '@/service/practice'
 import { onShow } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import { getMonthlyCheckInsAPI, getPracticeStatsAPI, practiceTypeLabel } from '@/service/practice'
+import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { getEnvBaseUrl } from '@/utils'
+import { shanghaiNowTime, shanghaiToday } from '@/utils/dateUtil'
 import { getOfflineQueue, syncOfflineQueue } from '@/utils/practice-offline'
 import { toLoginPage } from '@/utils/toLoginPage'
-import CheckInPopup from './components/CheckInPopup.vue'
 import DayDetailPopup from './components/DayDetailPopup.vue'
 import PracticeCalendar from './components/PracticeCalendar.vue'
 import ReminderPopup from './components/ReminderPopup.vue'
@@ -17,29 +18,6 @@ definePage({
     navigationBarTitleText: '练拳打卡',
   },
 })
-
-/**
- * 将当前时间转为 Asia/Shanghai (UTC+8) 时区的 Date 对象
- * 不使用 Intl.DateTimeFormat，兼容微信小程序真机等 Intl 不可用的环境
- */
-function toShanghaiDate(): Date {
-  const now = new Date()
-  const tzOffsetMs = 8 * 60 * 60 * 1000
-  return new Date(now.getTime() + now.getTimezoneOffset() * 60 * 1000 + tzOffsetMs)
-}
-
-/** Asia/Shanghai 时区的今天日期 YYYY-MM-DD */
-function shanghaiToday(): string {
-  return toShanghaiDate().toISOString().slice(0, 10)
-}
-
-/** Asia/Shanghai 时区的当前时间 HH:mm（24小时制） */
-function shanghaiNowTime(): string {
-  const d = toShanghaiDate()
-  const hh = String(d.getUTCHours()).padStart(2, '0')
-  const mm = String(d.getUTCMinutes()).padStart(2, '0')
-  return `${hh}:${mm}`
-}
 
 /** 提醒配置（与 ReminderPopup 共用的 storage 结构，键 practice_reminder） */
 interface PracticeReminderSetting {
@@ -51,13 +29,6 @@ interface PracticeReminderSetting {
 const REMINDER_KEY = 'practice_reminder'
 const REMINDER_SHOWN_DATE_KEY = 'practice_reminder_shown_date'
 
-/** 勋章等级 → 文案（与后端 badges.get.ts 的勋章名保持一致） */
-const BADGE_LABELS: Record<BadgeLevel, string> = {
-  BRONZE: '铜牌',
-  SILVER: '银牌',
-  GOLD: '金牌',
-}
-
 /** 入口区配置 */
 const ENTRIES = [
   { key: 'stats', title: '统计明细', icon: 'i-carbon-chart-bar' },
@@ -66,6 +37,10 @@ const ENTRIES = [
 ]
 
 const userStore = useUserStore()
+const settingsStore = useSettingsStore()
+// 后台配置了总打卡挑战时展示「总打卡榜」入口（store 持久化，冷启动也可立即读取）
+settingsStore.fetchSettings()
+const globalChallengeId = computed(() => settingsStore.globalChallengeId)
 
 const todayStr = ref(shanghaiToday())
 const currentMonth = ref(shanghaiToday().slice(0, 7))
@@ -75,7 +50,6 @@ const todayCheckIn = ref<PracticeCheckIn | null>(null)
 const offlineCount = ref(0)
 const syncing = ref(false)
 
-const showCheckIn = ref(false)
 const showDetail = ref(false)
 const detailCheckIn = ref<PracticeCheckIn | null>(null)
 const showReminder = ref(false)
@@ -184,40 +158,26 @@ function ensureLogin(): boolean {
 
 // ==================== 打卡 ====================
 
+/** 跳转独立打卡页：新建今日打卡 */
 function openCheckIn() {
   if (!ensureLogin()) {
     return
   }
-  showReminderBanner.value = false
-  showCheckIn.value = true
+  uni.navigateTo({
+    url: '/pages/practice/checkin',
+    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
+  })
 }
 
+/** 跳转独立打卡页：编辑今日打卡（页面自行拉取当日记录回填） */
 function startEditToday() {
-  showCheckIn.value = true
-}
-
-async function onSubmitted(res: CheckInResponse | null) {
-  showReminderBanner.value = false
-  offlineCount.value = getOfflineQueue().length
-  await Promise.all([loadStats(), loadMonthly(currentMonth.value)])
-  if (!res) {
+  if (!ensureLogin()) {
     return
   }
-  const delta = res.pointsEarned
-  uni.showToast({
-    title: delta > 0 ? `打卡成功 +${delta} 积分` : '打卡已更新',
-    icon: delta > 0 ? 'success' : 'none',
+  uni.navigateTo({
+    url: '/pages/practice/checkin?edit=1',
+    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
   })
-  if (res.newBadges && res.newBadges.length > 0) {
-    const names = res.newBadges.map(b => BADGE_LABELS[b] ?? b).join('、')
-    setTimeout(() => {
-      uni.showModal({
-        title: '恭喜获得新勋章',
-        content: `连续打卡 ${res.consecutiveDays} 天，获得「${names}」勋章！`,
-        showCancel: false,
-      })
-    }, 800)
-  }
 }
 
 async function onDeleted() {
@@ -227,7 +187,7 @@ async function onDeleted() {
 function onCheckInEdit(checkIn: PracticeCheckIn) {
   // 仅当日记录可编辑（服务端按日期 upsert）
   if (checkIn.checkInDate.slice(0, 10) === todayStr.value) {
-    showCheckIn.value = true
+    startEditToday()
   }
 }
 
@@ -263,6 +223,22 @@ async function syncNow() {
   finally {
     syncing.value = false
   }
+}
+
+// ==================== 总打卡榜 ====================
+
+function openGlobalLeaderboard() {
+  if (!ensureLogin()) {
+    return
+  }
+  const id = settingsStore.globalChallengeId
+  if (!id) {
+    return
+  }
+  uni.navigateTo({
+    url: `/pages/practice/challenge-detail?id=${id}`,
+    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
+  })
 }
 
 // ==================== 入口区 ====================
@@ -502,6 +478,29 @@ function offerCopyCsvContent() {
       </view>
     </view>
 
+    <!-- 总打卡榜入口（后台设置总打卡挑战后展示） -->
+    <view
+      v-if="globalChallengeId"
+      class="mx-4 mt-4 flex items-center justify-between border border-[#e8e4dc] rounded-lg bg-[#fffdf9] px-5 py-3.5 shadow-sm active:opacity-70"
+      @click="openGlobalLeaderboard"
+    >
+      <view class="flex items-center gap-3">
+        <view class="h-10 w-10 flex items-center justify-center rounded-full bg-[#9c6b3f]/10">
+          <text class="i-carbon-trophy text-lg text-[#9c6b3f]" />
+        </view>
+        <view class="flex flex-col">
+          <view class="flex items-center gap-1.5">
+            <text class="text-sm text-[#1a1a1a] font-bold">总打卡榜</text>
+            <view class="rounded bg-[#9c6b3f]/10 px-1.5 py-0.5 text-3xs text-[#9c6b3f]">
+              总榜
+            </view>
+          </view>
+          <text class="mt-0.5 text-2xs text-[#999]">查看全体拳友打卡排名</text>
+        </view>
+      </view>
+      <text class="i-carbon-chevron-right text-base text-[#b8a880]" />
+    </view>
+
     <!-- 本周目标进度 -->
     <view v-if="stats?.weeklyGoal" class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
       <view class="mb-2 flex items-center justify-between">
@@ -543,9 +542,6 @@ function offerCopyCsvContent() {
         </view>
       </view>
     </view>
-
-    <!-- 快速打卡弹层（今日已打卡时自动进入编辑模式） -->
-    <CheckInPopup v-model:visible="showCheckIn" :edit-data="todayCheckIn" @submitted="onSubmitted" />
 
     <!-- 当日详情弹层 -->
     <DayDetailPopup

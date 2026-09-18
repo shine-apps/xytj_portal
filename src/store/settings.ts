@@ -64,6 +64,12 @@ export const useSettingsStore = defineStore(
       return settingsMap.value.phoneNumber || '15706725301'
     })
 
+    /** 总打卡挑战 ID（未配置或值非法时为 null） */
+    const globalChallengeId = computed<string | null>(() => {
+      const v = settingsMap.value.globalPracticeChallengeId
+      return typeof v === 'string' && v ? v : null
+    })
+
     const hotLinks = computed<HotLinkItem[]>(() => {
       const hotLinksValue = settingsMap.value.hotLinks
       if (!hotLinksValue)
@@ -132,6 +138,7 @@ export const useSettingsStore = defineStore(
       banners,
       showVideo,
       phoneNumber,
+      globalChallengeId,
       hotLinks,
       fetchSettings,
       refreshSettings,

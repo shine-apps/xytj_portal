@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { CreateChallengePayload, PracticeChallenge } from '@/service/practice'
-import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
 import { createChallengeAPI } from '@/service/practice'
+import { addDaysStr, dateStrToLocalMidnight, shanghaiDateStr, shanghaiToday } from '@/utils/dateUtil'
 
 const props = defineProps<{
   show: boolean
@@ -21,25 +21,26 @@ const visible = computed({
 const formRef = ref()
 const submitting = ref(false)
 
-// 今天零点时间戳（开始日期不得早于今天）
-const todayStart = dayjs().startOf('day').valueOf()
+// 上海今天的本地零点时间戳（开始日期不得早于上海今天，与后端创建校验同口径）。
+// computed：弹层可能长期挂载，跨零点打开时取最新值。
+const todayStart = computed(() => dateStrToLocalMidnight(shanghaiToday()))
 
 const form = ref(getDefaultForm())
 
-// 结束日期选择器最早可选：开始日期的次日
+// 结束日期选择器最早可选：开始日期的次日（先把选中时间戳还原为上海日历日再 +1 天）
 const endMinDate = computed(() => {
-  return dayjs(form.value.startDate).startOf('day').add(1, 'day').valueOf()
+  return dateStrToLocalMidnight(addDaysStr(shanghaiDateStr(form.value.startDate), 1))
 })
 
 function getDefaultForm() {
-  const startDate = dayjs().add(1, 'day').startOf('day').valueOf()
+  // 默认上海明天开始、开始 + 30 天结束；值用对应日历日的设备本地零点时间戳
+  const startDateStr = addDaysStr(shanghaiToday(), 1)
+  const endDateStr = addDaysStr(startDateStr, 30)
   return {
     title: '',
     description: '',
-    // 默认明天开始
-    startDate,
-    // 默认开始 + 30 天
-    endDate: dayjs(startDate).add(30, 'day').valueOf(),
+    startDate: dateStrToLocalMidnight(startDateStr),
+    endDate: dateStrToLocalMidnight(endDateStr),
   }
 }
 
@@ -50,14 +51,15 @@ const rules = {
   ],
   startDate: [
     { required: true, message: '请选择开始日期' },
-    { required: false, validator: (value: number) => dayjs(value).startOf('day').valueOf() >= todayStart, message: '开始日期不能早于今天' },
+    // 字符串字典序比较即日历序；日期统一按上海日历日
+    { required: false, validator: (value: number) => shanghaiDateStr(value) >= shanghaiToday(), message: '开始日期不能早于今天' },
   ],
   endDate: [
     { required: true, message: '请选择结束日期' },
     {
       required: false,
       validator: (value: number) => {
-        return dayjs(value).startOf('day').valueOf() > dayjs(form.value.startDate).startOf('day').valueOf()
+        return shanghaiDateStr(value) > shanghaiDateStr(form.value.startDate)
       },
       message: '结束日期须晚于开始日期',
     },
@@ -81,8 +83,9 @@ async function handleSubmit() {
   try {
     const payload: CreateChallengePayload = {
       title: form.value.title.trim(),
-      startDate: dayjs(form.value.startDate).format('YYYY-MM-DD'),
-      endDate: dayjs(form.value.endDate).format('YYYY-MM-DD'),
+      // 提交上海日历日，与后端校验/存储口径一致
+      startDate: shanghaiDateStr(form.value.startDate),
+      endDate: shanghaiDateStr(form.value.endDate),
     }
     const description = form.value.description.trim()
     if (description)

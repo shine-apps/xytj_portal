@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { createTrainingGroundPost } from '@/api/training-ground'
 import { deleteCheckInAPI, practiceTypeLabel } from '@/service/practice'
 import { buildVideoCoverUrl } from '@/utils/cos'
+import { shanghaiToday } from '@/utils/dateUtil'
 
 const props = defineProps<{
   visible: boolean
@@ -31,7 +32,8 @@ const isToday = computed(() => {
   if (!props.checkIn) {
     return false
   }
-  return props.checkIn.checkInDate.slice(0, 10) === dayjs().format('YYYY-MM-DD')
+  // 打卡记录日期为上海日历日，「今天」判定必须同口径（不能用设备本地日期）
+  return props.checkIn.checkInDate.slice(0, 10) === shanghaiToday()
 })
 
 const hasMedia = computed(() => (props.checkIn?.medias?.length ?? 0) > 0)

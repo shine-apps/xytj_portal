@@ -3,6 +3,7 @@ import type { BadgeLevel, PointsLedgerItem, PracticeBadge, PracticeGoal, Practic
 import dayjs from 'dayjs'
 import { computed, onMounted, ref } from 'vue'
 import { getBadgesAPI, getGoalAPI, getPointsLedgerAPI, getPracticeStatsAPI, saveGoalAPI } from '@/service/practice'
+import { shanghaiCurrentMonth, shanghaiDateStr } from '@/utils/dateUtil'
 
 definePage({
   style: {
@@ -77,7 +78,8 @@ const totalHours = computed(() => {
 const trendBars = computed(() => {
   const trend = stats.value?.monthlyTrend ?? []
   const maxMinutes = Math.max(...trend.map(item => item.minutes), 0)
-  const currentMonth = dayjs().format('YYYY-MM')
+  // 月趋势由服务端按上海时区分桶，「当前月」标记也必须用上海月份
+  const currentMonth = shanghaiCurrentMonth()
   return trend.map((item) => {
     const heightPercent = item.minutes > 0 && maxMinutes > 0
       ? (item.minutes / maxMinutes) * CHART_MAX_PERCENT
@@ -406,7 +408,7 @@ onMounted(async () => {
                 {{ badge.name }}
               </text>
               <text class="mt-1 text-2xs text-[#999]">
-                {{ badge.earned && badge.earnedAt ? `获得于 ${dayjs(badge.earnedAt).format('YYYY-MM-DD')}` : `连续 ${badge.threshold} 天解锁` }}
+                {{ badge.earned && badge.earnedAt ? `获得于 ${shanghaiDateStr(badge.earnedAt)}` : `连续 ${badge.threshold} 天解锁` }}
               </text>
             </view>
           </view>

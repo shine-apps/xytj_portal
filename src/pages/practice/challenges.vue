@@ -63,6 +63,14 @@ function navigateToDetail(id: string) {
   uni.navigateTo({ url: `/pages/practice/challenge-detail?id=${id}` })
 }
 
+/** 跳转今日打卡页（未登录时打卡页会引导登录） */
+function navigateToCheckIn() {
+  uni.navigateTo({
+    url: '/pages/practice/checkin',
+    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
+  })
+}
+
 function handleCreated(challenge: PracticeChallenge) {
   // 刷新列表并跳转新挑战详情
   paging.value?.reload()
@@ -89,6 +97,23 @@ function handleCreated(challenge: PracticeChallenge) {
           <view class="h-[1px] w-12 bg-[#a33327] opacity-50" />
         </view>
 
+        <!-- 今日打卡入口 -->
+        <view
+          class="mb-4 flex items-center justify-between border border-[#a33327]/30 rounded-lg bg-[#fffdf9] px-4 py-3 shadow-sm active:opacity-70"
+          @click="navigateToCheckIn"
+        >
+          <view class="flex items-center gap-2.5">
+            <view class="h-8 w-8 flex items-center justify-center rounded-full bg-[#a33327]/10">
+              <text class="i-carbon-edit text-base text-[#a33327]" />
+            </view>
+            <view class="flex flex-col">
+              <text class="text-sm text-[#1a1a1a] font-bold">今日打卡</text>
+              <text class="text-2xs text-[#999]">记录今天的练拳功课</text>
+            </view>
+          </view>
+          <text class="i-carbon-chevron-right text-base text-[#b8a880]" />
+        </view>
+
         <!-- 状态 Tab -->
         <view class="mb-4 flex overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9]">
           <view
@@ -111,9 +136,15 @@ function handleCreated(challenge: PracticeChallenge) {
             :class="item.isJoined ? 'border-[#a33327]/70' : 'border-[#e8e4dc]'"
             @click="navigateToDetail(item.id)"
           >
-            <!-- 已参加角标 -->
+            <!-- 角标：总打卡挑战显示「总榜」，其余已参加显示「已参加」 -->
             <view
-              v-if="item.isJoined"
+              v-if="item.isGlobal"
+              class="absolute right-0 top-0 rounded-bl-lg bg-[#9c6b3f] px-2 py-0.5 text-2xs text-white"
+            >
+              总榜
+            </view>
+            <view
+              v-else-if="item.isJoined"
               class="absolute right-0 top-0 rounded-bl-lg bg-[#a33327] px-2 py-0.5 text-2xs text-white"
             >
               已参加
