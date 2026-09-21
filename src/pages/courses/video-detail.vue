@@ -146,7 +146,7 @@
 import type { AccessReason, ISubscriptionStatus } from '@/api/subscriptions'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
-import { mockCompleteOrderAPI } from '@/api/subscriptions'
+import { mockCompleteOrderAPI, syncSubscriptionOrderAPI } from '@/api/subscriptions'
 import { createTrainingGroundPost } from '@/api/training-ground'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { recordVideoViewAPI } from '@/service/collections'
@@ -391,55 +391,118 @@ async function onSubscribeClick() {
     const res = await subscriptionStore.subscribe(collectionId.value)
 
     if (res.alreadySubscribed) {
+      await refreshAfterPayment()
       uni.showToast({ title: '已是订阅用户', icon: 'success' })
-      subscriptionStore.invalidate(collectionId.value)
-      await subscriptionStore.fetchStatus(collectionId.value, true)
-      await coursesStore.fetchCourseDetail(collectionId.value)
-      // 重新检查当前视频权限
-      const access = await subscriptionStore.fetchAccess(videoId.value, true)
-      accessReason.value = access.reason
-      accessAllowed.value = access.allowed
       return
     }
 
     if (res.payParams) {
       const paid = await invokeWechatPay(res.payParams, res.mocked === true)
-      if (paid) {
-        // mock 模式：微信不会真正回调，这里主动完成订单激活订阅
-        if (res.mocked && res.orderId) {
-          await mockCompleteOrderAPI(res.orderId)
-        }
-        subscriptionStore.invalidate(collectionId.value)
-        await subscriptionStore.fetchStatus(collectionId.value, true)
-        await coursesStore.fetchCourseDetail(collectionId.value)
-        // 重新拉取当前视频的访问权限
-        const access = await subscriptionStore.fetchAccess(videoId.value, true)
-        accessReason.value = access.reason
-        accessAllowed.value = access.allowed
-        uni.showToast({ title: '订阅成功', icon: 'success' })
-      }
+      if (!paid)
+        return
+
+      // 用户已完成支付。后续"激活订阅 + 刷新页面"必须与下单流程解耦:
+      // 微信支付回调是异步链路(可能延迟/短暂丢失),支付后的任何请求失败
+      // 都不能再向已付款用户提示"订阅失败",只能提示"生效中"。
+      const activated = await finalizePaidOrder(res.orderId || '', res.mocked === true)
+      uni.showToast({
+        title: activated ? '订阅成功' : '支付成功,订阅生效中,请稍后刷新',
+        icon: activated ? 'success' : 'none',
+        duration: 2500,
+      })
+      return
     }
-    else if (res.free) {
+
+    if (res.free) {
       // 免费课程：后端已直接激活订阅，无需支付
-      subscriptionStore.invalidate(collectionId.value)
-      await subscriptionStore.fetchStatus(collectionId.value, true)
-      await coursesStore.fetchCourseDetail(collectionId.value)
-      // 重新拉取当前视频的访问权限
-      const access = await subscriptionStore.fetchAccess(videoId.value, true)
-      accessReason.value = access.reason
-      accessAllowed.value = access.allowed
+      await refreshAfterPayment()
       uni.showToast({ title: '订阅成功', icon: 'success' })
+      return
     }
+
+    // 下单响应结构异常（理论上不会发生）
+    uni.showToast({ title: '订阅失败,请联系客服', icon: 'none' })
   }
   catch (e: any) {
-    console.error('Subscribe failed', e)
+    // 仅"下单阶段"失败会走到这里；支付取消已在 invokeWechatPay 内单独提示
+    console.error('Subscribe order failed', e)
     uni.showToast({
-      title: e?.message || '订阅失败',
+      title: e?.data?.message || e?.data?.msg || '订阅失败,请稍后重试',
       icon: 'none',
     })
   }
   finally {
     subscribing.value = false
+  }
+}
+
+/**
+ * 支付成功后的订阅激活与页面刷新（独立于下单 try/catch，任何失败只返回 false）。
+ * - mock 模式：调用 mock-complete 激活
+ * - 真实模式：主动查单补单 + 短轮询等待异步回调，再刷新状态与视频权限
+ * @returns 订阅是否已确认激活
+ */
+async function finalizePaidOrder(orderId: string, mocked: boolean): Promise<boolean> {
+  try {
+    if (mocked) {
+      if (orderId)
+        await mockCompleteOrderAPI(orderId)
+    }
+    else if (orderId) {
+      await waitForSubscriptionActive(orderId)
+    }
+    await refreshAfterPayment()
+    return !!subscriptionStore.statusMap[collectionId.value]?.hasActiveSubscription
+  }
+  catch (e) {
+    console.warn('Finalize paid order failed', e)
+    return false
+  }
+}
+
+/**
+ * 轮询等待订阅激活(真实微信支付回调为异步)
+ * 每轮先主动查单补单(回调丢失也能开通),再查本地订阅状态;
+ * 最多 3 轮,间隔 1.5s;超时后由上层提示"生效中"
+ */
+async function waitForSubscriptionActive(orderId: string): Promise<void> {
+  const MAX_RETRIES = 3
+  const INTERVAL = 1500
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      const syncRes = await syncSubscriptionOrderAPI(orderId)
+      if (syncRes.status === 'PAID')
+        return
+      const status = await subscriptionStore.fetchStatus(collectionId.value, true, { hideErrorToast: true })
+      if (status.hasActiveSubscription)
+        return
+    }
+    catch {
+      // 单次同步/查询失败(网络抖动)不中断流程,继续重试
+    }
+    if (i < MAX_RETRIES - 1)
+      await new Promise(resolve => setTimeout(resolve, INTERVAL))
+  }
+}
+
+/**
+ * 支付/订阅状态变更后静默刷新本地状态与当前视频权限。
+ * 各请求独立 catch,单个失败不阻断其余刷新,且不弹全局错误 toast
+ * (用户已付款,这里属于补偿刷新场景)。
+ */
+async function refreshAfterPayment() {
+  subscriptionStore.invalidate(collectionId.value)
+  await subscriptionStore
+    .fetchStatus(collectionId.value, true, { hideErrorToast: true })
+    .catch(e => console.warn('Refresh subscription status failed', e))
+  await coursesStore.fetchCourseDetail(collectionId.value).catch(() => {})
+  try {
+    const access = await subscriptionStore.fetchAccess(videoId.value, true, { hideErrorToast: true })
+    accessReason.value = access.reason
+    accessAllowed.value = access.allowed
+  }
+  catch (e) {
+    console.warn('Refresh video access failed', e)
   }
 }
 

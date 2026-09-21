@@ -188,7 +188,7 @@ import type { IVideo } from '@/service/collections'
 import { onLoad, onUnload } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
-import { mockCompleteOrderAPI } from '@/api/subscriptions'
+import { mockCompleteOrderAPI, syncSubscriptionOrderAPI } from '@/api/subscriptions'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import { useCoursesStore } from '@/store/courses'
 import { useSubscriptionStore } from '@/store/subscription'
@@ -418,21 +418,40 @@ async function refreshAfterSubscribe() {
 
 /**
  * 轮询等待订阅激活(真实微信支付回调为异步)
- * 最多查询 3 次,间隔 1.5s;若回调迟迟未到则提前返回,由用户手动刷新
+ * 每轮先主动查单补单(回调延迟/丢失时也能开通),再查本地订阅状态;
+ * 最多 3 轮,间隔 1.5s;超时后由上层提示"生效中",用户也可稍后刷新
  */
-async function waitForSubscriptionActive(): Promise<void> {
+async function waitForSubscriptionActive(orderId: string): Promise<void> {
   const MAX_RETRIES = 3
   const INTERVAL = 1500
   for (let i = 0; i < MAX_RETRIES; i++) {
     try {
-      const status = await subscriptionStore.fetchStatus(collectionId.value, true)
+      const syncRes = await syncSubscriptionOrderAPI(orderId)
+      if (syncRes.status === 'PAID')
+        return
+      const status = await subscriptionStore.fetchStatus(collectionId.value, true, { hideErrorToast: true })
       if (status.hasActiveSubscription)
         return
     }
     catch {
-      // 单次查询失败(网络/401)不中断流程,继续重试
+      // 单次同步/查询失败(网络/401)不中断流程,继续重试
     }
-    await new Promise(resolve => setTimeout(resolve, INTERVAL))
+    if (i < MAX_RETRIES - 1)
+      await new Promise(resolve => setTimeout(resolve, INTERVAL))
+  }
+}
+
+/**
+ * 支付成功后的静默刷新:状态/列表刷新失败不阻断、不弹错误 toast。
+ * 用户已付款,这里属于支付后补偿场景,任何失败都不应表现为"订阅失败"。
+ */
+async function safeRefreshAfterSubscribe() {
+  try {
+    await subscriptionStore.fetchStatus(collectionId.value, true, { hideErrorToast: true })
+    await refreshAfterSubscribe()
+  }
+  catch (e) {
+    console.warn('Refresh after payment failed', e)
   }
 }
 
@@ -457,10 +476,9 @@ async function onSubscribeClick() {
 
     // 已经订阅(后端直接返回)
     if (res.alreadySubscribed) {
-      uni.showToast({ title: '已是订阅用户', icon: 'success' })
       subscriptionStore.invalidate(collectionId.value)
-      await subscriptionStore.fetchStatus(collectionId.value, true)
-      await refreshAfterSubscribe()
+      await safeRefreshAfterSubscribe()
+      uni.showToast({ title: '已是订阅用户', icon: 'success' })
       return
     }
 
@@ -470,38 +488,40 @@ async function onSubscribeClick() {
       if (paid) {
         // mock 模式：微信不会真正回调，这里主动完成订单激活订阅
         if (res.mocked && res.orderId) {
-          await mockCompleteOrderAPI(res.orderId)
+          await mockCompleteOrderAPI(res.orderId).catch(() => {})
         }
-        // 支付成功:清除缓存 + 等待订阅激活 + 重新拉取状态 + 刷新视频列表
+
+        // 用户已完成支付。清除缓存后:真实模式主动查单补单 + 短轮询等待异步回调。
+        // 刷新与下单解耦,任何刷新失败都不得向已付款用户报"订阅失败"。
         subscriptionStore.invalidate(collectionId.value)
-        // 真实支付回调是异步的,后端可能尚未激活订阅,轮询等待
-        if (!res.mocked) {
-          await waitForSubscriptionActive()
+        if (!res.mocked && res.orderId) {
+          await waitForSubscriptionActive(res.orderId)
         }
-        await subscriptionStore.fetchStatus(collectionId.value, true)
-        // 重新加载课程详情,让 isAccessible 字段刷新
-        await refreshAfterSubscribe()
+        await safeRefreshAfterSubscribe()
+
         uni.showToast({
-          title: hasActiveSubscription.value ? '订阅成功' : '支付成功,订阅生效中',
+          title: hasActiveSubscription.value ? '订阅成功' : '支付成功,订阅生效中,请稍后刷新',
           icon: hasActiveSubscription.value ? 'success' : 'none',
+          duration: 2500,
         })
       }
     }
     else if (res.free) {
       // 免费课程：后端已直接激活订阅，无需支付
       subscriptionStore.invalidate(collectionId.value)
-      await subscriptionStore.fetchStatus(collectionId.value, true)
-      await refreshAfterSubscribe()
+      await safeRefreshAfterSubscribe()
       uni.showToast({ title: '订阅成功', icon: 'success' })
     }
     else {
-      uni.showToast({ title: '订阅失败', icon: 'none' })
+      // 下单响应结构异常（理论上不会发生）
+      uni.showToast({ title: '订阅失败,请联系客服', icon: 'none' })
     }
   }
   catch (e: any) {
-    console.error('Subscribe failed', e)
+    // 仅"下单阶段"失败会走到这里；支付取消已在 invokeWechatPay 内单独提示
+    console.error('Subscribe order failed', e)
     uni.showToast({
-      title: e?.message || '订阅失败',
+      title: e?.data?.message || e?.data?.msg || '订阅失败,请稍后重试',
       icon: 'none',
     })
   }

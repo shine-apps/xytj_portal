@@ -1,3 +1,4 @@
+import type { CustomRequestOptions } from '@/http/types'
 import { http } from '@/http/http'
 
 // 订阅状态(用于课程详情页)
@@ -26,6 +27,20 @@ export interface IVideoAccess {
   collectionId?: string
   collectionTitle?: string
   collectionPrice?: number
+}
+
+// 支付成功后主动同步订单的结果（微信回调延迟/丢失时由前端触发查单补单）
+export interface ISyncOrderResult {
+  // 本地订阅是否已激活（PAID）
+  status: 'PAID' | 'PENDING'
+  alreadyPaid?: boolean
+  expiresAt?: string
+  wxTransactionId?: string
+  // 微信侧交易状态（PENDING 时可能为 null）
+  tradeState?: string | null
+  tradeStateDesc?: string
+  notFound?: boolean
+  mocked?: boolean
 }
 
 // 微信支付参数
@@ -62,9 +77,18 @@ export interface IMySubscription {
 /**
  * 获取课程订阅状态
  * @param collectionId 课程(视频合集)ID
+ * @param options 额外请求选项（支付后静默刷新可传 hideErrorToast）
  */
-export function getSubscriptionStatusAPI(collectionId: string) {
-  return http.Get<ISubscriptionStatus>(`/api/collections/${collectionId}/subscription-status`)
+export function getSubscriptionStatusAPI(
+  collectionId: string,
+  options?: Partial<CustomRequestOptions>,
+) {
+  return http.Get<ISubscriptionStatus>(
+    `/api/collections/${collectionId}/subscription-status`,
+    undefined,
+    undefined,
+    options,
+  )
 }
 
 /**
@@ -79,9 +103,18 @@ export function subscribeCollectionAPI(collectionId: string, code?: string) {
 /**
  * 单视频访问权限检查
  * @param videoId 视频ID
+ * @param options 额外请求选项（支付后静默刷新可传 hideErrorToast）
  */
-export function getVideoAccessAPI(videoId: string) {
-  return http.Get<IVideoAccess>(`/api/videos/${videoId}/access`)
+export function getVideoAccessAPI(
+  videoId: string,
+  options?: Partial<CustomRequestOptions>,
+) {
+  return http.Get<IVideoAccess>(
+    `/api/videos/${videoId}/access`,
+    undefined,
+    undefined,
+    options,
+  )
 }
 
 /**
@@ -99,5 +132,20 @@ export function mockCompleteOrderAPI(orderId: string) {
   return http.Post<{ success: boolean, alreadyPaid?: boolean, expiresAt?: string }>(
     `/api/orders/${orderId}/mock-complete`,
     {},
+  )
+}
+
+/**
+ * 真实支付成功后主动同步订单：服务端查微信交易状态，若已支付则幂等补单激活订阅。
+ * 用于支付回调延迟/丢失时的用户侧补偿（支付成功后立即调用 + 短轮询）。
+ * @param orderId 订单ID
+ */
+export function syncSubscriptionOrderAPI(orderId: string) {
+  return http.Post<ISyncOrderResult>(
+    `/api/orders/${orderId}/sync`,
+    {},
+    undefined,
+    undefined,
+    { hideErrorToast: true },
   )
 }

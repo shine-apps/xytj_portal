@@ -4,6 +4,7 @@ import type {
   ISubscriptionStatus,
   IVideoAccess,
 } from '@/api/subscriptions'
+import type { CustomRequestOptions } from '@/http/types'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getWxCode } from '@/api/login'
@@ -17,35 +18,47 @@ import {
 export const useSubscriptionStore = defineStore(
   'subscription',
   () => {
+    // 前端缓存项:在接口类型上附加本地缓存时间戳
+    type CachedStatus = ISubscriptionStatus & { _cachedAt?: number }
+    type CachedAccess = IVideoAccess & { _cachedAt?: number }
+
     // 课程订阅状态缓存: collectionId -> status
-    const statusMap = ref<Record<string, ISubscriptionStatus>>({})
+    const statusMap = ref<Record<string, CachedStatus>>({})
 
     // 视频访问权限缓存: videoId -> access
-    const accessMap = ref<Record<string, IVideoAccess>>({})
+    const accessMap = ref<Record<string, CachedAccess>>({})
 
     // 我的订阅列表
     const mySubscriptions = ref<IMySubscription[]>([])
     const mySubscriptionsLoadedAt = ref<number>(0)
 
     // 拉取课程订阅状态(从服务端)
-    async function fetchStatus(collectionId: string, force = false): Promise<ISubscriptionStatus> {
+    async function fetchStatus(
+      collectionId: string,
+      force = false,
+      options?: Partial<CustomRequestOptions>,
+    ): Promise<ISubscriptionStatus> {
       const cached = statusMap.value[collectionId]
       // 5 分钟内的缓存可用; force=true 时强制刷新
-      if (!force && cached && Date.now() - (cached._cachedAt || 0) < 5 * 60 * 1000) {
+      if (!options && !force && cached && Date.now() - (cached._cachedAt || 0) < 5 * 60 * 1000) {
         return cached
       }
-      const status = await getSubscriptionStatusAPI(collectionId)
+      const status = await getSubscriptionStatusAPI(collectionId, options)
       statusMap.value[collectionId] = { ...status, _cachedAt: Date.now() } as ISubscriptionStatus
       return status
     }
 
     // 拉取视频访问权限
-    async function fetchAccess(videoId: string, force = false): Promise<IVideoAccess> {
+    async function fetchAccess(
+      videoId: string,
+      force = false,
+      options?: Partial<CustomRequestOptions>,
+    ): Promise<IVideoAccess> {
       const cached = accessMap.value[videoId]
-      if (!force && cached && Date.now() - (cached._cachedAt || 0) < 60 * 1000) {
+      if (!options && !force && cached && Date.now() - (cached._cachedAt || 0) < 60 * 1000) {
         return cached
       }
-      const access = await getVideoAccessAPI(videoId)
+      const access = await getVideoAccessAPI(videoId, options)
       accessMap.value[videoId] = { ...access, _cachedAt: Date.now() } as IVideoAccess
       return access
     }
