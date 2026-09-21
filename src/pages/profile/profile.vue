@@ -121,6 +121,7 @@
 import { isMpWeixin } from '@uni-helper/uni-env'
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useUserStore } from '@/store/user'
+import { staticUrl } from '@/utils'
 import { uploadToCos } from '@/utils/cos'
 
 definePage({
@@ -131,7 +132,7 @@ definePage({
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
-const defaultAvatar = '/static/images/default-avatar.png'
+const defaultAvatar = staticUrl('/static/images/default-avatar.png')
 
 const form = reactive({
   nickname: userInfo.value.nickname || userInfo.value.username || '',

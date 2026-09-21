@@ -5,7 +5,10 @@ import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { getArticleById } from '@/api/article'
 import CustomRichText from '@/components/CustomRichText.vue'
+import { staticUrl } from '@/utils'
 import { setPageShareConfig } from '@/utils/share'
+
+const logoUrl = staticUrl('/static/logo.png')
 
 definePage({
   name: 'article-detail',
@@ -96,7 +99,7 @@ function goToHome() {
       <template v-else>
         <view class="relative aspect-video w-full">
           <image
-            :src="article.coverUrl || '/static/logo.png'"
+            :src="article.coverUrl || logoUrl"
             class="h-full w-full object-contain"
             mode="aspectFit"
           />

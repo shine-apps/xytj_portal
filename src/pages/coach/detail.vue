@@ -4,6 +4,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getCoachById } from '@/api/coach'
 import CustomRichText from '@/components/CustomRichText.vue'
+import { staticUrl } from '@/utils'
 import { setPageShareConfig } from '@/utils/share'
 
 definePage({
@@ -89,7 +90,7 @@ function goToHome() {
       <!-- 顶部图片与返回键 -->
       <view class="relative aspect-video w-full">
         <image
-          :src="coach.photo || coach.avatar || '/static/image/default-avatar.png'" class="h-full w-full object-cover"
+          :src="coach.photo || coach.avatar || staticUrl('/static/images/default-avatar.png')" class="h-full w-full object-cover"
           mode="aspectFill"
         />
         <!-- 渐变阴影 -->

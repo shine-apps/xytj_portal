@@ -50,6 +50,7 @@
 import { computed, ref } from 'vue'
 import { getPendingInvitationsCountAPI } from '@/service/teacher-invitation'
 import { useUserStore } from '@/store/user'
+import { staticUrl } from '@/utils'
 import { toLoginPage } from '@/utils/toLoginPage'
 
 definePage({
@@ -60,7 +61,7 @@ const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 // Check if userId is valid (assuming -1 is default/invalid)
 const isLoggedIn = computed(() => userStore.hasValidLogin)
-const defaultAvatar = '/static/images/default-avatar.png'
+const defaultAvatar = staticUrl('/static/images/default-avatar.png')
 const pendingCount = ref(0)
 
 onShow(() => {

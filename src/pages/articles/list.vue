@@ -3,6 +3,9 @@ import type { Article } from '@/api/article'
 import dayjs from 'dayjs'
 import { ref } from 'vue'
 import { getArticles } from '@/api/article'
+import { staticUrl } from '@/utils'
+
+const logoUrl = staticUrl('/static/logo.png')
 
 definePage({
   name: 'article-list',
@@ -59,7 +62,7 @@ function goToHome() {
           class="absolute right-4 top-4 z-20 h-10 w-10 flex items-center justify-center overflow-hidden border-2 border-white/20 rounded-full bg-white/80 p-2 shadow-md active:opacity-70"
           @tap="goToHome"
         >
-          <image src="/static/logo.png" class="h-full w-full" mode="aspectFill" />
+          <image :src="staticUrl('/static/logo.png')" class="h-full w-full" mode="aspectFill" />
         </view>
 
         <view class="relative z-10 text-center">
@@ -83,7 +86,7 @@ function goToHome() {
         >
           <view class="relative h-[120rpx] w-[120rpx] shrink-0 overflow-hidden rounded-l-xl bg-gray-100">
             <image
-              :src="item.coverUrl || '/static/logo.png'"
+              :src="item.coverUrl || logoUrl"
               mode="aspectFill"
               class="h-full w-full object-cover"
             />

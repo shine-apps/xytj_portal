@@ -1,7 +1,7 @@
 <template>
   <view class="min-h-screen bg-white px-6 pt-20">
     <view class="mb-10 flex flex-col items-center">
-      <image src="/static/logo.png" class="mb-4 h-20 w-20" mode="aspectFit" />
+      <image :src="staticUrl('/static/logo.png')" class="mb-4 h-20 w-20" mode="aspectFit" />
       <text class="text-2xl text-[#1a1a1a] font-bold tracking-widest">翔云文武</text>
     </view>
 
@@ -82,6 +82,7 @@
 import { isMpWeixin } from '@uni-helper/uni-env'
 import { sendPhoneOtp } from '@/api/better-auth'
 import { useUserStore } from '@/store/user'
+import { staticUrl } from '@/utils'
 
 definePage({
   style: {

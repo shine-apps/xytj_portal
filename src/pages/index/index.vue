@@ -9,6 +9,7 @@ import { getMonthlyCheckInsAPI } from '@/service/practice'
 import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { isPageTabbar } from '@/tabbar/store'
+import { staticUrl } from '@/utils'
 
 defineOptions({
   name: 'Home',
@@ -100,19 +101,19 @@ const courses = [
     title: '青少年武术基础班',
     students: 128,
     rating: 4.9,
-    image: '/static/courses/kids-kungfu.jpg',
+    image: staticUrl('/static/courses/kids-kungfu.jpg'),
   },
   {
     title: '中老年太极养生班',
     students: 256,
     rating: 4.8,
-    image: '/static/courses/taichi.jpg',
+    image: staticUrl('/static/courses/taichi.jpg'),
   },
   {
     title: '传统武术进阶班',
     students: 89,
     rating: 4.9,
-    image: '/static/courses/advanced.jpg',
+    image: staticUrl('/static/courses/advanced.jpg'),
   },
 ]
 
@@ -158,7 +159,7 @@ function makePhoneCall() {
 <template>
   <view v-if="isReady" class="min-h-screen bg-[#f7f7f7] font-serif" style="font-family: 'KaiTi', 'STKaiti', 'serif'">
     <view class="flex items-center justify-center gap-2 bg-white py-2" :style="{ paddingTop: 'var(--status-bar-height)' }">
-      <image src="/static/logo.png" class="h-8 w-8" mode="aspectFit" />
+      <image :src="staticUrl('/static/logo.png')" class="h-8 w-8" mode="aspectFit" />
       <text class="text-lg text-[#1a1a1a] font-bold tracking-widest">翔云文武</text>
     </view>
 

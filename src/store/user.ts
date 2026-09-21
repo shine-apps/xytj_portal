@@ -13,6 +13,7 @@ import {
   updateUser,
   verifyPhoneOtp,
 } from '@/api/better-auth'
+import { staticUrl } from '@/utils'
 
 // 初始化状态
 const userInfoState: IUserInfoRes = {
@@ -21,7 +22,7 @@ const userInfoState: IUserInfoRes = {
   nickname: '',
   phoneNumber: '',
   email: '',
-  avatar: '/static/images/default-avatar.png',
+  avatar: staticUrl('/static/images/default-avatar.png'),
 }
 
 const tokenInfoState = {

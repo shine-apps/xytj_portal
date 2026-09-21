@@ -159,3 +159,17 @@ export const isDoubleTokenMode = import.meta.env.VITE_AUTH_MODE === 'double'
  * 通常为 /pages/index/index
  */
 export const HOME_PAGE = `/${(pages as PageMetaDatum[]).find(page => page.type === 'home')?.path || (pages as PageMetaDatum[])[0].path}`
+
+/**
+ * 跨平台静态资源路径
+ * - H5 部署在子路径（VITE_APP_PUBLIC_BASE，如 /ui/）时需拼上 base，否则会请求到域名根目录
+ * - 小程序/App 保持 uni-app 约定的 /static/... 绝对路径
+ * @param path 以 /static/ 开头的静态资源路径，如 '/static/logo.png'
+ */
+export function staticUrl(path: string) {
+  let base = ''
+  // #ifdef H5
+  base = import.meta.env.BASE_URL
+  // #endif
+  return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
+}
