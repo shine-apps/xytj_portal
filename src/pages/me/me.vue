@@ -28,6 +28,7 @@
         <wd-cell title="关于我们" icon="" to="/pages/about/about" is-link border />
         <wd-cell title="设置" icon="setting" is-link border />
         <wd-cell v-if="isLoggedIn" title="我的上课邀请" is-link to="/pages/teacher-invitations/list" border />
+        <wd-cell v-if="userStore.isAdmin" title="课程分账计算器" is-link to="/pages/course-settlement/index" border />
         <wd-cell v-if="userStore.isAdmin" title=" 上课申请记录" is-link to="/pages/teacher-invitations/admin-list" border>
           <template #default>
             <wd-badge :model-value="pendingCount" />
