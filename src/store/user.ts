@@ -25,10 +25,11 @@ const userInfoState: IUserInfoRes = {
   avatar: staticUrl('/static/images/default-avatar.png'),
 }
 
+// 会话有效期由服务端 better-auth 统一管理（expiresIn 7 天 + updateAge 1 天滚动续期），
+// 本地不再保存过期时间，token 是否有效以服务端响应为准。
 const tokenInfoState = {
   token: '',
   userId: '',
-  expiresAt: 0,
 }
 
 const STORAGE_KEY_TOKEN = 'xytj_token'
@@ -41,9 +42,14 @@ export const useUserStore = defineStore(
 
     // 定义token信息
     const tokenInfo = ref<typeof tokenInfoState>({ ...tokenInfoState })
-    const _token = uni.getStorageSync(STORAGE_KEY_TOKEN)
-    if (_token) {
-      tokenInfo.value = _token
+    // 兼容旧版本存储：旧格式为 { token, userId, expiresAt }，其中 expiresAt 已废弃，
+    // 读取时只提取新结构需要的字段，旧 token 仍可继续使用（服务端会话未失效）。
+    const storedToken = uni.getStorageSync(STORAGE_KEY_TOKEN)
+    if (storedToken && typeof storedToken === 'object' && typeof storedToken.token === 'string') {
+      tokenInfo.value = {
+        token: storedToken.token,
+        userId: typeof storedToken.userId === 'string' ? storedToken.userId : '',
+      }
     }
 
     // 设置token信息
@@ -106,13 +112,6 @@ export const useUserStore = defineStore(
             mappedUser.roles.push(res.user.role)
           setUserInfo(mappedUser)
         }
-        // if (res && res.session && res.session.token) {
-        //   setTokenInfo({
-        //     token: res.session.token,
-        //     userId: res.session.userId,
-        //     expiresAt: new Date(res.session.expiresAt).getTime(),
-        //   })
-        // }
       }
       catch (e) {
         console.error('Fetch session failed', e)
@@ -120,8 +119,10 @@ export const useUserStore = defineStore(
       return null
     }
 
+    // 本地不再判断 token 过期时间：会话由服务端滚动续期，只要本地存有 token
+    // 即视为登录态；token 真正失效时服务端返回 401，由 HTTP 层统一兜底登出。
     const hasValidLogin = computed(() => {
-      return tokenInfo.value.token && tokenInfo.value.expiresAt > Date.now()
+      return !!tokenInfo.value.token
     })
 
     const hasUserInfo = computed(() => {
@@ -150,7 +151,6 @@ export const useUserStore = defineStore(
       setTokenInfo({
         token: res.token,
         userId: res.user.id,
-        expiresAt: Date.now() + 7 * 24 * 3600 * 1000, // 默认7天过期
       })
 
       const mappedUser: IUserInfoRes = {

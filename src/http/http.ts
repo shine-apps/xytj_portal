@@ -2,9 +2,9 @@ import type { CustomRequestOptions } from '@/http/types'
 import { useUserStore } from '@/store'
 import { toLoginPage } from '@/utils/toLoginPage'
 
-// 刷新 token 状态管理
-const refreshing = false // 防止重复刷新 token 标识
-const taskQueue: (() => void)[] = [] // 刷新 token 请求队列
+// 401 处理幂等锁：多个并发请求同时返回 401 时，只执行一次本地清理与登录跳转。
+// 重新登录后首个带新 token 的成功响应会自动解除该锁。
+let isHandlingUnauthorized = false
 
 export function http<T>(options: CustomRequestOptions) {
   // 1. 返回 Promise 对象
@@ -24,14 +24,22 @@ export function http<T>(options: CustomRequestOptions) {
         const isTokenExpired = res.statusCode === 401
 
         if (isTokenExpired) {
-          const userStore = useUserStore()
-          userStore.clearUserInfo()
-          toLoginPage()
+          if (!isHandlingUnauthorized) {
+            isHandlingUnauthorized = true
+            const userStore = useUserStore()
+            userStore.clearUserInfo()
+            // toLoginPage 内部已有 500ms 防抖与“已在登录页”判断
+            toLoginPage()
+          }
           return reject(res)
         }
 
         // 处理其他成功状态（HTTP状态码200-299）
         if (res.statusCode >= 200 && res.statusCode < 300) {
+          // 重新登录后首个带有效 token 的成功响应，解除 401 幂等锁
+          if (isHandlingUnauthorized && useUserStore().hasValidLogin) {
+            isHandlingUnauthorized = false
+          }
           // 如果需要完整响应（用于获取headers等）
           if (options.returnFullResponse) {
             return resolve(res as any)
