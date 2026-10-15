@@ -288,6 +288,19 @@ export function requestPasswordReset(data: { phoneNumber: string }) {
 }
 
 /**
+ * 管理员换取 webview 管理后台一次性登录令牌（OTT）
+ *
+ * 令牌 1 分钟内有效、仅可使用一次，用于打开后端 /auth/bridge 中转页，
+ * 避免把长期会话 token 暴露在 URL 中。
+ */
+export function requestWebviewLoginToken() {
+  return http.post<{ token: string, expiresIn: number }>(
+    '/api/webview-login/token',
+    {},
+  )
+}
+
+/**
  * 使用OTP重置密码
  */
 export function resetPasswordWithOTP(data: { phoneNumber: string, otp: string, newPassword: string }) {

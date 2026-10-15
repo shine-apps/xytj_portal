@@ -13,7 +13,10 @@ onLoad((options) => {
 
   if (options?.url) {
     let targetUrl = decodeURIComponent(options.url)
-    if (userStore.hasValidLogin && userStore.tokenInfo.token) {
+    // attach_token=0：链接自带认证机制（如管理后台 /auth/bridge 一次性令牌），
+    // 不再拼接长期会话 token，避免长期 token 出现在 URL 中。
+    const attachToken = options.attach_token !== '0'
+    if (attachToken && userStore.hasValidLogin && userStore.tokenInfo.token) {
       const token = userStore.tokenInfo.token
       const separator = targetUrl.includes('?') ? '&' : '?'
       targetUrl = `${targetUrl}${separator}token=${encodeURIComponent(token)}`

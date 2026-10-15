@@ -49,6 +49,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
+import { requestWebviewLoginToken } from '@/api/better-auth'
 import { getPendingInvitationsCountAPI } from '@/service/teacher-invitation'
 import { useUserStore } from '@/store/user'
 import { staticUrl } from '@/utils'
@@ -108,10 +109,25 @@ function handleLogout() {
   })
 }
 
-function openAdminWebview() {
-  const adminUrl = import.meta.env.VITE_SERVER_BASEURL
-  uni.navigateTo({
-    url: `/pages/webview/webview?url=${encodeURIComponent(adminUrl)}&title=${encodeURIComponent('管理后台')}`,
-  })
+async function openAdminWebview() {
+  // 先用手机端登录态换取 1 分钟有效的一次性令牌，
+  // 再由 webview 打开后端 /auth/bridge 中转页写入会话 cookie，
+  // 长期会话 token 不出现在 URL 中。
+  uni.showLoading({ title: '正在进入...', mask: true })
+  try {
+    const { token } = await requestWebviewLoginToken()
+    const base = import.meta.env.VITE_SERVER_BASEURL
+    const bridgeUrl = `${base}/auth/bridge?token=${encodeURIComponent(token)}`
+    uni.navigateTo({
+      url: `/pages/webview/webview?url=${encodeURIComponent(bridgeUrl)}&title=${encodeURIComponent('管理后台')}&attach_token=0`,
+    })
+  }
+  catch (e) {
+    // http 拦截器已对错误（如 403）做过 toast，这里只兜底网络异常场景
+    console.error('openAdminWebview failed', e)
+  }
+  finally {
+    uni.hideLoading()
+  }
 }
 </script>
