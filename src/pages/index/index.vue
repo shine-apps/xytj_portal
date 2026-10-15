@@ -50,10 +50,10 @@ const baseFeatures = [
     showKey: 'showVideo' as const,
   },
   {
-    title: '请老师上课',
-    desc: '邀请老师来上课',
-    icon: 'i-carbon-user-speaker',
-    url: '/pages/teacher-invitations/create',
+    title: '企业合作',
+    desc: '邀请老师上门授课',
+    icon: 'i-carbon-partnership',
+    url: '/pages/teacher-invitations/index',
     showKey: null,
   },
   {
