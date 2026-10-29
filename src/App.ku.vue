@@ -36,6 +36,7 @@ defineExpose({
 
     <KuRootView />
 
+    <ProfileCompletionPopup />
     <FgTabbar v-if="isCurrentPageTabbar" />
   </view>
 </template>

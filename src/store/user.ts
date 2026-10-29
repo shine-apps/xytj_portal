@@ -1,6 +1,6 @@
 import type { IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import {
   changePassword,
   getSession,
