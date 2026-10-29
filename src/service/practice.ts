@@ -243,6 +243,18 @@ export interface CreateChallengePayload {
   endDate: string
 }
 
+/** 更新挑战参数（编辑时允许保留过去的开始日期） */
+export interface UpdateChallengePayload {
+  /** 标题，1~50 字 */
+  title: string
+  /** 描述，≤500 字；传空字符串可清空 */
+  description?: string
+  /** YYYY-MM-DD */
+  startDate: string
+  /** YYYY-MM-DD，晚于开始日期，周期 ≤366 天 */
+  endDate: string
+}
+
 // ==================== API 函数 ====================
 
 /**
@@ -341,6 +353,11 @@ export function getChallengesAPI(params?: {
  */
 export function createChallengeAPI(data: CreateChallengePayload) {
   return http.post<PracticeChallenge>('/api/practice/challenges', data)
+}
+
+/** 更新挑战（创建者或系统管理员） */
+export function updateChallengeAPI(id: string, data: UpdateChallengePayload) {
+  return http.patch<{ success: boolean }>(`/api/practice/challenges/${id}`, data)
 }
 
 /**

@@ -1,17 +1,20 @@
 <script lang="ts" setup>
 import type { CreateChallengePayload, PracticeChallenge } from '@/service/practice'
 import { computed, ref, watch } from 'vue'
-import { createChallengeAPI } from '@/service/practice'
-import { addDaysStr, dateStrToLocalMidnight, shanghaiDateStr, shanghaiToday } from '@/utils/dateUtil'
+import { createChallengeAPI, updateChallengeAPI } from '@/service/practice'
+import { addDaysStr, dateStrToLocalMidnight, shanghaiToday } from '@/utils/dateUtil'
 
 const props = defineProps<{
   show: boolean
+  challenge?: PracticeChallenge
 }>()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
-  (e: 'success', challenge: PracticeChallenge): void
+  (e: 'success', challenge?: PracticeChallenge): void
 }>()
+
+const isEditing = computed(() => Boolean(props.challenge))
 
 const visible = computed({
   get: () => props.show,
@@ -27,12 +30,29 @@ const todayStart = computed(() => dateStrToLocalMidnight(shanghaiToday()))
 
 const form = ref(getDefaultForm())
 
-// 结束日期选择器最早可选：开始日期的次日（先把选中时间戳还原为上海日历日再 +1 天）
+/** 日期选择器的本地零点时间戳转为其展示的 YYYY-MM-DD */
+function pickerDateStr(value: number): string {
+  const date = new Date(value)
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+// 结束日期选择器最早可选：开始日期的次日
 const endMinDate = computed(() => {
-  return dateStrToLocalMidnight(addDaysStr(shanghaiDateStr(form.value.startDate), 1))
+  return dateStrToLocalMidnight(addDaysStr(pickerDateStr(form.value.startDate), 1))
 })
 
 function getDefaultForm() {
+  if (props.challenge) {
+    return {
+      title: props.challenge.title,
+      description: props.challenge.description ?? '',
+      startDate: dateStrToLocalMidnight(props.challenge.startDate),
+      endDate: dateStrToLocalMidnight(props.challenge.endDate),
+    }
+  }
+
   // 默认上海明天开始、开始 + 30 天结束；值用对应日历日的设备本地零点时间戳
   const startDateStr = addDaysStr(shanghaiToday(), 1)
   const endDateStr = addDaysStr(startDateStr, 30)
@@ -51,17 +71,30 @@ const rules = {
   ],
   startDate: [
     { required: true, message: '请选择开始日期' },
-    // 字符串字典序比较即日历序；日期统一按上海日历日
-    { required: false, validator: (value: number) => shanghaiDateStr(value) >= shanghaiToday(), message: '开始日期不能早于今天' },
+    // 创建限制开始日期不早于今天；编辑允许保留或选择过去日期
+    {
+      required: false,
+      validator: (value: number) => isEditing.value || pickerDateStr(value) >= shanghaiToday(),
+      message: '开始日期不能早于今天',
+    },
   ],
   endDate: [
     { required: true, message: '请选择结束日期' },
     {
       required: false,
       validator: (value: number) => {
-        return shanghaiDateStr(value) > shanghaiDateStr(form.value.startDate)
+        return pickerDateStr(value) > pickerDateStr(form.value.startDate)
       },
       message: '结束日期须晚于开始日期',
+    },
+    {
+      required: false,
+      validator: (value: number) => {
+        const start = Date.parse(`${pickerDateStr(form.value.startDate)}T00:00:00.000Z`)
+        const end = Date.parse(`${pickerDateStr(value)}T00:00:00.000Z`)
+        return (end - start) / 86400000 <= 366
+      },
+      message: '挑战周期不能超过 366 天',
     },
   ],
 }
@@ -83,13 +116,19 @@ async function handleSubmit() {
   try {
     const payload: CreateChallengePayload = {
       title: form.value.title.trim(),
-      // 提交上海日历日，与后端校验/存储口径一致
-      startDate: shanghaiDateStr(form.value.startDate),
-      endDate: shanghaiDateStr(form.value.endDate),
+      description: form.value.description.trim(),
+      // 提交日期选择器展示的日历日，与后端存储口径一致
+      startDate: pickerDateStr(form.value.startDate),
+      endDate: pickerDateStr(form.value.endDate),
     }
-    const description = form.value.description.trim()
-    if (description)
-      payload.description = description
+
+    if (props.challenge) {
+      await updateChallengeAPI(props.challenge.id, payload)
+      uni.showToast({ title: '保存成功', icon: 'success' })
+      visible.value = false
+      emit('success')
+      return
+    }
 
     const challenge = await createChallengeAPI(payload)
     uni.showToast({ title: '发起成功', icon: 'success' })
@@ -97,7 +136,7 @@ async function handleSubmit() {
     emit('success', challenge)
   }
   catch (e) {
-    console.error('发起挑战失败', e)
+    console.error(isEditing.value ? '保存挑战失败' : '发起挑战失败', e)
   }
   finally {
     submitting.value = false
@@ -113,7 +152,7 @@ async function handleSubmit() {
         <view class="w-6" />
         <view class="flex items-center">
           <view class="h-[1px] w-8 bg-[#a33327] opacity-50" />
-          <text class="mx-3 text-lg text-[#1a1a1a] font-bold tracking-widest">发起挑战</text>
+          <text class="mx-3 text-lg text-[#1a1a1a] font-bold tracking-widest">{{ isEditing ? '编辑挑战' : '发起挑战' }}</text>
           <view class="h-[1px] w-8 bg-[#a33327] opacity-50" />
         </view>
         <view class="h-6 w-6 flex items-center justify-center" @click="visible = false">
@@ -139,7 +178,7 @@ async function handleSubmit() {
             placeholder="请选择开始日期"
             prop="startDate"
             required
-            :min-date="todayStart"
+            :min-date="isEditing ? undefined : todayStart"
           />
           <wd-datetime-picker
             v-model="form.endDate"
@@ -173,7 +212,7 @@ async function handleSubmit() {
           custom-style="background-color:#a33327;border-color:#a33327;border-radius:9999px;height:96rpx;font-size:32rpx;letter-spacing:8rpx"
           @click="handleSubmit"
         >
-          立帖为证 · 发起挑战
+          {{ isEditing ? '保存修改' : '立帖为证 · 发起挑战' }}
         </wd-button>
       </view>
     </view>

@@ -6,6 +6,7 @@ import { useMessage } from 'wot-design-uni'
 import { getChallengeDetailAPI, joinChallengeAPI, leaveChallengeAPI } from '@/service/practice'
 import { useUserStore } from '@/store/user'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
+import ChallengeForm from './components/ChallengeForm.vue'
 
 definePage({
   style: {
@@ -20,8 +21,12 @@ const challengeId = ref('')
 const detail = ref<ChallengeDetail | null>(null)
 const loading = ref(false)
 const actionLoading = ref(false)
+const showEditForm = ref(false)
 
 const challenge = computed(() => detail.value?.challenge ?? null)
+const canEdit = computed(() => {
+  return challenge.value?.creator.id === userStore.userInfo?.userId || userStore.isAdmin
+})
 const isOngoing = computed(() => challenge.value?.status === 'ongoing')
 const isJoined = computed(() => challenge.value?.isJoined ?? false)
 const isGlobal = computed(() => challenge.value?.isGlobal === true)
@@ -72,6 +77,11 @@ async function loadDetail() {
   finally {
     loading.value = false
   }
+}
+
+async function handleEditSuccess() {
+  showEditForm.value = false
+  await loadDetail()
 }
 
 function displayName(nickname: string | null | undefined, userId: string) {
@@ -203,6 +213,16 @@ async function handleLeave() {
                 <text>发起人：{{ challenge.creator.name }}</text>
               </view>
             </view>
+
+            <view v-if="canEdit" class="mt-4 flex justify-end">
+              <view
+                class="flex items-center gap-1 border border-[#a33327]/50 rounded-full px-3 py-1.5 text-sm text-[#a33327] active:opacity-70"
+                @click="showEditForm = true"
+              >
+                <text class="i-carbon-edit text-sm" />
+                <text>编辑挑战</text>
+              </view>
+            </view>
           </view>
         </view>
 
@@ -267,6 +287,12 @@ async function handleLeave() {
         <view class="flex justify-center py-8 opacity-30">
           <text class="text-xs text-[#888] tracking-[0.5em]">—— 以武会友 · 共修身心 ——</text>
         </view>
+
+        <ChallengeForm
+          v-model:show="showEditForm"
+          :challenge="challenge"
+          @success="handleEditSuccess"
+        />
       </template>
     </view>
 
