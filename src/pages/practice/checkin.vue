@@ -479,19 +479,6 @@ async function handleSubmit() {
         </view>
       </view>
 
-      <!-- 心得笔记 -->
-      <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
-        <text class="mb-2 block text-sm text-[#555] font-medium">心得笔记（选填）</text>
-        <textarea
-          v-model="notes"
-          class="w-full border border-[#e8e4dc] rounded-md bg-[#faf8f3] p-3 text-sm text-[#1a1a1a]"
-          style="min-height: 100px"
-          placeholder="记录今天的练拳心得..."
-          :maxlength="500"
-        />
-        <text class="mt-1 block text-right text-2xs text-[#999]">{{ notes.length }}/500</text>
-      </view>
-
       <!-- 媒体 / 位置 -->
       <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
         <!-- 媒体 -->
@@ -527,6 +514,19 @@ async function handleSubmit() {
             />
           </view>
         </view>
+      </view>
+
+      <!-- 心得笔记 -->
+      <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
+        <text class="mb-2 block text-sm text-[#555] font-medium">心得笔记（选填）</text>
+        <textarea
+          v-model="notes"
+          class="w-full border border-[#e8e4dc] rounded-md bg-[#faf8f3] p-3 text-sm text-[#1a1a1a]"
+          style="min-height: 100px"
+          placeholder="记录今天的练拳心得..."
+          :maxlength="500"
+        />
+        <text class="mt-1 block text-right text-2xs text-[#999]">{{ notes.length }}/500</text>
       </view>
 
       <!-- 底部装饰 -->
