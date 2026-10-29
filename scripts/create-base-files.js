@@ -12,6 +12,12 @@ const __dirname = path.dirname(__filename)
 // 最简可运行配置
 const manifest = { }
 const pages = {
+  easycom: {
+    autoscan: true,
+    custom: {
+      '^wd-(.*)': 'wot-design-uni/components/wd-$1/wd-$1.vue',
+    },
+  },
   pages: [
     {
       path: 'pages/index/index',
