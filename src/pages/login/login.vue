@@ -15,24 +15,26 @@
       </button>
     </view>
 
-    <view v-if="isMpWeixin" class="mb-6 flex items-center">
+    <view class="mb-6 flex items-center active:opacity-60" @click="showOtherLogin = !showOtherLogin">
       <view class="h-px flex-1 bg-gray-200" />
-      <text class="px-4 text-sm text-gray-400">其他登录方式</text>
+      <text class="px-4 text-sm text-gray-400">{{ showOtherLogin ? '收起其他登录方式' : '展开其他登录方式' }}</text>
       <view class="h-px flex-1 bg-gray-200" />
     </view>
 
-    <wd-tabs v-model="currentTab" class="mb-6">
+    <wd-tabs v-if="showOtherLogin" v-model="currentTab" class="mb-6">
       <wd-tab name="otp" title="验证码登录" />
       <wd-tab name="password" title="密码登录" />
     </wd-tabs>
 
-    <view v-if="currentTab === 'otp'" class="pt-4 space-y-4">
+    <view v-if="showOtherLogin && currentTab === 'otp'" class="pt-4 space-y-4">
       <wd-input v-model="otpForm.phoneNumber" placeholder="请输入手机号" type="number" clearable>
         <template #prefix>
-          <view class="mr-2 flex items-center border-r border-gray-200 pr-2 active:opacity-60" @click.stop="openCountryPicker">
-            <text class="text-base text-[#1a1a1a]">+{{ otpForm.countryCode }}</text>
-            <wd-icon name="arrow-down" size="14px" custom-class="ml-1 text-gray-400" />
-          </view>
+          <wd-picker v-model="otpForm.countryCode" :columns="countryCodeColumns" title="选择国家/地区">
+            <view class="mr-2 flex items-center border-r border-gray-200 pr-2 active:opacity-60">
+              <text class="text-base text-[#1a1a1a]">+{{ otpForm.countryCode }}</text>
+              <wd-icon name="arrow-down" size="14px" custom-class="ml-1 text-gray-400" />
+            </view>
+          </wd-picker>
         </template>
       </wd-input>
       <wd-input v-model="otpForm.otp" placeholder="请输入验证码" type="number" clearable prefix-icon="secured">
@@ -49,7 +51,7 @@
       </view>
     </view>
 
-    <view v-if="currentTab === 'password'" class="pt-4 space-y-4">
+    <view v-if="showOtherLogin && currentTab === 'password'" class="pt-4 space-y-4">
       <wd-input v-model="passwordForm.account" placeholder="请输入邮箱或手机号" clearable prefix-icon="user" />
       <wd-input v-model="passwordForm.password" show-password placeholder="请输入密码" clearable prefix-icon="lock-on" />
       <view class="pt-4">
@@ -58,23 +60,6 @@
         </wd-button>
       </view>
     </view>
-
-    <view class="mt-6 flex justify-between px-2 text-sm text-gray-500">
-      <!-- <navigator url="/pages/register/register" hover-class="none" class="text-primary">
-        注册账号
-      </navigator> -->
-      <navigator url="#" hover-class="none">
-        忘记密码?
-      </navigator>
-    </view>
-
-    <wd-picker
-      v-model="countryCodeSelected"
-      v-model:visible="showCountryPicker"
-      :columns="countryCodeColumns"
-      title="选择国家/地区"
-      @confirm="onCountryCodeConfirm"
-    />
   </view>
 </template>
 
@@ -91,6 +76,7 @@ definePage({
 })
 
 const currentTab = ref('otp')
+const showOtherLogin = ref(false)
 const loading = ref(false)
 const countdown = ref(0)
 let timer: any = null
@@ -124,20 +110,6 @@ const countryCodeColumns = ref<{ label: string, value: string }[]>([
   { label: '马来西亚 +60', value: '60' },
   { label: '泰国 +66', value: '66' },
 ])
-
-const showCountryPicker = ref(false)
-const countryCodeSelected = ref<string[]>(['86'])
-
-function openCountryPicker() {
-  countryCodeSelected.value = [otpForm.countryCode]
-  showCountryPicker.value = true
-}
-
-function onCountryCodeConfirm({ selectedItems }: { selectedItems: { value: string }[] }) {
-  const value = selectedItems?.[0]?.value
-  if (value)
-    otpForm.countryCode = value
-}
 
 function getFullPhoneNumber() {
   return `+${otpForm.countryCode}${otpForm.phoneNumber}`
