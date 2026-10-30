@@ -15,6 +15,7 @@ interface Props {
   videoId?: string
   containerWidth?: number // 单位是rpx
   title?: string
+  autoplay?: boolean
   // 可选的播放列表，传入后全屏模式下会自动播放下一个
   playlist?: PlaylistItem[]
 }
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<Props>(), {
   videoId: 'videoPlayer',
   containerWidth: 0,
   title: '',
+  autoplay: true,
   playlist: () => [],
 })
 
@@ -230,7 +232,7 @@ onUnmounted(() => {
       :id="videoId"
       :src="props.src"
       :poster="props.poster || ''"
-      autoplay
+      :autoplay="props.autoplay"
       object-fit="contain"
       :controls="false"
       :show-fullscreen-btn="false"
