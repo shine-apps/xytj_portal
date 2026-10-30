@@ -203,6 +203,7 @@ function handleEdit() {
       <view class="border-t border-[#eee9df] px-4 py-3 space-y-2" style="padding-bottom: calc(12px + env(safe-area-inset-bottom))">
         <view class="flex gap-3">
           <wd-button
+            v-if="false"
             class="flex-1"
             plain
             :loading="sharing"
@@ -228,7 +229,7 @@ function handleEdit() {
             </view>
           </wd-button>
         </view>
-        <text v-if="!hasMedia" class="block text-center text-2xs text-[#999]">需包含照片或视频才能分享到练功场</text>
+        <text v-if="false" class="block text-center text-2xs text-[#999]">需包含照片或视频才能分享到练功场</text>
         <wd-button
           v-if="isToday"
 

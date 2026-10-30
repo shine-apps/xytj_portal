@@ -479,7 +479,7 @@ onMounted(() => {
               <wd-button type="icon" size="small" @click="deleteAlbum(album)">
                 <text class="i-carbon-trash-can text-gray-400" />
               </wd-button>
-              <wd-button type="icon" size="small" @click="publishToTrainingGround(album)">
+              <wd-button v-if="false" type="icon" size="small" @click="publishToTrainingGround(album)">
                 <text class="i-carbon-rocket text-gray-400" />
               </wd-button>
             </view>

@@ -70,13 +70,6 @@ const baseFeatures = [
     url: '/pages/articles/list',
     showKey: null,
   },
-  {
-    title: '练功场',
-    desc: '分享练功动态',
-    icon: 'i-carbon-accessibility-alt',
-    url: '/pages/training-ground/index',
-    showKey: 'showVideo' as const,
-  },
 ]
 
 const features = computed(() => {

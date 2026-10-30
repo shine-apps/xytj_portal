@@ -23,8 +23,8 @@
           所属课程: <text class="text-blue-500 active:opacity-70" @click="navigateToCollection">{{ collectionTitle }}</text>
         </view>
 
-        <!-- Publish to Training Ground (Admin Only) -->
-        <view v-if="userStore.isAdmin" class="mb-4">
+        <!-- 练功场入口隐藏，保留发布逻辑 -->
+        <view v-if="false" class="mb-4">
           <view
             class="flex items-center justify-center gap-2 rounded-lg bg-blue-500 py-2 text-sm text-white active:bg-blue-600"
             @click="publishToTrainingGround"
