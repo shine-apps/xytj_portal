@@ -14,12 +14,13 @@
         手机号快捷登录
       </button>
     </view>
-
+    <!-- #ifndef H5 -->
     <view class="mb-6 flex items-center active:opacity-60" @click="showOtherLogin = !showOtherLogin">
       <view class="h-px flex-1 bg-gray-200" />
       <text class="px-4 text-sm text-gray-400">{{ showOtherLogin ? '收起其他登录方式' : '展开其他登录方式' }}</text>
       <view class="h-px flex-1 bg-gray-200" />
     </view>
+    <!-- #endif -->
 
     <wd-tabs v-if="showOtherLogin" v-model="currentTab" class="mb-6">
       <wd-tab name="otp" title="验证码登录" />
@@ -77,6 +78,10 @@ definePage({
 
 const currentTab = ref('otp')
 const showOtherLogin = ref(false)
+// #ifdef H5
+showOtherLogin.value = true
+// #endif
+
 const loading = ref(false)
 const countdown = ref(0)
 let timer: any = null
