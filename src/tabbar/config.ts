@@ -80,6 +80,12 @@ export const customTabbarList: CustomTabBarItem[] = [
     iconType: 'unocss',
     icon: 'i-carbon-calendar',
   },
+  {
+    pagePath: 'pages/practice/records',
+    text: '打卡广场',
+    iconType: 'unocss',
+    icon: 'i-carbon-checkmark-outline',
+  },
 
   // 鼓包配置示例（2025-12-31）
   // 中间鼓包tabbarItem配置：通常是扫描按钮、发布按钮、更多按钮等，点击触发业务逻辑

@@ -32,7 +32,7 @@ const REMINDER_SHOWN_DATE_KEY = 'practice_reminder_shown_date'
 /** 入口区配置 */
 const ENTRIES = [
   { key: 'stats', title: '统计明细', icon: 'i-carbon-chart-bar' },
-  { key: 'records', title: '打卡广场', icon: 'i-carbon-center-square' },
+  { key: 'records', title: '打卡广场', icon: 'i-carbon-checkmark-outline' },
   { key: 'challenges', title: '打卡挑战', icon: 'i-carbon-trophy' },
   { key: 'reminder', title: '提醒设置', icon: 'i-carbon-alarm' },
 ]
@@ -255,7 +255,7 @@ function onEntry(key: string) {
     })
   }
   else if (key === 'records') {
-    uni.navigateTo({
+    uni.switchTab({
       url: '/pages/practice/records',
       fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
     })

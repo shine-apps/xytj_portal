@@ -61,6 +61,13 @@ function navigateToCheckIn() {
   })
 }
 
+function navigateToRecords() {
+  uni.switchTab({
+    url: '/pages/practice/records',
+    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
+  })
+}
+
 async function loadDetail() {
   if (!challengeId.value)
     return
@@ -171,6 +178,13 @@ async function handleLeave() {
       </view>
 
       <template v-else>
+        <view class="mb-3 flex justify-end">
+          <view class="flex items-center gap-1 text-sm text-[#a33327] font-medium" @click="navigateToRecords">
+            <text>去打卡广场</text>
+            <text class="i-carbon-chevron-right" />
+          </view>
+        </view>
+
         <!-- 挑战信息 -->
         <view class="overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
           <view class="p-4">
