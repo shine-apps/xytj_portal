@@ -32,6 +32,7 @@ const REMINDER_SHOWN_DATE_KEY = 'practice_reminder_shown_date'
 /** 入口区配置 */
 const ENTRIES = [
   { key: 'stats', title: '统计明细', icon: 'i-carbon-chart-bar' },
+  { key: 'records', title: '打卡广场', icon: 'i-carbon-center-square' },
   { key: 'challenges', title: '打卡挑战', icon: 'i-carbon-trophy' },
   { key: 'reminder', title: '提醒设置', icon: 'i-carbon-alarm' },
 ]
@@ -253,6 +254,12 @@ function onEntry(key: string) {
       fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
     })
   }
+  else if (key === 'records') {
+    uni.navigateTo({
+      url: '/pages/practice/records',
+      fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
+    })
+  }
   else if (key === 'challenges') {
     uni.navigateTo({
       url: '/pages/practice/challenges',
@@ -366,7 +373,8 @@ function offerCopyCsvContent() {
 </script>
 
 <template>
-  <view class="min-h-screen bg-[#f7f7f7] pb-8">
+  <!-- 底部预留固定入口区高度，避免滚动内容被遮挡 -->
+  <view class="min-h-screen bg-[#f7f7f7]" style="padding-bottom: calc(140px + env(safe-area-inset-bottom))">
     <!-- 离线待同步提示条 -->
     <view
       v-if="offlineCount > 0"
@@ -526,9 +534,12 @@ function offerCopyCsvContent() {
       />
     </view>
 
-    <!-- 入口区 -->
-    <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
-      <view class="grid grid-cols-3 gap-2">
+    <!-- 入口区（固定底部；z-index 低于 wd-popup 遮罩默认 zIndex=10，不遮挡弹窗） -->
+    <view
+      class="fixed bottom-0 left-0 right-0 z-[5] mx-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] py-2 shadow-sm"
+      style="margin-bottom: calc(12px + env(safe-area-inset-bottom))"
+    >
+      <view class="grid grid-cols-4 gap-2">
         <view
           v-for="entry in ENTRIES"
           :key="entry.key"
