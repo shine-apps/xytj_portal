@@ -28,6 +28,10 @@
   <view v-else-if="!isReady" class="h-screen flex items-center justify-center bg-[#f7f7f7]">
     <wd-loading color="#a33327" />
   </view>
+  <!-- 未开放视频功能时的占位 -->
+  <view v-else class="h-screen flex items-center justify-center bg-[#f7f7f7]">
+    <text>视频功能暂未开放, 先占位以后再开放</text>
+  </view>
 </template>
 
 <script setup lang="ts">
@@ -85,5 +89,3 @@ function formatDate(date: string) {
   return dayjs(date).format('YYYY-MM-DD')
 }
 </script>
-
-<style lang="scss" scoped></style>
