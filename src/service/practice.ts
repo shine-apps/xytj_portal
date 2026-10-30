@@ -80,6 +80,34 @@ export interface PracticeCheckIn {
   challengeIds: string[]
 }
 
+/** 全员打卡记录中的用户资料 */
+export interface PracticeRecordUser {
+  id: string
+  name: string
+  image: string | null
+}
+
+/** 全员打卡记录中关联的挑战摘要 */
+export interface PracticeRecordChallenge {
+  id: string
+  title: string
+}
+
+/** 带用户资料的全员打卡记录 */
+export type PracticeRecordItem = PracticeCheckIn & {
+  user: PracticeRecordUser
+  /** 关联挑战摘要（与 challengeIds 一一对应，含标题便于展示） */
+  challenges: PracticeRecordChallenge[]
+}
+
+/** 全员打卡记录分页响应 */
+export interface PracticeRecordsResponse {
+  checkIns: PracticeRecordItem[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 /** 打卡提交响应 */
 export interface CheckInResponse {
   checkIn: PracticeCheckIn
@@ -279,6 +307,13 @@ export function getPracticeTypesAPI() {
  */
 export function getMonthlyCheckInsAPI(month?: string) {
   return http.get<MonthlyCheckInsResponse>('/api/practice', month ? { month } : undefined)
+}
+
+/**
+ * 全员打卡记录（按实际提交时间倒序分页）
+ */
+export function getPracticeRecordsAPI(params: { page: number, pageSize: number }) {
+  return http.get<PracticeRecordsResponse>('/api/practice/records', params)
 }
 
 /**
