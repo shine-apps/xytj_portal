@@ -8,6 +8,7 @@ import { useUserStore } from '@/store/user'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
 import { buildVideoCoverUrl } from '@/utils/cos'
 import { formatTime } from '@/utils/dateUtil'
+import { setPageShareConfig } from '@/utils/share'
 import { toLoginPage } from '@/utils/toLoginPage'
 
 definePage({
@@ -21,15 +22,50 @@ const checkIns = ref<PracticeRecordItem[]>([])
 const avatarErrors = ref<Record<string, boolean>>({})
 const userStore = useUserStore()
 
+const SHARE_TITLE = '翔云文武·练功打卡广场'
+const SHARE_TEXT = '一起坚持练功，记录每一次成长'
+
 // 首次 onShow 由 z-paging 自动加载，后续返回页面时刷新最新记录
 let isFirstShow = true
 
 onLoad(() => {
+  setPageShareConfig({
+    onShareAppMessage: () => ({
+      title: SHARE_TITLE,
+      desc: SHARE_TEXT,
+      path: '/pages/practice/records',
+    }),
+    onShareTimeline: () => ({
+      title: SHARE_TITLE,
+      query: '',
+    }),
+  })
+
   if (!userStore.hasValidLogin) {
     uni.showToast({ title: '请先登录', icon: 'none' })
     toLoginPage()
   }
 })
+
+// #ifdef H5
+// H5 无原生分享菜单：优先调起系统分享面板，不支持时复制链接兜底
+async function handleH5Share() {
+  const shareUrl = window.location.href
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url: shareUrl })
+      return
+    }
+    catch {
+      // 用户取消或调起失败，走复制链接兜底
+    }
+  }
+  uni.setClipboardData({
+    data: shareUrl,
+    success: () => uni.showToast({ title: '链接已复制，快去分享吧', icon: 'none' }),
+  })
+}
+// #endif
 
 onShow(() => {
   if (isFirstShow) {
@@ -58,6 +94,10 @@ function navigateToChallenge(id: string) {
   uni.navigateTo({ url: `/pages/practice/challenge-detail?id=${id}` })
 }
 
+function navigateToPracticeHome() {
+  uni.navigateTo({ url: '/pages/practice/index' })
+}
+
 function previewImage(item: PracticeRecordItem, url: string) {
   const urls = item.medias.filter(m => m.type === 'IMAGE').map(m => m.url)
   uni.previewImage({ urls, current: url })
@@ -83,8 +123,14 @@ function hasUpdate(item: PracticeRecordItem): boolean {
       />
 
       <view class="relative z-8 px-4 pb-8 pt-5">
-        <view class="mb-5">
+        <view class="mb-5 flex items-center justify-between">
           <text class="block text-2xl text-[#1a1a1a] font-bold tracking-widest">练功打卡广场</text>
+          <view class="flex shrink-0 items-center gap-4">
+            <!-- #ifdef H5 -->
+            <text class="text-sm text-[#a33327] font-medium" @click="handleH5Share">分享</text>
+            <!-- #endif -->
+            <text class="text-sm text-[#a33327] font-medium underline underline-offset-4" @click="navigateToPracticeHome">去打卡</text>
+          </view>
         </view>
 
         <view class="space-y-4">
