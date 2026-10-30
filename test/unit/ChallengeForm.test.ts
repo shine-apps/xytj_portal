@@ -16,6 +16,10 @@ const PopupStub = defineComponent({
 })
 
 const FormStub = defineComponent({
+  props: {
+    model: { type: Object, required: true },
+    rules: { type: Object, required: true },
+  },
   setup(_, { expose }) {
     expose({ validate: vi.fn().mockResolvedValue({ valid: true }) })
   },
@@ -111,6 +115,19 @@ describe('challengeForm', () => {
     expect(createChallengeAPI).not.toHaveBeenCalled()
     expect(wrapper.emitted('success')).toHaveLength(1)
     expect(uni.showToast).toHaveBeenCalledWith({ title: '保存成功', icon: 'success' })
+  })
+
+  it('允许超过一年的挑战日期范围', () => {
+    const wrapper = mountForm({
+      challenge: { ...challenge, endDate: '2027-02-01' },
+    })
+    const form = wrapper.findComponent(FormStub)
+    const model = form.props('model') as { endDate: number }
+    const rules = form.props('rules') as Record<string, Array<{ validator?: (value: number) => boolean }>>
+
+    const isValid = rules.endDate.every(rule => !rule.validator || rule.validator(model.endDate))
+
+    expect(isValid).toBe(true)
   })
 
   it('创建模式仍调用创建接口', async () => {

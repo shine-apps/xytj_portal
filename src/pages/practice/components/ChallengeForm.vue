@@ -87,15 +87,6 @@ const rules = {
       },
       message: '结束日期须晚于开始日期',
     },
-    {
-      required: false,
-      validator: (value: number) => {
-        const start = Date.parse(`${pickerDateStr(form.value.startDate)}T00:00:00.000Z`)
-        const end = Date.parse(`${pickerDateStr(value)}T00:00:00.000Z`)
-        return (end - start) / 86400000 <= 366
-      },
-      message: '挑战周期不能超过 366 天',
-    },
   ],
 }
 

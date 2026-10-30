@@ -267,7 +267,7 @@ export interface CreateChallengePayload {
   description?: string
   /** YYYY-MM-DD，不早于今天 */
   startDate: string
-  /** YYYY-MM-DD，晚于开始日期，周期 ≤366 天 */
+  /** YYYY-MM-DD，晚于开始日期 */
   endDate: string
 }
 
@@ -279,7 +279,7 @@ export interface UpdateChallengePayload {
   description?: string
   /** YYYY-MM-DD */
   startDate: string
-  /** YYYY-MM-DD，晚于开始日期，周期 ≤366 天 */
+  /** YYYY-MM-DD，晚于开始日期 */
   endDate: string
 }
 
