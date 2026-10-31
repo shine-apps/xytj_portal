@@ -9,6 +9,7 @@ export interface BetterAuthUser {
   updatedAt: Date
   image?: string
   role?: string | null
+  wxOpenid?: string | null
 }
 
 export interface BetterAuthSession {

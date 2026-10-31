@@ -196,6 +196,17 @@ export function signInWePhone(data: { code: string }) {
   })
 }
 
+/** 使用 uni.login 临时 code 绑定当前用户的微信 openid */
+export function bindWxOpenid(data: { code: string }) {
+  return http.post<{ wxOpenid: string }>(
+    '/user/wechat-openid',
+    data,
+    {},
+    {},
+    { isRaw: true },
+  )
+}
+
 /**
  * 邮箱注册 - 使用uni.request实现
  */

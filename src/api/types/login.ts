@@ -32,6 +32,8 @@ export interface IUserInfoRes {
   avatar?: string
   phoneNumber?: string
   email?: string
+  /** 当前小程序的微信 openid，由后端绑定并返回 */
+  wxOpenid?: string
   /** 同时支持单角色和多角色，你自行选择一种就行 */
   role?: UserRole
   roles?: UserRole[]

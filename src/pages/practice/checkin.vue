@@ -482,7 +482,7 @@ async function handleSubmit() {
       <!-- 媒体 / 位置 -->
       <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
         <!-- 媒体 -->
-        <view class="mb-5">
+        <view v-if="settingsStore.showVideo" class="mb-5">
           <MediaUploader v-model="mediaItems" :disabled="submitting" />
         </view>
 

@@ -2,6 +2,7 @@ import type { IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import {
+  bindWxOpenid,
   changePassword,
   getSession,
   requestPasswordReset,
@@ -13,6 +14,7 @@ import {
   updateUser,
   verifyPhoneOtp,
 } from '@/api/better-auth'
+import { getWxCode } from '@/api/login'
 import { staticUrl } from '@/utils'
 
 // 初始化状态
@@ -90,6 +92,19 @@ export const useUserStore = defineStore(
       }
     }
 
+    const ensureWxOpenid = async () => {
+      if (userInfo.value.wxOpenid) {
+        return userInfo.value.wxOpenid
+      }
+      const { code } = await getWxCode()
+      if (!code) {
+        throw new Error('未获取到微信登录凭证')
+      }
+      const { wxOpenid } = await bindWxOpenid({ code })
+      userInfo.value.wxOpenid = wxOpenid
+      return wxOpenid
+    }
+
     /**
      * 获取用户信息
      */
@@ -105,12 +120,23 @@ export const useUserStore = defineStore(
             avatar: res.user.image,
             phoneNumber: res.user.phoneNumber,
             email: res.user.email,
+            wxOpenid: res.user.wxOpenid ?? undefined,
             role: res.user.role || 'user',
             roles: [],
           }
           if (res.user.role)
             mappedUser.roles.push(res.user.role)
           setUserInfo(mappedUser)
+          // #ifdef MP-WEIXIN
+          if (!mappedUser.wxOpenid) {
+            try {
+              await ensureWxOpenid()
+            }
+            catch (e) {
+              console.error('Ensure wxOpenid after session restore failed', e)
+            }
+          }
+          // #endif
         }
       }
       catch (e) {
@@ -142,6 +168,7 @@ export const useUserStore = defineStore(
         name?: string | null
         image?: string | null
         role?: string | null
+        wxOpenid?: string | null
       }
     }) => {
       if (!res || !res.token || !res.user) {
@@ -160,6 +187,7 @@ export const useUserStore = defineStore(
         avatar: res.user.image,
         phoneNumber: res.user.phoneNumber || userInfoState.phoneNumber,
         email: res.user.email || userInfoState.email,
+        wxOpenid: res.user.wxOpenid ?? undefined,
         role: res.user.role || 'user',
         roles: [],
       }
@@ -192,6 +220,14 @@ export const useUserStore = defineStore(
     const loginByWechatPhone = async (code: string) => {
       const res = await signInWePhone({ code })
       handleLoginSuccess(res)
+      // #ifdef MP-WEIXIN
+      try {
+        await ensureWxOpenid()
+      }
+      catch (e) {
+        console.error('Fetch wxOpenid after Wechat phone login failed', e)
+      }
+      // #endif
     }
 
     const updateProfile = async (data: {
@@ -264,6 +300,7 @@ export const useUserStore = defineStore(
       resetPasswordWithPhoneOTP,
       clearUserInfo,
       fetchUserInfo,
+      ensureWxOpenid,
       setUserInfo,
       setUserAvatar,
     }
