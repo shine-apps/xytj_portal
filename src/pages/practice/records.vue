@@ -9,7 +9,6 @@ import { RICE_PAPER_IMAGE } from '@/utils/constants'
 import { buildVideoCoverUrl } from '@/utils/cos'
 import { formatTime } from '@/utils/dateUtil'
 import { setPageShareConfig } from '@/utils/share'
-import { toLoginPage } from '@/utils/toLoginPage'
 
 definePage({
   style: {
@@ -40,11 +39,6 @@ onLoad(() => {
       query: '',
     }),
   })
-
-  if (!userStore.hasValidLogin) {
-    uni.showToast({ title: '请先登录', icon: 'none' })
-    toLoginPage()
-  }
 })
 
 // #ifdef H5
@@ -76,6 +70,11 @@ onShow(() => {
 })
 
 async function queryList(pageNo: number, pageSize: number) {
+  if (!userStore.hasValidLogin) {
+    paging.value?.completeByTotal([], 0)
+    return
+  }
+
   try {
     const res = await getPracticeRecordsAPI({ page: pageNo, pageSize })
     paging.value?.completeByTotal(res.checkIns, res.total)
@@ -114,7 +113,7 @@ function hasUpdate(item: PracticeRecordItem): boolean {
       ref="paging"
       v-model="checkIns"
       :default-page-size="10"
-      empty-view-text="暂无打卡记录"
+      :empty-view-text="userStore.hasValidLogin ? '暂无打卡记录' : '所有用户的打卡信息只有登录才能查看'"
       @query="queryList"
     >
       <view
