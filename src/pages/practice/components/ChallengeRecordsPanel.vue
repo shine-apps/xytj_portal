@@ -190,7 +190,7 @@ defineExpose({ reload })
           <view class="flex items-start gap-1.5 text-xs text-[#666]">
             <text class="i-carbon-location mt-0.5 shrink-0 text-[#a33327]" />
             <text>
-              {{ item.location.address || `已记录位置（${item.location.latitude.toFixed(4)}, ${item.location.longitude.toFixed(4)}）` }}
+              {{ item.location.name || item.location.address || `已记录位置（${item.location.latitude.toFixed(4)}, ${item.location.longitude.toFixed(4)}）` }}
             </text>
           </view>
         </view>

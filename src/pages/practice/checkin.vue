@@ -219,8 +219,8 @@ function chooseDuration(d: number) {
 // ==================== 位置 ====================
 
 /**
- * 调起地图选点，用户确认后保存经纬度 + 地址文本。
- * 用 uni.chooseLocation 直接拿到可读的 address，避免只展示经纬度数字。
+ * 调起地图选点，用户确认后保存地点名称、经纬度 + 地址文本。
+ * 用 uni.chooseLocation 直接拿到可读的 name/address，避免只展示经纬度数字。
  */
 function chooseLocation() {
   uni.chooseLocation({
@@ -228,6 +228,7 @@ function chooseLocation() {
       location.value = {
         latitude: res.latitude,
         longitude: res.longitude,
+        name: res.name || '',
         address: res.address || res.name || '',
       }
     },
@@ -254,7 +255,7 @@ function buildPayload(duration: number): CheckInPayload {
     durationMinutes: duration,
     notes: notes.value.trim() || undefined,
     location: location.value
-      ? { latitude: location.value.latitude, longitude: location.value.longitude, address: location.value.address }
+      ? { latitude: location.value.latitude, longitude: location.value.longitude, name: location.value.name, address: location.value.address }
       : undefined,
     medias: mediaItems.value
       .filter(m => m.remoteUrl)
@@ -504,15 +505,15 @@ async function handleSubmit() {
               @click="chooseLocation()"
             >
               <text class="i-carbon-map text-xs text-[#a33327]" />
-              <text class="text-xs text-[#a33327]">{{ location?.address ? '更换' : '选择' }}</text>
+              <text class="text-xs text-[#a33327]">{{ location?.name || location?.address ? '更换' : '选择' }}</text>
             </view>
           </view>
           <view
-            v-if="location?.address"
+            v-if="location?.name || location?.address"
             class="mt-1 flex items-center gap-1 active:opacity-60"
             @click="chooseLocation()"
           >
-            <text class="text-2xs text-[#999]">{{ location.address }}</text>
+            <text class="text-2xs text-[#999]">{{ location?.name || location?.address }}</text>
             <text
               v-if="location"
               class="i-carbon-close text-2xs text-[#bbb]"

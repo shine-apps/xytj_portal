@@ -26,6 +26,8 @@ export type ChallengeStatus = 'ongoing' | 'ended'
 export interface PracticeLocation {
   latitude: number
   longitude: number
+  /** 地点名称（如「朝阳公园」），展示时优先于 address */
+  name?: string
   address?: string
 }
 

@@ -286,7 +286,7 @@ async function handleShare() {
       <view v-if="checkIn.location" class="mx-5 flex items-start gap-2 border-t border-[#eee9df] py-4 text-xs text-[#777]">
         <text class="i-carbon-location mt-0.5 shrink-0 text-sm text-[#a33327]" />
         <text class="leading-relaxed">
-          {{ checkIn.location.address || `已记录位置（${checkIn.location.latitude.toFixed(4)}, ${checkIn.location.longitude.toFixed(4)}）` }}
+          {{ checkIn.location.name || checkIn.location.address || `已记录位置（${checkIn.location.latitude.toFixed(4)}, ${checkIn.location.longitude.toFixed(4)}）` }}
         </text>
       </view>
 

@@ -194,7 +194,7 @@ function handleEdit() {
         <view v-if="checkIn.location" class="mb-2 flex items-center gap-1">
           <text class="i-carbon-location text-sm text-[#a33327]" />
           <text class="text-xs text-[#666]">
-            {{ checkIn.location.address || `已记录位置（${checkIn.location.latitude.toFixed(4)}, ${checkIn.location.longitude.toFixed(4)}）` }}
+            {{ checkIn.location.name || checkIn.location.address || `已记录位置（${checkIn.location.latitude.toFixed(4)}, ${checkIn.location.longitude.toFixed(4)}）` }}
           </text>
         </view>
       </scroll-view>
