@@ -444,7 +444,7 @@ function offerCopyCsvContent() {
               <text>{{ todayCheckIn.durationMinutes }} 分钟</text>
             </view>
             <text class="text-sm text-[#a33327] font-medium">+{{ todayCheckIn.points }} 积分</text>
-            <text v-if="todayCheckIn.medias?.length" class="text-2xs text-[#999]">含 {{ todayCheckIn.medias.length }} 个媒体</text>
+            <!-- <text v-if="todayCheckIn.medias?.length" class="text-2xs text-[#999]">含 {{ todayCheckIn.medias.length }} 个媒体</text> -->
           </view>
           <view class="mb-4 flex items-center justify-around border border-[#e8e4dc] rounded-lg bg-[#faf8f3] py-3">
             <view class="flex flex-col items-center gap-0.5">

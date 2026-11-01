@@ -10,10 +10,12 @@ const SHANGHAI_OFFSET_MS = 8 * 60 * 60 * 1000
 /**
  * 将任意时刻转换为「上海墙钟时间」对应的 Date，
  * 转换后该 Date 的 UTC 年/月/日/时/分分量即上海日历分量。
+ * 消费方均读 UTC 分量（toISOString/getUTCHours），故只需整体 +8h，
+ * 不能再叠加 getTimezoneOffset()（会与 +8h 在 UTC+8 设备上相互抵消，退化成 UTC 日期）。
  */
 export function toShanghaiWallClock(time: string | number | Date = Date.now()): Date {
   const d = new Date(time)
-  return new Date(d.getTime() + d.getTimezoneOffset() * 60_000 + SHANGHAI_OFFSET_MS)
+  return new Date(d.getTime() + SHANGHAI_OFFSET_MS)
 }
 
 /** 指定时刻在上海时区的日历日 YYYY-MM-DD（默认当前时刻） */

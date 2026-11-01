@@ -317,6 +317,14 @@ export function getPracticeRecordsAPI(params: { page: number, pageSize: number, 
 }
 
 /**
+ * 单条全员打卡记录详情
+ * @param id 打卡记录 ID
+ */
+export function getPracticeRecordAPI(id: string) {
+  return http.get<PracticeRecordItem>(`/api/practice/records/${id}`)
+}
+
+/**
  * 单日打卡详情（当日无记录时接口返回 404）
  * @param date 日期 YYYY-MM-DD
  */

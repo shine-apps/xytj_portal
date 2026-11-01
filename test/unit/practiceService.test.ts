@@ -43,4 +43,16 @@ describe('practice service', () => {
     expect(httpMock.get).toHaveBeenCalledWith('/api/practice/records', { page: 2, pageSize: 10 })
     expect(result).toBe(response)
   })
+
+  it('按 ID 请求单条打卡记录详情', async () => {
+    const getPracticeRecordAPI = practiceService.getPracticeRecordAPI
+    expect(getPracticeRecordAPI).toBeTypeOf('function')
+    const response = { id: 'check-in-1' }
+    httpMock.get.mockResolvedValueOnce(response)
+
+    const result = await getPracticeRecordAPI('check-in-1')
+
+    expect(httpMock.get).toHaveBeenCalledWith('/api/practice/records/check-in-1')
+    expect(result).toBe(response)
+  })
 })

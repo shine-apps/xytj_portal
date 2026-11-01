@@ -52,6 +52,19 @@ function navigateToChallenge(id: string) {
   uni.navigateTo({ url: `/pages/practice/challenge-detail?id=${id}` })
 }
 
+function navigateToCheckIn(id: string) {
+  uni.navigateTo({ url: `/pages/practice/checkin-detail?id=${id}` })
+}
+
+function getCheckInShareTitle(item: PracticeRecordItem) {
+  const [, month, day] = item.checkInDate.slice(0, 10).split('-').map(Number)
+  return `${item.user.name} ${month}月${day}号的练功打卡`
+}
+
+function getCheckInShareImage(item: PracticeRecordItem) {
+  return item.medias.find(media => media.type === 'IMAGE')?.url || ''
+}
+
 function previewImage(item: PracticeRecordItem, url: string) {
   const urls = item.medias.filter(m => m.type === 'IMAGE').map(m => m.url)
   uni.previewImage({ urls, current: url })
@@ -76,7 +89,8 @@ defineExpose({ reload })
       <view
         v-for="item in checkIns"
         :key="item.id"
-        class="border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm"
+        class="border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm active:opacity-70"
+        @click="navigateToCheckIn(item.id)"
       >
         <view class="mb-4 flex items-center gap-3">
           <image
@@ -96,6 +110,22 @@ defineExpose({ reload })
             <text class="block text-base text-[#1a1a1a] font-bold">{{ item.user.name }}</text>
             <text class="mt-0.5 block text-xs text-[#888]">{{ formatTime(item.createdAt) }} 提交</text>
           </view>
+          <view class="ml-auto flex shrink-0 items-center gap-3">
+            <!-- #ifdef MP-WEIXIN -->
+            <button
+              open-type="share"
+              class="m-0 flex items-center gap-1 border-0 bg-transparent p-0 text-xs text-[#a33327] leading-normal after:border-0"
+              :data-check-in-id="item.id"
+              :data-share-title="getCheckInShareTitle(item)"
+              :data-share-image="getCheckInShareImage(item)"
+              @click.stop
+            >
+              <text class="i-carbon-share text-sm" />
+              <text>分享</text>
+            </button>
+            <!-- #endif -->
+            <text class="i-carbon-chevron-right text-base text-[#b8a880]" />
+          </view>
         </view>
 
         <view class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-t border-[#eee9df] py-3">
@@ -111,10 +141,10 @@ defineExpose({ reload })
             <text class="block text-2xs text-[#999]">关联挑战</text>
             <view class="mt-0.5 flex flex-wrap items-center text-sm font-medium">
               <template v-if="item.challenges.length">
-                <template v-for="(challenge, challengeIndex) in item.challenges" :key="challenge.id">
-                  <text class="text-[#a33327] underline underline-offset-2" @click="navigateToChallenge(challenge.id)">{{ challenge.title }}</text>
+                <view v-for="(challenge, challengeIndex) in item.challenges" :key="challenge.id">
+                  <text class="text-[#a33327] underline underline-offset-2" @click.stop="navigateToChallenge(challenge.id)">{{ challenge.title }}</text>
                   <text v-if="challengeIndex < item.challenges.length - 1" class="text-[#333]">、</text>
-                </template>
+                </view>
               </template>
               <text v-else class="text-[#333]">未关联</text>
             </view>
@@ -136,7 +166,7 @@ defineExpose({ reload })
               <view
                 v-if="media.type === 'IMAGE'"
                 class="aspect-square overflow-hidden rounded-md bg-[#efece4]"
-                @click="previewImage(item, media.url)"
+                @click.stop="previewImage(item, media.url)"
               >
                 <image :src="media.url" mode="aspectFill" class="h-full w-full" />
               </view>
@@ -151,6 +181,7 @@ defineExpose({ reload })
               :video-id="`challenge-record-video-${item.id}-${mediaIndex}`"
               :title="practiceTypeLabel(item.practiceType)"
               :autoplay="false"
+              @click.stop
             />
           </template>
         </view>

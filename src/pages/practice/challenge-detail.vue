@@ -7,6 +7,7 @@ import { getChallengeDetailAPI, joinChallengeAPI, leaveChallengeAPI } from '@/se
 import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
+import { setPageShareConfig } from '@/utils/share'
 import ChallengeForm from './components/ChallengeForm.vue'
 import ChallengeRecordsPanel from './components/ChallengeRecordsPanel.vue'
 
@@ -41,6 +42,22 @@ const myEntry = computed(() => {
 })
 
 onLoad((options) => {
+  setPageShareConfig({
+    onShareAppMessage: (res) => {
+      const dataset = res?.target?.dataset
+      if (dataset?.checkInId) {
+        return {
+          title: dataset.shareTitle || '练功打卡',
+          path: `/pages/practice/checkin-detail?id=${dataset.checkInId}`,
+          imageUrl: dataset.shareImage || undefined,
+        }
+      }
+      return {
+        title: challenge.value?.title || '挑战详情',
+        path: `/pages/practice/challenge-detail?id=${challengeId.value}`,
+      }
+    },
+  })
   if (options?.id) {
     challengeId.value = options.id
     loadDetail()

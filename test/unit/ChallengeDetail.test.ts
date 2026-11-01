@@ -1,10 +1,11 @@
 import type { ChallengeDetail } from '@/service/practice'
+import type { ShareConfig } from '@/utils/share'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import ChallengeDetailPage from '@/pages/practice/challenge-detail.vue'
 
-const { lifecycle, userStore, getChallengeDetailAPI, ChallengeRecordsPanelStub } = vi.hoisted(() => ({
+const { lifecycle, userStore, getChallengeDetailAPI, setPageShareConfig, ChallengeRecordsPanelStub } = vi.hoisted(() => ({
   lifecycle: {
     onLoad: undefined as ((options?: { id?: string }) => void) | undefined,
   },
@@ -13,6 +14,7 @@ const { lifecycle, userStore, getChallengeDetailAPI, ChallengeRecordsPanelStub }
     isAdmin: false,
   },
   getChallengeDetailAPI: vi.fn(),
+  setPageShareConfig: vi.fn(),
   ChallengeRecordsPanelStub: {
     name: 'ChallengeRecordsPanelStub',
     props: {
@@ -34,6 +36,10 @@ vi.mock('@/store/user', () => ({
   useUserStore: () => userStore,
 }))
 
+vi.mock('@/store/settings', () => ({
+  useSettingsStore: () => ({ showVideo: true }),
+}))
+
 vi.mock('@/service/practice', () => ({
   getChallengeDetailAPI,
   joinChallengeAPI: vi.fn(),
@@ -48,6 +54,14 @@ vi.mock('@/pages/practice/components/ChallengeRecordsPanel.vue', () => ({
 
 vi.mock('wot-design-uni', () => ({
   useMessage: () => ({ confirm: vi.fn() }),
+}))
+
+vi.mock('@/utils/constants', () => ({
+  RICE_PAPER_IMAGE: '',
+}))
+
+vi.mock('@/utils/share', () => ({
+  setPageShareConfig,
 }))
 
 const ChallengeFormStub = defineComponent({
@@ -154,5 +168,35 @@ describe('挑战详情', () => {
     const panel = wrapper.findComponent(ChallengeRecordsPanelStub)
     expect(panel.exists()).toBe(true)
     expect(panel.props('active')).toBe(false)
+  })
+
+  it('根据卡片按钮参数分享对应打卡详情', async () => {
+    await mountDetail()
+
+    const config = setPageShareConfig.mock.calls[0]?.[0] as ShareConfig | undefined
+    expect(config).toBeDefined()
+    expect(config!.onShareAppMessage?.({
+      target: {
+        dataset: {
+          checkInId: 'check-in-1',
+          shareTitle: '林安然10月30号的练功打卡',
+          shareImage: 'https://cdn.example.com/image.jpg',
+        },
+      },
+    })).toEqual({
+      title: '林安然10月30号的练功打卡',
+      path: '/pages/practice/checkin-detail?id=check-in-1',
+      imageUrl: 'https://cdn.example.com/image.jpg',
+    })
+  })
+
+  it('没有卡片按钮参数时保留挑战分享', async () => {
+    await mountDetail()
+
+    const config = setPageShareConfig.mock.calls[0]?.[0] as ShareConfig | undefined
+    expect(config!.onShareAppMessage?.({})).toEqual({
+      title: '太极共修',
+      path: '/pages/practice/challenge-detail?id=challenge-1',
+    })
   })
 })
