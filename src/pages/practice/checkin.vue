@@ -5,6 +5,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import MediaUploader from '@/components/MediaUploader.vue'
 import { getChallengesAPI, getCheckInByDateAPI, getPracticeTypesAPI, submitCheckInAPI } from '@/service/practice'
+import { checkTextSecurityAPI } from '@/service/security'
 import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { uploadToCos } from '@/utils/cos'
@@ -364,6 +365,11 @@ async function handleSubmit() {
 
     const payload = buildPayload(duration)
     try {
+      // #ifdef MP-WEIXIN
+      if (payload.notes) {
+        await checkTextSecurityAPI(payload.notes)
+      }
+      // #endif
       const res = await submitCheckInAPI(payload)
       // 记忆上次选择
       uni.setStorageSync(LAST_TYPE_KEY, practiceType.value)

@@ -4,6 +4,7 @@ import { onLoad, onShow } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import { useMessage } from 'wot-design-uni'
 import { getChallengeDetailAPI, joinChallengeAPI, leaveChallengeAPI } from '@/service/practice'
+import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
 import ChallengeForm from './components/ChallengeForm.vue'
@@ -16,6 +17,7 @@ definePage({
 })
 
 const userStore = useUserStore()
+const { showVideo } = useSettingsStore()
 const message = useMessage()
 
 const challengeId = ref('')
@@ -62,13 +64,6 @@ onShow(() => {
 function navigateToCheckIn() {
   uni.navigateTo({
     url: '/pages/practice/checkin',
-    fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
-  })
-}
-
-function navigateToRecords() {
-  uni.switchTab({
-    url: '/pages/practice/records',
     fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
   })
 }
@@ -190,13 +185,6 @@ async function handleLeave() {
       </view>
 
       <template v-else>
-        <view class="mb-3 flex justify-end">
-          <view class="flex items-center gap-1 text-sm text-[#a33327] font-medium" @click="navigateToRecords">
-            <text>去打卡广场</text>
-            <text class="i-carbon-chevron-right" />
-          </view>
-        </view>
-
         <!-- 挑战信息 -->
         <view class="overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
           <view class="p-4">
@@ -254,7 +242,7 @@ async function handleLeave() {
 
         <!-- 今日打卡入口 -->
         <view
-          class="mt-2 flex items-center justify-between border border-[#a33327]/30 rounded-lg bg-[#fffdf9] px-4 py-3 shadow-sm active:opacity-70"
+          class="mt-3 flex items-center justify-between border border-[#a33327]/30 rounded-lg bg-[#fffdf9] px-4 py-3 shadow-sm active:opacity-70"
           @click="navigateToCheckIn"
         >
           <view class="flex items-center gap-2.5">
@@ -270,7 +258,7 @@ async function handleLeave() {
         </view>
 
         <!-- 打卡榜单与关联记录 -->
-        <view class="mb-2 mt-2 overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
+        <view class="mb-2 mt-3 overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
           <view class="flex border-b border-[#eee9dd]">
             <view class="flex flex-1 justify-center" @click="handleTabChange('leaderboard')">
               <view class="relative px-6 py-2">
@@ -286,7 +274,7 @@ async function handleLeave() {
                 />
               </view>
             </view>
-            <view class="flex flex-1 justify-center" @click="handleTabChange('records')">
+            <view v-if="showVideo" class="flex flex-1 justify-center" @click="handleTabChange('records')">
               <view class="relative px-6 pt-2">
                 <text
                   class="text-sm"
