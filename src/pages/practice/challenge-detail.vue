@@ -228,8 +228,8 @@ async function handleLeave() {
                   {{ isOngoing ? '进行中' : '已结束' }}
                 </view>
                 <text
-                  class="i-carbon-chevron-down text-sm text-[#b8a880] transition-transform duration-300"
-                  :class="infoCollapsed ? '-rotate-90' : ''"
+                  class="i-carbon-chevron-down text-sm text-[#b8a880]"
+                  :style="{ transition: 'transform 0.3s', transform: infoCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }"
                 />
               </view>
             </view>
@@ -293,29 +293,29 @@ async function handleLeave() {
             <view class="flex flex-1 justify-center" @click="handleTabChange('leaderboard')">
               <view class="relative px-6 py-2">
                 <text
-                  class="text-sm"
+                  class="text-lg"
                   :class="activeTab === 'leaderboard' ? 'text-[#a33327] font-bold' : 'text-[#888] font-medium'"
                 >
                   打卡榜单
                 </text>
-                <view
+                <!-- <view
                   v-if="activeTab === 'leaderboard'"
                   class="absolute bottom-0 left-1/2 h-[2px] w-8 rounded-full bg-[#a33327] -translate-x-1/2"
-                />
+                /> -->
               </view>
             </view>
             <view v-if="showVideo" class="flex flex-1 justify-center" @click="handleTabChange('records')">
               <view class="relative px-6 pt-2">
                 <text
-                  class="text-sm"
+                  class="text-lg"
                   :class="activeTab === 'records' ? 'text-[#a33327] font-bold' : 'text-[#888] font-medium'"
                 >
                   打卡记录
                 </text>
-                <view
+                <!-- <view
                   v-if="activeTab === 'records'"
                   class="absolute bottom-0 left-1/2 h-[2px] w-8 rounded-full bg-[#a33327] -translate-x-1/2"
-                />
+                /> -->
               </view>
             </view>
           </view>
