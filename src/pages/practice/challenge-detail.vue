@@ -29,6 +29,7 @@ const showEditForm = ref(false)
 const activeTab = ref<'leaderboard' | 'records'>('leaderboard')
 const recordsLoaded = ref(false)
 const recordsPanelRef = ref<InstanceType<typeof ChallengeRecordsPanel> | null>(null)
+const infoCollapsed = ref(false)
 
 const challenge = computed(() => detail.value?.challenge ?? null)
 const canEdit = computed(() => {
@@ -205,7 +206,11 @@ async function handleLeave() {
         <!-- 挑战信息 -->
         <view class="overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
           <view class="p-4">
-            <view class="mb-2 flex items-start justify-between gap-2">
+            <view
+              class="flex items-start justify-between gap-2"
+              :class="infoCollapsed ? '' : 'mb-2'"
+              @click="infoCollapsed = !infoCollapsed"
+            >
               <view class="flex flex-1 flex-wrap items-center gap-2">
                 <text class="text-xl text-[#1a1a1a] font-bold">{{ challenge.title }}</text>
                 <view
@@ -215,43 +220,51 @@ async function handleLeave() {
                   总打卡挑战
                 </view>
               </view>
+              <view class="flex shrink-0 items-center gap-1.5">
+                <view
+                  class="whitespace-nowrap rounded px-2 py-0.5 text-2xs"
+                  :class="isOngoing ? 'bg-[#3d5a66]/10 text-[#3d5a66]' : 'bg-gray-200 text-[#888]'"
+                >
+                  {{ isOngoing ? '进行中' : '已结束' }}
+                </view>
+                <text
+                  class="i-carbon-chevron-down text-sm text-[#b8a880] transition-transform duration-300"
+                  :class="infoCollapsed ? '-rotate-90' : ''"
+                />
+              </view>
+            </view>
+
+            <view v-show="!infoCollapsed">
               <view
-                class="whitespace-nowrap rounded px-2 py-0.5 text-2xs"
-                :class="isOngoing ? 'bg-[#3d5a66]/10 text-[#3d5a66]' : 'bg-gray-200 text-[#888]'"
+                v-if="challenge.description"
+                class="mb-3 rounded bg-[#f7f4ec] p-3 text-sm text-[#555] leading-relaxed"
               >
-                {{ isOngoing ? '进行中' : '已结束' }}
+                {{ challenge.description }}
               </view>
-            </view>
 
-            <view
-              v-if="challenge.description"
-              class="mb-3 rounded bg-[#f7f4ec] p-3 text-sm text-[#555] leading-relaxed"
-            >
-              {{ challenge.description }}
-            </view>
+              <view class="text-sm text-[#555] space-y-2">
+                <view class="flex items-center">
+                  <view class="i-carbon-time mr-2 text-[#a33327]" />
+                  <text>{{ challenge.startDate }} ~ {{ challenge.endDate }}</text>
+                </view>
+                <view class="flex items-center">
+                  <view class="i-carbon-user-multiple mr-2 text-[#a33327]" />
+                  <text>{{ challenge.participantCount }} 人参与</text>
+                </view>
+                <view class="flex items-center">
+                  <view class="i-carbon-user mr-2 text-[#a33327]" />
+                  <text>发起人：{{ challenge.creator.name }}</text>
+                </view>
+              </view>
 
-            <view class="text-sm text-[#555] space-y-2">
-              <view class="flex items-center">
-                <view class="i-carbon-time mr-2 text-[#a33327]" />
-                <text>{{ challenge.startDate }} ~ {{ challenge.endDate }}</text>
-              </view>
-              <view class="flex items-center">
-                <view class="i-carbon-user-multiple mr-2 text-[#a33327]" />
-                <text>{{ challenge.participantCount }} 人参与</text>
-              </view>
-              <view class="flex items-center">
-                <view class="i-carbon-user mr-2 text-[#a33327]" />
-                <text>发起人：{{ challenge.creator.name }}</text>
-              </view>
-            </view>
-
-            <view v-if="canEdit" class="mt-4 flex justify-end">
-              <view
-                class="flex items-center gap-1 border border-[#a33327]/50 rounded-full px-3 py-1.5 text-sm text-[#a33327] active:opacity-70"
-                @click="showEditForm = true"
-              >
-                <text class="i-carbon-edit text-sm" />
-                <text>编辑挑战</text>
+              <view v-if="canEdit" class="mt-4 flex justify-end">
+                <view
+                  class="flex items-center gap-1 border border-[#a33327]/50 rounded-full px-3 py-1.5 text-sm text-[#a33327] active:opacity-70"
+                  @click="showEditForm = true"
+                >
+                  <text class="i-carbon-edit text-sm" />
+                  <text>编辑挑战</text>
+                </view>
               </view>
             </view>
           </view>
