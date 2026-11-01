@@ -310,9 +310,9 @@ export function getMonthlyCheckInsAPI(month?: string) {
 }
 
 /**
- * 全员打卡记录（按实际提交时间倒序分页）
+ * 全员打卡记录（按实际提交时间倒序分页，可按关联挑战筛选）
  */
-export function getPracticeRecordsAPI(params: { page: number, pageSize: number }) {
+export function getPracticeRecordsAPI(params: { page: number, pageSize: number, challengeId?: string }) {
   return http.get<PracticeRecordsResponse>('/api/practice/records', params)
 }
 

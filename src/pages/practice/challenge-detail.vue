@@ -7,6 +7,7 @@ import { getChallengeDetailAPI, joinChallengeAPI, leaveChallengeAPI } from '@/se
 import { useUserStore } from '@/store/user'
 import { RICE_PAPER_IMAGE } from '@/utils/constants'
 import ChallengeForm from './components/ChallengeForm.vue'
+import ChallengeRecordsPanel from './components/ChallengeRecordsPanel.vue'
 
 definePage({
   style: {
@@ -22,6 +23,9 @@ const detail = ref<ChallengeDetail | null>(null)
 const loading = ref(false)
 const actionLoading = ref(false)
 const showEditForm = ref(false)
+const activeTab = ref<'leaderboard' | 'records'>('leaderboard')
+const recordsLoaded = ref(false)
+const recordsPanelRef = ref<InstanceType<typeof ChallengeRecordsPanel> | null>(null)
 
 const challenge = computed(() => detail.value?.challenge ?? null)
 const canEdit = computed(() => {
@@ -50,6 +54,7 @@ onShow(() => {
   }
   if (challengeId.value) {
     loadDetail()
+    recordsPanelRef.value?.reload()
   }
 })
 
@@ -66,6 +71,13 @@ function navigateToRecords() {
     url: '/pages/practice/records',
     fail: () => uni.showToast({ title: '页面暂未开放', icon: 'none' }),
   })
+}
+
+function handleTabChange(tab: 'leaderboard' | 'records') {
+  activeTab.value = tab
+  if (tab === 'records') {
+    recordsLoaded.value = true
+  }
 }
 
 async function loadDetail() {
@@ -242,7 +254,7 @@ async function handleLeave() {
 
         <!-- 今日打卡入口 -->
         <view
-          class="mt-4 flex items-center justify-between border border-[#a33327]/30 rounded-lg bg-[#fffdf9] px-4 py-3 shadow-sm active:opacity-70"
+          class="mt-2 flex items-center justify-between border border-[#a33327]/30 rounded-lg bg-[#fffdf9] px-4 py-3 shadow-sm active:opacity-70"
           @click="navigateToCheckIn"
         >
           <view class="flex items-center gap-2.5">
@@ -257,44 +269,79 @@ async function handleLeave() {
           <text class="i-carbon-chevron-right text-base text-[#b8a880]" />
         </view>
 
-        <!-- 排行榜 -->
-        <view class="mb-2 mt-6 flex items-center justify-center">
-          <view class="h-[1px] w-12 bg-[#a33327] opacity-50" />
-          <text class="mx-4 text-lg text-[#1a1a1a] font-bold tracking-widest">打卡榜单</text>
-          <view class="h-[1px] w-12 bg-[#a33327] opacity-50" />
-        </view>
-
-        <view class="overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
-          <view
-            v-for="entry in detail.leaderboard"
-            :key="entry.userId"
-            class="flex items-center justify-between border-b border-[#eee9dd] px-4 py-3 last:border-b-0"
-          >
-            <view class="flex items-center">
-              <text
-                class="w-8 text-center text-lg font-bold"
-                :style="{ color: rankColor(entry.rank) }"
-              >
-                {{ entry.rank }}
-              </text>
-              <view class="ml-2 flex items-center">
-                <text class="text-sm text-[#1a1a1a]">{{ displayName(entry.nickname, entry.userId) }}</text>
-                <view
-                  v-if="entry.rank === 1"
-                  class="ml-2 rounded-sm bg-[#a33327]/10 px-1.5 py-0.5 text-3xs text-[#a33327]"
+        <!-- 打卡榜单与关联记录 -->
+        <view class="mb-2 mt-2 overflow-hidden border border-[#e8e4dc] rounded-lg bg-[#fffdf9] shadow-md">
+          <view class="flex border-b border-[#eee9dd]">
+            <view class="flex flex-1 justify-center" @click="handleTabChange('leaderboard')">
+              <view class="relative px-6 py-2">
+                <text
+                  class="text-sm"
+                  :class="activeTab === 'leaderboard' ? 'text-[#a33327] font-bold' : 'text-[#888] font-medium'"
                 >
-                  领先
-                </view>
+                  打卡榜单
+                </text>
+                <view
+                  v-if="activeTab === 'leaderboard'"
+                  class="absolute bottom-0 left-1/2 h-[2px] w-8 rounded-full bg-[#a33327] -translate-x-1/2"
+                />
               </view>
             </view>
-            <view class="text-sm text-[#555]">
-              <text class="text-base text-[#1a1a1a] font-bold">{{ entry.checkInDays }}</text>
-              天
+            <view class="flex flex-1 justify-center" @click="handleTabChange('records')">
+              <view class="relative px-6 pt-2">
+                <text
+                  class="text-sm"
+                  :class="activeTab === 'records' ? 'text-[#a33327] font-bold' : 'text-[#888] font-medium'"
+                >
+                  打卡记录
+                </text>
+                <view
+                  v-if="activeTab === 'records'"
+                  class="absolute bottom-0 left-1/2 h-[2px] w-8 rounded-full bg-[#a33327] -translate-x-1/2"
+                />
+              </view>
             </view>
           </view>
-          <view v-if="!detail.leaderboard.length" class="py-10 text-center text-sm text-[#888]">
-            尚无拳友上榜，快去打卡吧
+
+          <view v-show="activeTab === 'leaderboard'">
+            <view
+              v-for="entry in detail.leaderboard"
+              :key="entry.userId"
+              class="flex items-center justify-between border-b border-[#eee9dd] px-4 py-3 last:border-b-0"
+            >
+              <view class="flex items-center">
+                <text
+                  class="w-8 text-center text-lg font-bold"
+                  :style="{ color: rankColor(entry.rank) }"
+                >
+                  {{ entry.rank }}
+                </text>
+                <view class="ml-2 flex items-center">
+                  <text class="text-sm text-[#1a1a1a]">{{ displayName(entry.nickname, entry.userId) }}</text>
+                  <view
+                    v-if="entry.rank === 1"
+                    class="ml-2 rounded-sm bg-[#a33327]/10 px-1.5 py-0.5 text-3xs text-[#a33327]"
+                  >
+                    领先
+                  </view>
+                </view>
+              </view>
+              <view class="text-sm text-[#555]">
+                <text class="text-base text-[#1a1a1a] font-bold">{{ entry.checkInDays }}</text>
+                天
+              </view>
+            </view>
+            <view v-if="!detail.leaderboard.length" class="py-10 text-center text-sm text-[#888]">
+              尚无拳友上榜，快去打卡吧
+            </view>
           </view>
+
+          <ChallengeRecordsPanel
+            v-if="recordsLoaded"
+            v-show="activeTab === 'records'"
+            ref="recordsPanelRef"
+            :challenge-id="challengeId"
+            :active="activeTab === 'records'"
+          />
         </view>
 
         <!-- 底部装饰 -->

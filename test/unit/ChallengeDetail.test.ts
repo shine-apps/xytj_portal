@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import ChallengeDetailPage from '@/pages/practice/challenge-detail.vue'
 
-const { lifecycle, userStore, getChallengeDetailAPI } = vi.hoisted(() => ({
+const { lifecycle, userStore, getChallengeDetailAPI, ChallengeRecordsPanelStub } = vi.hoisted(() => ({
   lifecycle: {
     onLoad: undefined as ((options?: { id?: string }) => void) | undefined,
   },
@@ -13,6 +13,14 @@ const { lifecycle, userStore, getChallengeDetailAPI } = vi.hoisted(() => ({
     isAdmin: false,
   },
   getChallengeDetailAPI: vi.fn(),
+  ChallengeRecordsPanelStub: {
+    name: 'ChallengeRecordsPanelStub',
+    props: {
+      challengeId: String,
+      active: Boolean,
+    },
+    template: '<div data-test="challenge-records-panel" />',
+  },
 }))
 
 vi.mock('@dcloudio/uni-app', () => ({
@@ -32,6 +40,10 @@ vi.mock('@/service/practice', () => ({
   leaveChallengeAPI: vi.fn(),
   createChallengeAPI: vi.fn(),
   updateChallengeAPI: vi.fn(),
+}))
+
+vi.mock('@/pages/practice/components/ChallengeRecordsPanel.vue', () => ({
+  default: ChallengeRecordsPanelStub,
 }))
 
 vi.mock('wot-design-uni', () => ({
@@ -67,6 +79,7 @@ async function mountDetail() {
     global: {
       stubs: {
         'ChallengeForm': ChallengeFormStub,
+        'ChallengeRecordsPanel': ChallengeRecordsPanelStub,
         'wd-loading': true,
         'wd-message-box': true,
       },
@@ -81,7 +94,7 @@ function findText(wrapper: Awaited<ReturnType<typeof mountDetail>>, text: string
   return wrapper.findAll('text').find(node => node.text() === text)
 }
 
-describe('挑战详情编辑权限', () => {
+describe('挑战详情', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     lifecycle.onLoad = undefined
@@ -116,5 +129,30 @@ describe('挑战详情编辑权限', () => {
     const wrapper = await mountDetail()
 
     expect(findText(wrapper, '编辑挑战')).toBeUndefined()
+  })
+
+  it('使用自定义标签替代 wd-tabs', async () => {
+    const wrapper = await mountDetail()
+
+    expect(wrapper.find('wd-tabs').exists()).toBe(false)
+  })
+
+  it('首次点击打卡记录才挂载记录面板', async () => {
+    const wrapper = await mountDetail()
+
+    expect(wrapper.findComponent(ChallengeRecordsPanelStub).exists()).toBe(false)
+    await findText(wrapper, '打卡记录')!.trigger('click')
+    expect(wrapper.findComponent(ChallengeRecordsPanelStub).exists()).toBe(true)
+  })
+
+  it('切换标签后保留已加载的记录面板', async () => {
+    const wrapper = await mountDetail()
+
+    await findText(wrapper, '打卡记录')!.trigger('click')
+    await findText(wrapper, '打卡榜单')!.trigger('click')
+
+    const panel = wrapper.findComponent(ChallengeRecordsPanelStub)
+    expect(panel.exists()).toBe(true)
+    expect(panel.props('active')).toBe(false)
   })
 })
