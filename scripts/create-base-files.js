@@ -10,11 +10,17 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // 最简可运行配置
+// 注意：easycom 规则必须与 pages.config.ts 保持一致。
+// uni-app 启动时会缓存此处的 easycom 规则（initEasycomsOnce），后续插件再生成完整的
+// pages.json 也不会重新注册，缺失的规则会导致组件被编译成 resolveComponent 而在运行时找不到
+// （例如 CI 全新检出时 z-paging 未注册，分页页面不请求数据、页面空白）。
 const manifest = { }
 const pages = {
   easycom: {
     autoscan: true,
     custom: {
+      '^fg-(.*)': '@/components/fg-$1/fg-$1.vue',
+      '^(?!z-paging-refresh|z-paging-load-more)z-paging(.*)': 'z-paging/components/z-paging$1/z-paging$1.vue',
       '^wd-(.*)': 'wot-design-uni/components/wd-$1/wd-$1.vue',
     },
   },
