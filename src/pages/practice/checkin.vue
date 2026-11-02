@@ -494,7 +494,7 @@ async function handleSubmit() {
         </view>
 
         <!-- 位置 -->
-        <view>
+        <view v-if="settingsStore.showVideo">
           <view class="flex items-center justify-between">
             <view class="flex items-center gap-1">
               <text class="i-carbon-location text-sm text-[#a33327]" />
@@ -516,7 +516,7 @@ async function handleSubmit() {
             <text class="text-2xs text-[#999]">{{ location?.name || location?.address }}</text>
             <text
               v-if="location"
-              class="i-carbon-close text-2xs text-[#bbb]"
+              class="i-carbon-close text-2xs text-[#a33327]"
               @click.stop="clearLocation()"
             />
           </view>
