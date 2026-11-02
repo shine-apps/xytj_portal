@@ -524,7 +524,7 @@ async function handleSubmit() {
       </view>
 
       <!-- 心得笔记 -->
-      <view class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
+      <view v-if="settingsStore.showVideo" class="mx-4 mt-4 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-4 shadow-sm">
         <text class="mb-2 block text-sm text-[#555] font-medium">心得笔记（选填）</text>
         <textarea
           v-model="notes"
