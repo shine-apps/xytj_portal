@@ -52,8 +52,17 @@ export const useSettingsStore = defineStore(
       }
     })
 
+    // 小程序版本在运行期间不会变化，初始化时读取一次即可
+    let isTrialVersion = false
+    // #ifdef MP-WEIXIN
+    isTrialVersion = uni.getAccountInfoSync().miniProgram.envVersion === 'trial'
+    // #endif
+
     const showVideo = computed(() => {
-      return settingsMap.value.showVideo
+      // 仅微信小程序体验版受后台设置控制，其他环境始终显示视频课程
+      if (isTrialVersion)
+        return settingsMap.value.showVideo
+      return true
     })
 
     const phoneNumber = computed(() => {
