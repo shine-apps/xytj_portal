@@ -46,7 +46,7 @@ const recentFixture: HomeRecentResponse = {
     collectionId: 'collection-1',
     title: '云手详解',
     collectionTitle: '太极基础',
-    coverUrl: null,
+    coverUrl: 'course-cover.jpg',
     lastViewedAt: '2026-10-31T09:00:00.000Z',
   }],
   activities: [{
@@ -88,6 +88,9 @@ describe('首页我的区域', () => {
     const wrapper = await mountHome()
 
     expect(wrapper.text()).toContain('我的区域')
+    expect(wrapper.text()).toContain('点击记录查看详情')
+    expect(wrapper.findAll('text').filter(node => node.text() === '查看详情')).toHaveLength(3)
+    expect(wrapper.find('image[src="course-cover.jpg"]').exists()).toBe(true)
     expect(findByText(wrapper, '晨练二十一天').exists()).toBe(true)
     await findByText(wrapper, '晨练二十一天').trigger('click')
     expect(uni.navigateTo).toHaveBeenCalledWith({ url: '/pages/practice/challenge-detail?id=challenge-1' })
