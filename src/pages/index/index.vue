@@ -1,15 +1,19 @@
 <script lang="ts" setup>
+import type { HomeRecentResponse } from '@/service/me'
 import type { BannerItem } from '@/store/settings'
 import { onShow } from '@dcloudio/uni-app'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 import { useToast } from 'wot-design-uni'
 import useSettingsReady from '@/hooks/useSettingsReady'
+import { getHomeRecentAPI } from '@/service/me'
 import { getMonthlyCheckInsAPI } from '@/service/practice'
 import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { isPageTabbar } from '@/tabbar/store'
 import { staticUrl } from '@/utils'
+import { toLoginPage } from '@/utils/toLoginPage'
+import MyRecentSection from './components/MyRecentSection.vue'
 
 defineOptions({
   name: 'Home',
@@ -126,8 +130,11 @@ function navigateTo(url: string) {
 // 练拳打卡：登录用户展示「今日已打卡」小勾状态
 const userStore = useUserStore()
 const practiceDoneToday = ref(false)
+const homeRecent = ref<HomeRecentResponse>({ challenges: [], courses: [], activities: [] })
+const homeRecentLoading = ref(false)
+const homeRecentLoadFailed = ref(false)
 
-onShow(async () => {
+async function loadPracticeDoneToday() {
   if (!userStore.hasValidLogin) {
     practiceDoneToday.value = false
     return
@@ -137,9 +144,35 @@ onShow(async () => {
     const today = dayjs().format('YYYY-MM-DD')
     practiceDoneToday.value = res.checkIns.some(c => c.checkInDate.slice(0, 10) === today)
   }
-  catch (e) {
+  catch {
     practiceDoneToday.value = false
   }
+}
+
+async function loadHomeRecent() {
+  if (!userStore.hasValidLogin) {
+    homeRecent.value = { challenges: [], courses: [], activities: [] }
+    homeRecentLoading.value = false
+    homeRecentLoadFailed.value = false
+    return
+  }
+  homeRecentLoading.value = true
+  homeRecentLoadFailed.value = false
+  try {
+    homeRecent.value = await getHomeRecentAPI()
+  }
+  catch (error) {
+    console.error('Fetch home recent failed', error)
+    homeRecentLoadFailed.value = true
+  }
+  finally {
+    homeRecentLoading.value = false
+  }
+}
+
+onShow(() => {
+  void loadPracticeDoneToday()
+  void loadHomeRecent()
 })
 
 function makePhoneCall() {
@@ -322,6 +355,17 @@ function makePhoneCall() {
         </view>
       </view>
     </view> -->
+    <!-- 我的区域 -->
+    <MyRecentSection
+      v-if="settingsStore.showVideo"
+      :recent="homeRecent"
+      :loading="homeRecentLoading"
+      :load-failed="homeRecentLoadFailed"
+      :logged-in="userStore.hasValidLogin"
+      @login="toLoginPage()"
+      @retry="loadHomeRecent"
+      @navigate="navigateTo"
+    />
     <!-- 底部装饰 -->
     <view class="flex justify-center pb-8 opacity-30">
       <text class="text-xs text-[#888] tracking-[0.5em]">—— 弘扬中华传统文化 ——</text>

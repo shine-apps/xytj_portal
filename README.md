@@ -67,7 +67,7 @@ xytj_portal/
 ### 环境要求
 
 - Node.js `>= 20`
-- pnpm `>= 9`（推荐 `10.x`）
+- bun `>= 9`（推荐 `10.x`）
 - Vue Official `>= 2.1.10`
 - TypeScript `>= 5.0`
 
@@ -75,13 +75,13 @@ xytj_portal/
 
 ```bash
 # 安装依赖
-pnpm install
+bun install
 
 # 微信小程序开发
-pnpm dev:mp-weixin
+bun dev:mp-weixin
 
 # H5 开发（默认 http://localhost:9000）
-pnpm dev:h5
+bun dev:h5
 ```
 
 > 默认未启用 i18n 与登录策略；如需开启，可在 `pages.config.ts` 与 `src/api/` 目录中扩展。
@@ -90,18 +90,18 @@ pnpm dev:h5
 
 | 命令                          | 说明                                   |
 | ----------------------------- | -------------------------------------- |
-| `pnpm dev:mp-weixin`          | 启动微信小程序开发（推荐）             |
-| `pnpm dev:mp`                 | 启动微信小程序（同上别名）             |
-| `pnpm dev:h5`                 | 启动 H5 开发                           |
-| `pnpm dev:app`                | 启动 APP 开发                          |
-| `pnpm dev`                    | 默认平台（可在 `package.json` 中调整） |
-| `pnpm build:mp-weixin`        | 构建微信小程序                         |
-| `pnpm build:h5`               | 构建 H5（产物在 `dist/build/h5`）      |
-| `pnpm build:app`              | 构建 APP                               |
-| `pnpm type-check`             | TypeScript 类型检查                    |
-| `pnpm lint` / `pnpm lint:fix` | ESLint 检查 / 自动修复                 |
-| `pnpm test`                   | 运行单元测试（Vitest）                 |
-| `pnpm openapi`                | 从 OpenAPI 规范生成前端请求与类型      |
+| `bun dev:mp-weixin`          | 启动微信小程序开发（推荐）             |
+| `bun dev:mp`                 | 启动微信小程序（同上别名）             |
+| `bun dev:h5`                 | 启动 H5 开发                           |
+| `bun dev:app`                | 启动 APP 开发                          |
+| `bun dev`                    | 默认平台（可在 `package.json` 中调整） |
+| `bun build:mp-weixin`        | 构建微信小程序                         |
+| `bun build:h5`               | 构建 H5（产物在 `dist/build/h5`）      |
+| `bun build:app`              | 构建 APP                               |
+| `bun type-check`             | TypeScript 类型检查                    |
+| `bun lint` / `bun lint:fix` | ESLint 检查 / 自动修复                 |
+| `bun test`                   | 运行单元测试（Vitest）                 |
+| `bun openapi`                | 从 OpenAPI 规范生成前端请求与类型      |
 
 ## 编码规范
 
@@ -161,7 +161,7 @@ const onTap = () => uni.showToast({ title: "Hello" });
 | --- | ---------- | ---- | --- |
 | √   | √          | √    | √   |
 
-> H5 与微信小程序为当前主维护平台；APP 通过 `pnpm dev:app` 调试，必要时配合 HBuilderX 运行。
+> H5 与微信小程序为当前主维护平台；APP 通过 `bun dev:app` 调试，必要时配合 HBuilderX 运行。
 
 ## 设计风格
 
