@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { ResultEnum, ContentTypeEnum, ShowMessage } from '../../../src/http/tools/enum'
+import { describe, expect, it } from 'vitest'
+import { ContentTypeEnum, ResultEnum, ShowMessage } from '../../../src/http/tools/enum'
 
-describe('ResultEnum', () => {
+describe('resultEnum', () => {
   it('should have correct success values', () => {
     expect(ResultEnum.Success0).toBe(0)
     expect(ResultEnum.Success200).toBe(200)
@@ -24,7 +24,7 @@ describe('ResultEnum', () => {
   })
 })
 
-describe('ContentTypeEnum', () => {
+describe('contentTypeEnum', () => {
   it('should have correct content types', () => {
     expect(ContentTypeEnum.JSON).toBe('application/json;charset=UTF-8')
     expect(ContentTypeEnum.FORM_URLENCODED).toBe('application/x-www-form-urlencoded;charset=UTF-8')
@@ -32,7 +32,7 @@ describe('ContentTypeEnum', () => {
   })
 })
 
-describe('ShowMessage', () => {
+describe('showMessage', () => {
   it('should return message for 400', () => {
     expect(ShowMessage(400)).toContain('请求错误')
   })

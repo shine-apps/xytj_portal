@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 // Re-implement the functions here to avoid importing from src/utils/index.ts
 // which imports pages.json that has UniApp conditional compilation comments

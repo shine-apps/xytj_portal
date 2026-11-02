@@ -36,7 +36,7 @@ function formatDateTime(value: string) {
     <view class="mb-4 flex items-end justify-between">
       <view class="flex items-center">
         <view class="mr-2 h-5 w-1 rounded-full bg-[#a33327]" />
-        <text class="text-xl text-[#1a1a1a] font-bold">我的区域</text>
+        <text class="text-xl text-[#1a1a1a] font-bold">我的轨迹</text>
       </view>
       <text class="pb-0.5 text-xs text-[#999]">点击记录查看详情</text>
     </view>
@@ -73,7 +73,7 @@ function formatDateTime(value: string) {
     <view v-else class="space-y-5">
       <view v-if="recent.challenges.length > 0">
         <view class="mb-2 flex items-center gap-2 px-1">
-          <view class="h-7 w-7 flex items-center justify-center rounded-full bg-[#a33327]/8">
+          <view class="h-7 w-7 flex items-center justify-center rounded-full">
             <text class="i-carbon-fire text-sm text-[#a33327]" />
           </view>
           <text class="text-sm text-[#555] font-bold">打卡挑战</text>
@@ -86,15 +86,11 @@ function formatDateTime(value: string) {
             class="flex items-center gap-3 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-3 shadow-sm transition-all duration-200 active:scale-98 active:border-[#a33327]/40 active:bg-[#f9f5ee]"
             @click="emit('navigate', `/pages/practice/challenge-detail?id=${item.id}`)"
           >
-            <view class="h-10 w-10 flex shrink-0 items-center justify-center border border-[#a33327]/15 rounded-full bg-[#a33327]/8">
-              <text class="i-carbon-fire text-lg text-[#a33327]" />
-            </view>
             <view class="min-w-0 flex-1">
               <text class="block truncate text-[15px] text-[#1a1a1a] font-bold">{{ item.title }}</text>
               <text class="mt-1 block text-xs text-[#888]">{{ formatDate(item.joinedAt) }} 加入</text>
             </view>
-            <view class="flex shrink-0 items-center gap-0.5 rounded-full bg-[#a33327]/8 px-2 py-1 text-xs text-[#a33327]">
-              <text>查看详情</text>
+            <view class="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1 text-xs text-[#a33327]">
               <text class="i-carbon-chevron-right" />
             </view>
           </view>
@@ -103,7 +99,7 @@ function formatDateTime(value: string) {
 
       <view v-if="recent.courses.length > 0">
         <view class="mb-2 flex items-center gap-2 px-1">
-          <view class="h-7 w-7 flex items-center justify-center rounded-full bg-[#a33327]/8">
+          <view class="h-7 w-7 flex items-center justify-center rounded-full">
             <text class="i-carbon-video text-sm text-[#a33327]" />
           </view>
           <text class="text-sm text-[#555] font-bold">观看课程</text>
@@ -124,7 +120,7 @@ function formatDateTime(value: string) {
             />
             <view
               v-else
-              class="h-11 w-11 flex shrink-0 items-center justify-center border border-[#a33327]/15 rounded-md bg-[#a33327]/8"
+              class="h-11 w-11 flex shrink-0 items-center justify-center border border-[#a33327]/15 rounded-md"
             >
               <text class="i-carbon-video text-lg text-[#a33327]" />
             </view>
@@ -132,8 +128,7 @@ function formatDateTime(value: string) {
               <text class="block truncate text-[15px] text-[#1a1a1a] font-bold">{{ item.title }}</text>
               <text class="mt-1 block truncate text-xs text-[#888]">{{ item.collectionTitle }} · {{ formatDateTime(item.lastViewedAt) }}</text>
             </view>
-            <view class="flex shrink-0 items-center gap-0.5 rounded-full bg-[#a33327]/8 px-2 py-1 text-xs text-[#a33327]">
-              <text>查看详情</text>
+            <view class="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1 text-xs text-[#a33327]">
               <text class="i-carbon-chevron-right" />
             </view>
           </view>
@@ -142,7 +137,7 @@ function formatDateTime(value: string) {
 
       <view v-if="recent.activities.length > 0">
         <view class="mb-2 flex items-center gap-2 px-1">
-          <view class="h-7 w-7 flex items-center justify-center rounded-full bg-[#a33327]/8">
+          <view class="h-7 w-7 flex items-center justify-center rounded-full">
             <text class="i-carbon-calendar text-sm text-[#a33327]" />
           </view>
           <text class="text-sm text-[#555] font-bold">参与活动</text>
@@ -155,15 +150,11 @@ function formatDateTime(value: string) {
             class="flex items-center gap-3 border border-[#e8e4dc] rounded-lg bg-[#fffdf9] p-3 shadow-sm transition-all duration-200 active:scale-98 active:border-[#a33327]/40 active:bg-[#f9f5ee]"
             @click="emit('navigate', `/pages/activities/detail?id=${item.id}`)"
           >
-            <view class="h-10 w-10 flex shrink-0 items-center justify-center border border-[#a33327]/15 rounded-full bg-[#a33327]/8">
-              <text class="i-carbon-calendar text-lg text-[#a33327]" />
-            </view>
             <view class="min-w-0 flex-1">
               <text class="block truncate text-[15px] text-[#1a1a1a] font-bold">{{ item.title }}</text>
               <text class="mt-1 block text-xs text-[#888]">{{ formatDateTime(item.startTime) }} 开始</text>
             </view>
-            <view class="flex shrink-0 items-center gap-0.5 rounded-full bg-[#a33327]/8 px-2 py-1 text-xs text-[#a33327]">
-              <text>查看详情</text>
+            <view class="flex shrink-0 items-center gap-0.5 rounded-full px-2 py-1 text-xs text-[#a33327]">
               <text class="i-carbon-chevron-right" />
             </view>
           </view>

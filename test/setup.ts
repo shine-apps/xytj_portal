@@ -1,7 +1,9 @@
 import { vi } from 'vitest'
 
 // Mock uni-app global APIs
-;(globalThis as any).uni = {
+;
+
+(globalThis as any).uni = {
   showToast: vi.fn(),
   showModal: vi.fn(),
   showLoading: vi.fn(),

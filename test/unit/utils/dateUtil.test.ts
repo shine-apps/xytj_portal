@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { formatTime, formatDate, getRelativeTime } from '../../../src/utils/dateUtil'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { formatDate, formatTime, getRelativeTime } from '../../../src/utils/dateUtil'
 
 describe('dateUtil', () => {
   beforeEach(() => {
