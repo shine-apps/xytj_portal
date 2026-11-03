@@ -236,7 +236,7 @@ async function handleLeave() {
 
             <view v-show="!infoCollapsed">
               <view
-                v-if="challenge.description"
+                v-if="!!challenge.description"
                 class="mb-3 rounded bg-[#f7f4ec] p-3 text-sm text-[#555] leading-relaxed"
               >
                 {{ challenge.description }}

@@ -1,7 +1,7 @@
 {
   "name": "xytj_portal",
   "type": "module",
-  "version": "1.0.0",
+  "version": "0.6.7",
   "unibest": {
     "platforms": [
       "h5",
