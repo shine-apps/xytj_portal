@@ -58,10 +58,16 @@ export const useSettingsStore = defineStore(
     isTrialVersion = uni.getAccountInfoSync().miniProgram.envVersion === 'trial'
     // #endif
 
+    /** 小程序是否处于审核中（由后端设置控制，默认 false） */
+    const isInReview = computed(() => settingsMap.value.isInReview === true)
+
     const showVideo = computed(() => {
-      // 仅微信小程序体验版受后台设置控制，其他环境始终显示视频课程
+      // 仅微信小程序体验版受 showVideo 设置控制
       if (isTrialVersion)
         return settingsMap.value.showVideo
+      // 非体验版（正式版）审核中时隐藏视频课程
+      if (isInReview.value)
+        return false
       return true
     })
 
@@ -126,6 +132,7 @@ export const useSettingsStore = defineStore(
       settingsMap,
       banners,
       showVideo,
+      isInReview,
       phoneNumber,
       globalChallengeId,
       hotLinks,

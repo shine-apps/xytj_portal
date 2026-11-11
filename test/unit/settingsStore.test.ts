@@ -43,4 +43,51 @@ describe('settings store', () => {
 
     expect(store.showVideo).toBe(false)
   })
+
+  it('微信小程序正式版审核中时隐藏视频课程', () => {
+    setEnvVersion('release')
+    const store = useSettingsStore()
+    store.settings = [
+      { id: 1, key: 'showVideo', value: true, createdAt: '', updatedAt: '' },
+      { id: 2, key: 'isInReview', value: true, createdAt: '', updatedAt: '' },
+    ]
+
+    expect(store.isInReview).toBe(true)
+    expect(store.showVideo).toBe(false)
+  })
+
+  it('微信小程序正式版非审核中时显示视频课程', () => {
+    setEnvVersion('release')
+    const store = useSettingsStore()
+    store.settings = [
+      { id: 1, key: 'showVideo', value: true, createdAt: '', updatedAt: '' },
+      { id: 2, key: 'isInReview', value: false, createdAt: '', updatedAt: '' },
+    ]
+
+    expect(store.isInReview).toBe(false)
+    expect(store.showVideo).toBe(true)
+  })
+
+  it('微信小程序体验版不受 isInReview 影响，仍按 showVideo 控制', () => {
+    setEnvVersion('trial')
+    const store = useSettingsStore()
+    store.settings = [
+      { id: 1, key: 'showVideo', value: true, createdAt: '', updatedAt: '' },
+      { id: 2, key: 'isInReview', value: true, createdAt: '', updatedAt: '' },
+    ]
+
+    expect(store.isInReview).toBe(true)
+    expect(store.showVideo).toBe(true)
+  })
+
+  it('isInReview 未配置时默认 false，正式版正常显示视频课程', () => {
+    setEnvVersion('release')
+    const store = useSettingsStore()
+    store.settings = [
+      { id: 1, key: 'showVideo', value: true, createdAt: '', updatedAt: '' },
+    ]
+
+    expect(store.isInReview).toBe(false)
+    expect(store.showVideo).toBe(true)
+  })
 })
