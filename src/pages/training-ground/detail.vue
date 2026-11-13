@@ -4,6 +4,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 import { deleteComment, deleteTrainingGroundPost, getComments, getTrainingGroundPost, toggleLike } from '@/api/training-ground'
 import TrainingGroundComment from '@/components/TrainingGroundComment.vue'
+import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { useUserListStore } from '@/store/userList'
 import { buildVideoCoverUrl } from '@/utils/cos'
@@ -17,6 +18,7 @@ definePage({
 
 const userStore = useUserStore()
 const userListStore = useUserListStore()
+const settingsStore = useSettingsStore()
 
 const postId = ref('')
 const post = ref<TrainingGroundPost | null>(null)
@@ -207,7 +209,11 @@ function handleSourceClick() {
 </script>
 
 <template>
-  <view class="min-h-screen bg-gray-50">
+  <!-- 审核中拦截：小程序审核期间隐藏练功场页面内容 -->
+  <view v-if="!settingsStore.showVideo" class="min-h-screen flex items-center justify-center bg-gray-50">
+    <text class="text-base text-gray-400">页面不存在</text>
+  </view>
+  <view v-else class="min-h-screen bg-gray-50">
     <view v-if="loading" class="flex items-center justify-center py-20">
       <wd-loading />
     </view>

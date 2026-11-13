@@ -263,7 +263,11 @@ function onPublished() {
 </script>
 
 <template>
-  <view class="h-full bg-gray-50">
+  <!-- 审核中拦截：小程序审核期间隐藏练功场页面内容 -->
+  <view v-if="!settingsStore.showVideo" class="min-h-screen flex items-center justify-center bg-gray-50">
+    <text class="text-base text-gray-400">页面不存在</text>
+  </view>
+  <view v-else class="h-full bg-gray-50">
     <!-- 帖子列表 -->
     <z-paging ref="paging" v-model="posts" @query="queryList">
       <template #empty>
