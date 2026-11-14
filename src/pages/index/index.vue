@@ -256,7 +256,7 @@ function makePhoneCall() {
     </view>
 
     <!-- 热点链接 -->
-    <view v-if="settingsStore.hotLinks.length > 0" class="relative z-20 mx-4 mt-6">
+    <view v-if="settingsStore.showVideo && settingsStore.hotLinks.length > 0" class="relative z-20 mx-4 mt-6">
       <view class="mb-4 flex items-center">
         <view class="mr-2 h-5 w-1 rounded-full bg-[#a33327]" />
         <text class="text-xl text-[#1a1a1a] font-bold">热点推荐</text>
