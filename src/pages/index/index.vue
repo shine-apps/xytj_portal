@@ -8,6 +8,7 @@ import { useToast } from 'wot-design-uni'
 import useSettingsReady from '@/hooks/useSettingsReady'
 import { getHomeRecentAPI } from '@/service/me'
 import { getMonthlyCheckInsAPI } from '@/service/practice'
+import { useNearbyStore } from '@/store/nearby'
 import { useSettingsStore } from '@/store/settings'
 import { useUserStore } from '@/store/user'
 import { isPageTabbar } from '@/tabbar/store'
@@ -74,6 +75,13 @@ const baseFeatures = [
     url: '/pages/articles/list',
     showKey: null,
   },
+  {
+    title: '附近拳友',
+    desc: '发现附近同好',
+    icon: 'i-carbon-location',
+    url: '/pages/nearby/index',
+    showKey: null,
+  },
 ]
 
 const features = computed(() => {
@@ -129,6 +137,7 @@ function navigateTo(url: string) {
 
 // 练拳打卡：登录用户展示「今日已打卡」小勾状态
 const userStore = useUserStore()
+const nearbyStore = useNearbyStore()
 const practiceDoneToday = ref(false)
 const homeRecent = ref<HomeRecentResponse>({ challenges: [], courses: [], activities: [] })
 const homeRecentLoading = ref(false)
@@ -173,6 +182,9 @@ async function loadHomeRecent() {
 onShow(() => {
   void loadPracticeDoneToday()
   void loadHomeRecent()
+  if (userStore.hasValidLogin) {
+    void nearbyStore.fetchUnreadCount()
+  }
 })
 
 function makePhoneCall() {
@@ -303,6 +315,12 @@ function makePhoneCall() {
             <text class="i-carbon-checkmark-filled text-2xs text-green-500" />
             <text class="text-2xs text-green-600">今日已打卡</text>
           </view>
+          <!-- 附近拳友未读红点 -->
+          <wd-badge
+            v-if="item.url === '/pages/nearby/index' && nearbyStore.hasUnread"
+            is-dot
+            class="absolute right-2 top-2 z-20"
+          />
           <!-- 水墨装饰背景 -->
           <view class="absolute h-24 w-24 rounded-full bg-stone-100 opacity-50 transition-transform duration-500 -bottom-4 -right-4 group-hover:scale-110" />
 
