@@ -3,8 +3,6 @@ import type { NearbyLocationStatus, NearbyRadius, NearbyUser } from '@/service/n
 import { onShow } from '@dcloudio/uni-app'
 import { computed, nextTick, ref } from 'vue'
 import useZPaging from 'z-paging/components/z-paging/js/hooks/useZPaging.js'
-import FriendCard from './components/FriendCard.vue'
-import LocationPublishCard from './components/LocationPublishCard.vue'
 import {
   closeLocationAPI,
   createConversationAPI,
@@ -15,6 +13,8 @@ import {
 } from '@/service/nearby'
 import { useNearbyStore } from '@/store/nearby'
 import { useUserStore } from '@/store/user'
+import FriendCard from './components/FriendCard.vue'
+import LocationPublishCard from './components/LocationPublishCard.vue'
 
 defineOptions({
   name: 'NearbyIndex',
@@ -234,7 +234,7 @@ function goMessages() {
     <!-- 右上角消息入口 -->
     <view class="mb-3 flex justify-end">
       <view class="relative" @click="goMessages">
-        <view class="flex items-center gap-1 rounded-full border border-[#e8e4dc] bg-[#fffdf9] px-3 py-1.5">
+        <view class="flex items-center gap-1 border border-[#e8e4dc] rounded-full bg-[#fffdf9] px-3 py-1.5">
           <text class="i-carbon-chat text-base text-[#a33327]" />
           <text class="text-sm text-[#333]">消息</text>
         </view>
@@ -275,7 +275,7 @@ function goMessages() {
     <!-- 未发布引导空态：不渲染 z-paging，不请求列表 -->
     <view
       v-if="meLoaded && !isPublished"
-      class="mt-6 flex flex-col items-center rounded-lg border border-dashed border-[#d9c4b8] bg-[#fffdf9] px-6 py-12 text-center"
+      class="mt-6 flex flex-col items-center border border-[#d9c4b8] rounded-lg border-dashed bg-[#fffdf9] px-6 py-12 text-center"
     >
       <text class="i-carbon-location text-4xl text-[#d9c4b8]" />
       <text class="mt-3 text-base text-[#333] font-bold">发布我的位置，发现附近拳友</text>
@@ -301,7 +301,7 @@ function goMessages() {
       empty-view-text="附近暂未发现公开位置的拳友"
       @query="queryList"
     >
-      <view class="space-y-3 pb-6">
+      <view class="pb-6 space-y-3">
         <FriendCard
           v-for="friend in friends"
           :key="friend.userId"

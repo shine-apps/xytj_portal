@@ -46,7 +46,9 @@ defineExpose({ closeBioPopup: () => (bioPopupVisible.value = false) })
         <view class="flex items-center gap-2">
           <text class="i-carbon-location text-lg text-[#a33327]" />
           <text class="text-base text-[#1a1a1a] font-bold">我的位置</text>
-          <wd-tag v-if="location?.isActive" custom-style="background-color: #a33327; color: #fff;">公开中</wd-tag>
+          <wd-tag v-if="location?.isActive" custom-style="background-color: #a33327; color: #fff;">
+            公开中
+          </wd-tag>
         </view>
         <text v-if="location?.isActive" class="mt-1 block truncate text-sm text-[#666]">
           {{ location.locationName || location.address || '已公开位置' }}
@@ -63,8 +65,8 @@ defineExpose({ closeBioPopup: () => (bioPopupVisible.value = false) })
 
     <view class="mt-3 flex gap-3 border-t border-[#eee9df] pt-3">
       <wd-button
-        block
-        plain
+
+        plain block
         size="small"
         custom-style="color: #a33327; border-color: #a33327; border-radius: 10px;"
         @click="emit('choose-location')"
@@ -72,8 +74,8 @@ defineExpose({ closeBioPopup: () => (bioPopupVisible.value = false) })
         {{ location?.isActive ? '重新选点' : '选择位置' }}
       </wd-button>
       <wd-button
-        block
-        plain
+
+        plain block
         size="small"
         custom-style="color: #a33327; border-color: #a33327; border-radius: 10px;"
         @click="openBioPopup"
@@ -95,7 +97,7 @@ defineExpose({ closeBioPopup: () => (bioPopupVisible.value = false) })
     >
       <view class="px-6 pb-6 pt-7">
         <text class="block text-center text-xl text-gray-900 font-bold">一句话简介</text>
-        <text class="mt-2 mb-4 block text-center text-sm text-gray-500">让附近拳友快速认识你（≤50 字）</text>
+        <text class="mb-4 mt-2 block text-center text-sm text-gray-500">让附近拳友快速认识你（≤50 字）</text>
         <view class="border border-[#e8e4dc] rounded-lg bg-white">
           <wd-textarea
             v-model="bioDraft"
@@ -107,8 +109,8 @@ defineExpose({ closeBioPopup: () => (bioPopupVisible.value = false) })
         </view>
         <view class="mt-5 flex gap-3">
           <wd-button
-            block
-            plain
+
+            plain block
             custom-style="color: #a33327; border-color: #a33327; border-radius: 12px;"
             @click="bioPopupVisible = false"
           >

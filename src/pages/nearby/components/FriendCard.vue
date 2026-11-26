@@ -25,7 +25,7 @@ function onAvatarError() {
         v-if="props.user.avatar && !avatarError"
         :src="props.user.avatar"
         mode="aspectFill"
-        class="h-12 w-12 shrink-0 rounded-full border border-[#e8e4dc]"
+        class="h-12 w-12 shrink-0 border border-[#e8e4dc] rounded-full"
         @error="onAvatarError"
       />
       <view
