@@ -16,6 +16,7 @@ setActivePinia(store)
 export default store
 
 export * from './courses'
+export * from './nearby'
 export * from './settings'
 // 模块统一导出
 export * from './subscription'
