@@ -7,6 +7,7 @@ import {
   markConversationReadAPI,
   sendMessageAPI,
 } from '@/service/nearby'
+import { checkTextSecurityAPI } from '@/service/security'
 import { useNearbyStore } from '@/store/nearby'
 import { useUserStore } from '@/store/user'
 import MessageBubble from './components/MessageBubble.vue'
@@ -97,12 +98,17 @@ async function onSend() {
   }
   sending.value = true
   try {
+    // #ifdef MP-WEIXIN
+    await checkTextSecurityAPI(content)
+    // #endif
     const res = await sendMessageAPI(conversationId.value, content)
     messages.value.push(res.message)
     inputContent.value = ''
   }
   catch (e) {
-    // 审核 400/503/409 的中文提示已由 http 拦截器统一 toast；此处不清空输入框，便于修改重发
+    // 微信小程序：文本审核 400/503/409 的中文提示由 http 拦截器统一 toast；
+    // H5 端跳过前端审核，业务接口返回错误时也由拦截器统一提示；
+    // 审核失败或业务失败时不清空输入框，便于用户修改重发。
     console.error('发送消息失败', e)
   }
   finally {

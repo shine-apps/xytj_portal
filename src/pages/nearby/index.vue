@@ -11,6 +11,7 @@ import {
   publishLocationAPI,
   updateNearbyBioAPI,
 } from '@/service/nearby'
+import { checkTextSecurityAPI } from '@/service/security'
 import { useNearbyStore } from '@/store/nearby'
 import { useUserStore } from '@/store/user'
 import FriendCard from './components/FriendCard.vue'
@@ -31,7 +32,7 @@ const nearbyStore = useNearbyStore()
 const paging = ref<any>(null)
 useZPaging(paging)
 
-const radiusOptions: NearbyRadius[] = [5, 10, 30]
+const radiusOptions: NearbyRadius[] = [5, 10, 30, 50]
 const radius = ref<NearbyRadius>(5)
 const friends = ref<NearbyUser[]>([])
 
@@ -198,13 +199,17 @@ function onToggleActive(nextActive: boolean) {
 async function onSaveBio(bio: string) {
   savingBio.value = true
   try {
+    // #ifdef MP-WEIXIN
+    await checkTextSecurityAPI(bio)
+    // #endif
     const res = await updateNearbyBioAPI(bio)
     myBio.value = res.bio
     locationCardRef.value?.closeBioPopup()
     uni.showToast({ title: '简介已更新', icon: 'none' })
   }
   catch (e) {
-    // 审核 400 / 503 / 409 的中文提示已由 http 拦截器统一 toast
+    // 微信小程序：文本审核 / 后端校验 400/503/409 的中文提示由 http 拦截器统一 toast；
+    // H5 端跳过前端审核，业务接口返回错误时也由拦截器统一提示。
     console.error('更新简介失败', e)
   }
   finally {
@@ -259,6 +264,7 @@ function goMessages() {
 
     <!-- 距离筛选条 -->
     <view v-if="isPublished" class="mt-4 flex gap-2">
+      <view>距离：</view>
       <view
         v-for="item in radiusOptions"
         :key="item"

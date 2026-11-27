@@ -4,7 +4,7 @@ import { http } from '@/http/http'
 // ==================== 类型定义 ====================
 
 /** 允许的查询半径（公里），后端仅接受 5 / 10 / 30，非法值回退 5 */
-export type NearbyRadius = 5 | 10 | 30
+export type NearbyRadius = 5 | 10 | 30 | 50
 
 /** 我的位置发布状态（GET /nearby/me 的 location 字段） */
 export interface NearbyLocationStatus {
@@ -109,7 +109,7 @@ export function closeLocationAPI(options?: Partial<CustomRequestOptions>) {
   return http.delete<{ success: boolean }>('/api/nearby/location', undefined, undefined, options)
 }
 
-/** 更新一句话简介（≤50 字，后端带微信文本审核） */
+/** 更新一句话简介（≤50 字；微信小程序端由前端前置调 /api/text-security-check，H5 端跳过审核） */
 export function updateNearbyBioAPI(bio: string) {
   return http.put<{ bio: string }>('/api/nearby/profile', { bio })
 }
@@ -145,7 +145,7 @@ export function getMessagesAPI(conversationId: string, options?: Partial<CustomR
   )
 }
 
-/** 发送消息（1~500 字，后端成员校验 + 文本审核 + 事务）。
+/** 发送消息（1~500 字，后端成员校验 + 事务；微信小程序端由前端前置调 /api/text-security-check，H5 端跳过审核）。
  *  不静默：审核 400/503/409 的中文提示由 http 拦截器统一 toast，页面只保留输入内容。 */
 export function sendMessageAPI(conversationId: string, content: string) {
   return http.post<{ message: NearbyMessage }>(
