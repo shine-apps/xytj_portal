@@ -134,6 +134,10 @@ export const useUserStore = defineStore(
             }
             catch (e) {
               console.error('Ensure wxOpenid after session restore failed', e)
+              uni.showToast({
+                icon: 'none',
+                title: '微信身份绑定失败，请重进小程序重试',
+              })
             }
           }
           // #endif
@@ -226,6 +230,10 @@ export const useUserStore = defineStore(
       }
       catch (e) {
         console.error('Fetch wxOpenid after Wechat phone login failed', e)
+        uni.showToast({
+          icon: 'none',
+          title: '微信身份绑定失败，请重进小程序重试',
+        })
       }
       // #endif
     }
